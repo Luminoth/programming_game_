@@ -11,6 +11,65 @@ const THIRST_LEVEL: i64 = 5;
 const TIREDNESS_THRESHOLD: i64 = 5;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+enum GlobalState {
+    MinerGlobalState,
+}
+
+impl GlobalState {
+    fn enter(
+        state: Self,
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
+        match state {
+            Self::MinerGlobalState => Self::MinerGlobalState_enter(entity, state_machine, miner),
+        }
+    }
+
+    fn execute(
+        state: Self,
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
+        match state {
+            Self::MinerGlobalState => Self::MinerGlobalState_execute(entity, state_machine, miner),
+        }
+    }
+
+    fn exit(
+        state: Self,
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
+        match state {
+            Self::MinerGlobalState => Self::MinerGlobalState_exit(entity, state_machine, miner),
+        }
+    }
+}
+
+impl GlobalState {
+    fn MinerGlobalState_enter(
+        _entity: &Entity,
+        _: &mut StateMachine,
+        _miner: &mut MinerComponents,
+    ) {
+    }
+
+    fn MinerGlobalState_execute(
+        _entity: &Entity,
+        _state_machine: &mut StateMachine,
+        _miner: &mut MinerComponents,
+    ) {
+    }
+
+    fn MinerGlobalState_exit(_entity: &Entity, _: &mut StateMachine, _miner: &mut MinerComponents) {
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum State {
     EnterMineAndDigForNugget,
     VisitBankAndDepositGold,
@@ -19,155 +78,268 @@ enum State {
 }
 
 impl State {
-    fn enter(state: State, miner: &mut Miner) {
+    fn enter(
+        state: Self,
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         match state {
-            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_enter(miner),
-            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_enter(miner),
-            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_enter(miner),
-            Self::QuenchThirst => Self::QuenchThirst_enter(miner),
+            Self::EnterMineAndDigForNugget => {
+                Self::EnterMineAndDigForNugget_enter(entity, state_machine, miner)
+            }
+            Self::VisitBankAndDepositGold => {
+                Self::VisitBankAndDepositGold_enter(entity, state_machine, miner)
+            }
+            Self::GoHomeAndSleepTilRested => {
+                Self::GoHomeAndSleepTilRested_enter(entity, state_machine, miner)
+            }
+            Self::QuenchThirst => Self::QuenchThirst_enter(entity, state_machine, miner),
         }
     }
 
-    fn execute(state: State, miner: &mut Miner) {
+    fn execute(
+        state: Self,
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         match state {
-            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_execute(miner),
-            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_execute(miner),
-            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_execute(miner),
-            Self::QuenchThirst => Self::QuenchThirst_execute(miner),
+            Self::EnterMineAndDigForNugget => {
+                Self::EnterMineAndDigForNugget_execute(entity, state_machine, miner)
+            }
+            Self::VisitBankAndDepositGold => {
+                Self::VisitBankAndDepositGold_execute(entity, state_machine, miner)
+            }
+            Self::GoHomeAndSleepTilRested => {
+                Self::GoHomeAndSleepTilRested_execute(entity, state_machine, miner)
+            }
+            Self::QuenchThirst => Self::QuenchThirst_execute(entity, state_machine, miner),
         }
     }
 
-    fn exit(state: State, miner: &mut Miner) {
+    fn exit(
+        state: Self,
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         match state {
-            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_exit(miner),
-            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_exit(miner),
-            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_exit(miner),
-            Self::QuenchThirst => Self::QuenchThirst_exit(miner),
+            Self::EnterMineAndDigForNugget => {
+                Self::EnterMineAndDigForNugget_exit(entity, state_machine, miner)
+            }
+            Self::VisitBankAndDepositGold => {
+                Self::VisitBankAndDepositGold_exit(entity, state_machine, miner)
+            }
+            Self::GoHomeAndSleepTilRested => {
+                Self::GoHomeAndSleepTilRested_exit(entity, state_machine, miner)
+            }
+            Self::QuenchThirst => Self::QuenchThirst_exit(entity, state_machine, miner),
         }
     }
 }
 
 impl State {
-    fn EnterMineAndDigForNugget_enter(miner: &mut Miner) {
+    fn EnterMineAndDigForNugget_enter(
+        entity: &Entity,
+        _: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         if miner.location != Location::GoldMine {
-            info!("{}: Walkin' to the gold mine", miner.entity.name());
+            info!("{}: Walkin' to the gold mine", entity.name());
 
             miner.change_location(Location::GoldMine);
         }
     }
 
-    fn EnterMineAndDigForNugget_execute(miner: &mut Miner) {
+    fn EnterMineAndDigForNugget_execute(
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         miner.mine_gold();
 
-        info!("{}: Pickin' up a nugget", miner.entity.name());
+        info!("{}: Pickin' up a nugget", entity.name());
 
         if miner.are_pockets_full() {
-            miner.change_state(Self::VisitBankAndDepositGold);
+            state_machine.change_state(entity, Self::VisitBankAndDepositGold, miner);
         } else if miner.is_thirsty() {
-            miner.change_state(Self::QuenchThirst);
+            state_machine.change_state(entity, Self::QuenchThirst, miner);
         }
     }
 
-    fn EnterMineAndDigForNugget_exit(miner: &mut Miner) {
+    fn EnterMineAndDigForNugget_exit(
+        entity: &Entity,
+        _: &mut StateMachine,
+        _: &mut MinerComponents,
+    ) {
         info!(
             "{}: Ah'm leavin' the gold mine with mah pockets full o' sweet gold",
-            miner.entity.name()
+            entity.name()
         )
     }
 }
 
 impl State {
-    fn VisitBankAndDepositGold_enter(miner: &mut Miner) {
+    fn VisitBankAndDepositGold_enter(
+        entity: &Entity,
+        _: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         if miner.location != Location::Bank {
-            info!("{}: Goin' to the bank. Yes siree", miner.entity.name());
+            info!("{}: Goin' to the bank. Yes siree", entity.name());
 
             miner.change_location(Location::Bank)
         }
     }
 
-    fn VisitBankAndDepositGold_execute(miner: &mut Miner) {
+    fn VisitBankAndDepositGold_execute(
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         miner.transfer_gold_to_wealth();
 
         info!(
             "{}: Depositing gold. Total savings now: {}",
-            miner.entity.name(),
+            entity.name(),
             miner.wealth()
         );
 
         if miner.wealth() >= COMFORT_LEVEL {
             info!(
                 "{}: WooHoo! Rich enough for now. Back home to mah li'lle lady",
-                miner.entity.name()
+                entity.name()
             );
 
-            miner.change_state(Self::GoHomeAndSleepTilRested);
+            state_machine.change_state(entity, Self::GoHomeAndSleepTilRested, miner);
         } else {
-            miner.change_state(Self::EnterMineAndDigForNugget);
+            state_machine.change_state(entity, Self::EnterMineAndDigForNugget, miner);
         }
     }
 
-    fn VisitBankAndDepositGold_exit(miner: &mut Miner) {
-        info!("{}: Leavin' the bank", miner.entity.name());
+    fn VisitBankAndDepositGold_exit(
+        entity: &Entity,
+        _: &mut StateMachine,
+        _: &mut MinerComponents,
+    ) {
+        info!("{}: Leavin' the bank", entity.name());
     }
 }
 
 impl State {
-    fn GoHomeAndSleepTilRested_enter(miner: &mut Miner) {
+    fn GoHomeAndSleepTilRested_enter(
+        entity: &Entity,
+        _: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         if miner.location != Location::Shack {
-            info!("{}: Walkin' home", miner.entity.name());
+            info!("{}: Walkin' home", entity.name());
 
             miner.change_location(Location::Shack)
         }
     }
 
-    fn GoHomeAndSleepTilRested_execute(miner: &mut Miner) {
+    fn GoHomeAndSleepTilRested_execute(
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         if !miner.is_fatigued() {
             info!(
                 "{}: What a God darn fantastic nap! Time to find more gold",
-                miner.entity.name()
+                entity.name()
             );
 
-            miner.change_state(Self::EnterMineAndDigForNugget);
+            state_machine.change_state(entity, Self::EnterMineAndDigForNugget, miner);
         } else {
             miner.rest();
 
-            info!("{}: ZZZZ... ", miner.entity.name());
+            info!("{}: ZZZZ... ", entity.name());
 
-            miner.change_state(Self::GoHomeAndSleepTilRested);
+            state_machine.change_state(entity, Self::GoHomeAndSleepTilRested, miner);
         }
     }
 
-    fn GoHomeAndSleepTilRested_exit(miner: &mut Miner) {
-        info!("{}: Leaving the house", miner.entity.name());
+    fn GoHomeAndSleepTilRested_exit(
+        entity: &Entity,
+        _: &mut StateMachine,
+        _: &mut MinerComponents,
+    ) {
+        info!("{}: Leaving the house", entity.name());
     }
 }
 
 impl State {
-    fn QuenchThirst_enter(miner: &mut Miner) {
+    fn QuenchThirst_enter(entity: &Entity, _: &mut StateMachine, miner: &mut MinerComponents) {
         if miner.location != Location::Saloon {
             info!(
                 "{}: Boy, ah sure is thusty! Walking to the saloon",
-                miner.entity.name()
+                entity.name()
             );
 
             miner.change_location(Location::Shack)
         }
     }
 
-    fn QuenchThirst_execute(miner: &mut Miner) {
+    fn QuenchThirst_execute(
+        entity: &Entity,
+        state_machine: &mut StateMachine,
+        miner: &mut MinerComponents,
+    ) {
         if miner.is_thirsty() {
             miner.buy_and_drink_a_whiskey();
 
-            info!("{}: That's mighty fine sippin liquer", miner.entity.name());
+            info!("{}: That's mighty fine sippin liquer", entity.name());
 
-            miner.change_state(Self::EnterMineAndDigForNugget);
+            state_machine.change_state(entity, Self::EnterMineAndDigForNugget, miner);
         } else {
             error!("ERROR!");
         }
     }
 
-    fn QuenchThirst_exit(miner: &mut Miner) {
-        info!("{}: Leaving the saloon, feelin' good", miner.entity.name());
+    fn QuenchThirst_exit(entity: &Entity, _: &mut StateMachine, _: &mut MinerComponents) {
+        info!("{}: Leaving the saloon, feelin' good", entity.name());
+    }
+}
+
+#[derive(Debug)]
+struct StateMachine {
+    global_state: GlobalState,
+
+    current_state: State,
+    previous_state: Option<State>,
+}
+
+impl Default for StateMachine {
+    fn default() -> Self {
+        Self {
+            global_state: GlobalState::MinerGlobalState,
+            current_state: State::GoHomeAndSleepTilRested,
+            previous_state: None,
+        }
+    }
+}
+
+impl StateMachine {
+    fn update(&mut self, entity: &Entity, miner: &mut MinerComponents) {
+        GlobalState::execute(self.global_state, entity, self, miner);
+
+        State::execute(self.current_state, entity, self, miner);
+    }
+
+    fn change_state(&mut self, entity: &Entity, new_state: State, miner: &mut MinerComponents) {
+        self.previous_state = Some(self.current_state);
+
+        State::exit(self.current_state, entity, self, miner);
+
+        self.current_state = new_state;
+
+        State::enter(self.current_state, entity, self, miner);
+    }
+
+    fn revert_to_previous_state(&mut self, entity: &Entity, miner: &mut MinerComponents) {
+        self.change_state(entity, self.previous_state.unwrap(), miner);
     }
 }
 
@@ -190,38 +362,24 @@ impl Default for Stats {
     }
 }
 
-impl Stats {}
-
 #[derive(Debug)]
-pub struct Miner {
-    entity: Entity,
-    state: State,
+struct MinerComponents {
     location: Location,
     stats: Stats,
 }
 
-impl Miner {
-    pub fn new(name: impl Into<String>) -> Self {
+impl Default for MinerComponents {
+    fn default() -> Self {
         Self {
-            entity: Entity::new(name),
-            state: State::GoHomeAndSleepTilRested,
             location: Location::Shack,
             stats: Stats::default(),
         }
     }
+}
 
-    pub fn update(&mut self) {
+impl MinerComponents {
+    fn update(&mut self) {
         self.stats.thirst += 1;
-
-        State::execute(self.state, self);
-    }
-
-    fn change_state(&mut self, new_state: State) {
-        State::exit(self.state, self);
-
-        self.state = new_state;
-
-        State::enter(self.state, self);
     }
 
     fn change_location(&mut self, location: Location) {
@@ -264,5 +422,29 @@ impl Miner {
 
     fn is_thirsty(&self) -> bool {
         self.stats.thirst >= THIRST_LEVEL
+    }
+}
+
+#[derive(Debug)]
+pub struct Miner {
+    entity: Entity,
+    state_machine: StateMachine,
+    components: MinerComponents,
+}
+
+impl Miner {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            entity: Entity::new(name),
+            state_machine: StateMachine::default(),
+            components: MinerComponents::default(),
+        }
+    }
+
+    pub fn update(&mut self) {
+        self.components.update();
+
+        self.state_machine
+            .update(&self.entity, &mut self.components);
     }
 }

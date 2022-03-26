@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use tracing::{error, info};
+use tracing::info;
 
 use crate::entity::Entity;
 use crate::location::Location;
@@ -294,7 +294,7 @@ impl State {
 
             state_machine.change_state(entity, Self::EnterMineAndDigForNugget, miner);
         } else {
-            error!("ERROR!");
+            unreachable!();
         }
     }
 
@@ -411,7 +411,7 @@ impl MinerComponents {
     }
 
     fn is_fatigued(&self) -> bool {
-        self.stats.fatigue >= TIREDNESS_THRESHOLD
+        self.stats.fatigue > TIREDNESS_THRESHOLD
     }
 
     fn buy_and_drink_a_whiskey(&mut self) {

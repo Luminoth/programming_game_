@@ -343,23 +343,12 @@ impl StateMachine {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Stats {
     gold_carried: i64,
     money_in_bank: i64,
     thirst: i64,
     fatigue: i64,
-}
-
-impl Default for Stats {
-    fn default() -> Self {
-        Self {
-            gold_carried: 0,
-            money_in_bank: 0,
-            thirst: 0,
-            fatigue: 0,
-        }
-    }
 }
 
 #[derive(Debug)]

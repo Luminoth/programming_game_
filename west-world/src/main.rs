@@ -1,10 +1,16 @@
 mod entity;
 mod location;
 mod miner;
+mod wife;
 
-use miner::Miner;
+use std::thread;
+use std::time::Duration;
+
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
+
+use miner::Miner;
+use wife::Wife;
 
 fn init_logging() -> anyhow::Result<()> {
     let subscriber = FmtSubscriber::builder()
@@ -19,8 +25,12 @@ fn init_logging() -> anyhow::Result<()> {
 fn main() -> anyhow::Result<()> {
     init_logging()?;
 
-    let mut miner = Miner::new("Miner Bob");
+    let mut bob = Miner::new("Miner Bob");
+    let mut elsa = Wife::new("Elsa");
     loop {
-        miner.update();
+        bob.update();
+        elsa.update();
+
+        thread::sleep(Duration::from_millis(800));
     }
 }

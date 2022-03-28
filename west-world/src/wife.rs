@@ -4,117 +4,95 @@ use rand::Rng;
 use tracing::info;
 
 use crate::entity::Entity;
+use crate::state::{State, StateMachine};
 
 const BATHROOM_CHANCE: f32 = 0.1;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum GlobalState {
-    WifeGlobalState,
-}
+enum WifeState {
+    GlobalState,
 
-impl GlobalState {
-    fn enter(
-        state: Self,
-        entity: &Entity,
-        state_machine: &mut StateMachine,
-        wife: &mut WifeComponents,
-    ) {
-        match state {
-            Self::WifeGlobalState => Self::WifeGlobalState_enter(entity, state_machine, wife),
-        }
-    }
-
-    fn execute(
-        state: Self,
-        entity: &Entity,
-        state_machine: &mut StateMachine,
-        wife: &mut WifeComponents,
-    ) {
-        match state {
-            Self::WifeGlobalState => Self::WifeGlobalState_execute(entity, state_machine, wife),
-        }
-    }
-
-    fn exit(
-        state: Self,
-        entity: &Entity,
-        state_machine: &mut StateMachine,
-        wife: &mut WifeComponents,
-    ) {
-        match state {
-            Self::WifeGlobalState => Self::WifeGlobalState_exit(entity, state_machine, wife),
-        }
-    }
-}
-
-impl GlobalState {
-    fn WifeGlobalState_enter(_entity: &Entity, _: &mut StateMachine, _wife: &mut WifeComponents) {}
-
-    fn WifeGlobalState_execute(
-        entity: &Entity,
-        state_machine: &mut StateMachine,
-        wife: &mut WifeComponents,
-    ) {
-        let mut rng = rand::thread_rng();
-
-        if rng.gen::<f32>() < BATHROOM_CHANCE {
-            state_machine.change_state(entity, State::VisitBathroom, wife)
-        }
-    }
-
-    fn WifeGlobalState_exit(_entity: &Entity, _: &mut StateMachine, _wife: &mut WifeComponents) {}
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum State {
     DoHouseWork,
     VisitBathroom,
 }
 
-impl State {
+impl State<WifeComponents> for WifeState {
+    type StateMachine = WifeStateMachine;
+
     fn enter(
-        state: Self,
+        self,
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut Self::StateMachine,
         wife: &mut WifeComponents,
     ) {
-        match state {
+        match self {
+            Self::GlobalState => Self::WifeGlobalState_enter(entity, state_machine, wife),
             Self::DoHouseWork => Self::DoHouseWork_enter(entity, state_machine, wife),
             Self::VisitBathroom => Self::VisitBathroom_enter(entity, state_machine, wife),
         }
     }
 
     fn execute(
-        state: Self,
+        self,
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut Self::StateMachine,
         wife: &mut WifeComponents,
     ) {
-        match state {
+        match self {
+            Self::GlobalState => Self::WifeGlobalState_execute(entity, state_machine, wife),
             Self::DoHouseWork => Self::DoHouseWork_execute(entity, state_machine, wife),
             Self::VisitBathroom => Self::VisitBathroom_execute(entity, state_machine, wife),
         }
     }
 
     fn exit(
-        state: Self,
+        self,
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut Self::StateMachine,
         wife: &mut WifeComponents,
     ) {
-        match state {
+        match self {
+            Self::GlobalState => Self::WifeGlobalState_exit(entity, state_machine, wife),
             Self::DoHouseWork => Self::DoHouseWork_exit(entity, state_machine, wife),
             Self::VisitBathroom => Self::VisitBathroom_exit(entity, state_machine, wife),
         }
     }
 }
 
-impl State {
-    fn DoHouseWork_enter(_entity: &Entity, _: &mut StateMachine, _wife: &mut WifeComponents) {}
+impl WifeState {
+    fn WifeGlobalState_enter(
+        _entity: &Entity,
+        _: &mut WifeStateMachine,
+        _wife: &mut WifeComponents,
+    ) {
+    }
+
+    fn WifeGlobalState_execute(
+        entity: &Entity,
+        state_machine: &mut WifeStateMachine,
+        wife: &mut WifeComponents,
+    ) {
+        let mut rng = rand::thread_rng();
+
+        if rng.gen::<f32>() < BATHROOM_CHANCE {
+            state_machine.change_state(entity, Self::VisitBathroom, wife)
+        }
+    }
+
+    fn WifeGlobalState_exit(
+        _entity: &Entity,
+        _: &mut WifeStateMachine,
+        _wife: &mut WifeComponents,
+    ) {
+    }
+}
+
+impl WifeState {
+    fn DoHouseWork_enter(_entity: &Entity, _: &mut WifeStateMachine, _wife: &mut WifeComponents) {}
 
     fn DoHouseWork_execute(
         entity: &Entity,
-        _state_machine: &mut StateMachine,
+        _state_machine: &mut WifeStateMachine,
         _wife: &mut WifeComponents,
     ) {
         let mut rng = rand::thread_rng();
@@ -127,11 +105,11 @@ impl State {
         }
     }
 
-    fn DoHouseWork_exit(_entity: &Entity, _: &mut StateMachine, _: &mut WifeComponents) {}
+    fn DoHouseWork_exit(_entity: &Entity, _: &mut WifeStateMachine, _: &mut WifeComponents) {}
 }
 
-impl State {
-    fn VisitBathroom_enter(entity: &Entity, _: &mut StateMachine, _wife: &mut WifeComponents) {
+impl WifeState {
+    fn VisitBathroom_enter(entity: &Entity, _: &mut WifeStateMachine, _wife: &mut WifeComponents) {
         info!(
             "{}: Walkin' to the can. Need to powda mah pretty li'lle nose",
             entity.name()
@@ -140,7 +118,7 @@ impl State {
 
     fn VisitBathroom_execute(
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut WifeStateMachine,
         wife: &mut WifeComponents,
     ) {
         info!("{}: Ahhhhhh! Sweet relief!", entity.name(),);
@@ -148,48 +126,50 @@ impl State {
         state_machine.revert_to_previous_state(entity, wife);
     }
 
-    fn VisitBathroom_exit(entity: &Entity, _: &mut StateMachine, _: &mut WifeComponents) {
+    fn VisitBathroom_exit(entity: &Entity, _: &mut WifeStateMachine, _: &mut WifeComponents) {
         info!("{}: Leavin' the Jon", entity.name());
     }
 }
 
 #[derive(Debug)]
-struct StateMachine {
-    global_state: GlobalState,
+struct WifeStateMachine {
+    global_state: WifeState,
 
-    current_state: State,
-    previous_state: Option<State>,
+    current_state: WifeState,
+    previous_state: Option<WifeState>,
 }
 
-impl Default for StateMachine {
+impl Default for WifeStateMachine {
     fn default() -> Self {
         Self {
-            global_state: GlobalState::WifeGlobalState,
-            current_state: State::DoHouseWork,
+            global_state: WifeState::GlobalState,
+            current_state: WifeState::DoHouseWork,
             previous_state: None,
         }
     }
 }
 
-impl StateMachine {
-    fn update(&mut self, entity: &Entity, miner: &mut WifeComponents) {
-        GlobalState::execute(self.global_state, entity, self, miner);
+impl StateMachine<WifeComponents> for WifeStateMachine {
+    type State = WifeState;
 
-        State::execute(self.current_state, entity, self, miner);
+    fn update(&mut self, entity: &Entity, wife: &mut WifeComponents) {
+        self.global_state.execute(entity, self, wife);
+
+        self.current_state.execute(entity, self, wife);
     }
 
-    fn change_state(&mut self, entity: &Entity, new_state: State, miner: &mut WifeComponents) {
+    fn change_state(&mut self, entity: &Entity, new_state: Self::State, wife: &mut WifeComponents) {
         self.previous_state = Some(self.current_state);
 
-        State::exit(self.current_state, entity, self, miner);
+        self.current_state.exit(entity, self, wife);
 
         self.current_state = new_state;
 
-        State::enter(self.current_state, entity, self, miner);
+        self.current_state.enter(entity, self, wife);
     }
 
-    fn revert_to_previous_state(&mut self, entity: &Entity, miner: &mut WifeComponents) {
-        self.change_state(entity, self.previous_state.unwrap(), miner);
+    fn revert_to_previous_state(&mut self, entity: &Entity, wife: &mut WifeComponents) {
+        self.change_state(entity, self.previous_state.unwrap(), wife);
     }
 }
 
@@ -203,7 +183,7 @@ impl WifeComponents {
 #[derive(Debug)]
 pub struct Wife {
     entity: Entity,
-    state_machine: StateMachine,
+    state_machine: WifeStateMachine,
     components: WifeComponents,
 }
 
@@ -211,7 +191,7 @@ impl Wife {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             entity: Entity::new(name),
-            state_machine: StateMachine::default(),
+            state_machine: WifeStateMachine::default(),
             components: WifeComponents::default(),
         }
     }

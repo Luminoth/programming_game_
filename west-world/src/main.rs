@@ -1,6 +1,7 @@
 mod entity;
 mod location;
 mod miner;
+mod state;
 mod wife;
 
 use std::thread;

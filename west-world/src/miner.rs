@@ -4,6 +4,7 @@ use tracing::info;
 
 use crate::entity::Entity;
 use crate::location::Location;
+use crate::state::{State, StateMachine};
 
 const COMFORT_LEVEL: i64 = 5;
 const MAX_NUGGETS: i64 = 3;
@@ -11,80 +12,26 @@ const THIRST_LEVEL: i64 = 5;
 const TIREDNESS_THRESHOLD: i64 = 5;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum GlobalState {
-    MinerGlobalState,
-}
+enum MinerState {
+    GlobalState,
 
-impl GlobalState {
-    fn enter(
-        state: Self,
-        entity: &Entity,
-        state_machine: &mut StateMachine,
-        miner: &mut MinerComponents,
-    ) {
-        match state {
-            Self::MinerGlobalState => Self::MinerGlobalState_enter(entity, state_machine, miner),
-        }
-    }
-
-    fn execute(
-        state: Self,
-        entity: &Entity,
-        state_machine: &mut StateMachine,
-        miner: &mut MinerComponents,
-    ) {
-        match state {
-            Self::MinerGlobalState => Self::MinerGlobalState_execute(entity, state_machine, miner),
-        }
-    }
-
-    fn exit(
-        state: Self,
-        entity: &Entity,
-        state_machine: &mut StateMachine,
-        miner: &mut MinerComponents,
-    ) {
-        match state {
-            Self::MinerGlobalState => Self::MinerGlobalState_exit(entity, state_machine, miner),
-        }
-    }
-}
-
-impl GlobalState {
-    fn MinerGlobalState_enter(
-        _entity: &Entity,
-        _: &mut StateMachine,
-        _miner: &mut MinerComponents,
-    ) {
-    }
-
-    fn MinerGlobalState_execute(
-        _entity: &Entity,
-        _state_machine: &mut StateMachine,
-        _miner: &mut MinerComponents,
-    ) {
-    }
-
-    fn MinerGlobalState_exit(_entity: &Entity, _: &mut StateMachine, _miner: &mut MinerComponents) {
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum State {
     EnterMineAndDigForNugget,
     VisitBankAndDepositGold,
     GoHomeAndSleepTilRested,
     QuenchThirst,
 }
 
-impl State {
+impl State<MinerComponents> for MinerState {
+    type StateMachine = MinerStateMachine;
+
     fn enter(
-        state: Self,
+        self,
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut Self::StateMachine,
         miner: &mut MinerComponents,
     ) {
-        match state {
+        match self {
+            Self::GlobalState => Self::GlobalState_enter(entity, state_machine, miner),
             Self::EnterMineAndDigForNugget => {
                 Self::EnterMineAndDigForNugget_enter(entity, state_machine, miner)
             }
@@ -99,12 +46,13 @@ impl State {
     }
 
     fn execute(
-        state: Self,
+        self,
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut Self::StateMachine,
         miner: &mut MinerComponents,
     ) {
-        match state {
+        match self {
+            Self::GlobalState => Self::GlobalState_execute(entity, state_machine, miner),
             Self::EnterMineAndDigForNugget => {
                 Self::EnterMineAndDigForNugget_execute(entity, state_machine, miner)
             }
@@ -119,12 +67,13 @@ impl State {
     }
 
     fn exit(
-        state: Self,
+        self,
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut Self::StateMachine,
         miner: &mut MinerComponents,
     ) {
-        match state {
+        match self {
+            Self::GlobalState => Self::GlobalState_exit(entity, state_machine, miner),
             Self::EnterMineAndDigForNugget => {
                 Self::EnterMineAndDigForNugget_exit(entity, state_machine, miner)
             }
@@ -139,10 +88,29 @@ impl State {
     }
 }
 
-impl State {
+impl MinerState {
+    fn GlobalState_enter(
+        _entity: &Entity,
+        _: &mut MinerStateMachine,
+        _miner: &mut MinerComponents,
+    ) {
+    }
+
+    fn GlobalState_execute(
+        _entity: &Entity,
+        _state_machine: &mut MinerStateMachine,
+        _miner: &mut MinerComponents,
+    ) {
+    }
+
+    fn GlobalState_exit(_entity: &Entity, _: &mut MinerStateMachine, _miner: &mut MinerComponents) {
+    }
+}
+
+impl MinerState {
     fn EnterMineAndDigForNugget_enter(
         entity: &Entity,
-        _: &mut StateMachine,
+        _: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         if miner.location != Location::GoldMine {
@@ -154,7 +122,7 @@ impl State {
 
     fn EnterMineAndDigForNugget_execute(
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         miner.mine_gold();
@@ -170,7 +138,7 @@ impl State {
 
     fn EnterMineAndDigForNugget_exit(
         entity: &Entity,
-        _: &mut StateMachine,
+        _: &mut MinerStateMachine,
         _: &mut MinerComponents,
     ) {
         info!(
@@ -180,10 +148,10 @@ impl State {
     }
 }
 
-impl State {
+impl MinerState {
     fn VisitBankAndDepositGold_enter(
         entity: &Entity,
-        _: &mut StateMachine,
+        _: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         if miner.location != Location::Bank {
@@ -195,7 +163,7 @@ impl State {
 
     fn VisitBankAndDepositGold_execute(
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         miner.transfer_gold_to_wealth();
@@ -220,17 +188,17 @@ impl State {
 
     fn VisitBankAndDepositGold_exit(
         entity: &Entity,
-        _: &mut StateMachine,
+        _: &mut MinerStateMachine,
         _: &mut MinerComponents,
     ) {
         info!("{}: Leavin' the bank", entity.name());
     }
 }
 
-impl State {
+impl MinerState {
     fn GoHomeAndSleepTilRested_enter(
         entity: &Entity,
-        _: &mut StateMachine,
+        _: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         if miner.location != Location::Shack {
@@ -242,7 +210,7 @@ impl State {
 
     fn GoHomeAndSleepTilRested_execute(
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         if !miner.is_fatigued() {
@@ -263,15 +231,15 @@ impl State {
 
     fn GoHomeAndSleepTilRested_exit(
         entity: &Entity,
-        _: &mut StateMachine,
+        _: &mut MinerStateMachine,
         _: &mut MinerComponents,
     ) {
         info!("{}: Leaving the house", entity.name());
     }
 }
 
-impl State {
-    fn QuenchThirst_enter(entity: &Entity, _: &mut StateMachine, miner: &mut MinerComponents) {
+impl MinerState {
+    fn QuenchThirst_enter(entity: &Entity, _: &mut MinerStateMachine, miner: &mut MinerComponents) {
         if miner.location != Location::Saloon {
             info!(
                 "{}: Boy, ah sure is thusty! Walking to the saloon",
@@ -284,7 +252,7 @@ impl State {
 
     fn QuenchThirst_execute(
         entity: &Entity,
-        state_machine: &mut StateMachine,
+        state_machine: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         if miner.is_thirsty() {
@@ -298,44 +266,51 @@ impl State {
         }
     }
 
-    fn QuenchThirst_exit(entity: &Entity, _: &mut StateMachine, _: &mut MinerComponents) {
+    fn QuenchThirst_exit(entity: &Entity, _: &mut MinerStateMachine, _: &mut MinerComponents) {
         info!("{}: Leaving the saloon, feelin' good", entity.name());
     }
 }
 
 #[derive(Debug)]
-struct StateMachine {
-    global_state: GlobalState,
+struct MinerStateMachine {
+    global_state: MinerState,
 
-    current_state: State,
-    previous_state: Option<State>,
+    current_state: MinerState,
+    previous_state: Option<MinerState>,
 }
 
-impl Default for StateMachine {
+impl Default for MinerStateMachine {
     fn default() -> Self {
         Self {
-            global_state: GlobalState::MinerGlobalState,
-            current_state: State::GoHomeAndSleepTilRested,
+            global_state: MinerState::GlobalState,
+            current_state: MinerState::GoHomeAndSleepTilRested,
             previous_state: None,
         }
     }
 }
 
-impl StateMachine {
-    fn update(&mut self, entity: &Entity, miner: &mut MinerComponents) {
-        GlobalState::execute(self.global_state, entity, self, miner);
+impl StateMachine<MinerComponents> for MinerStateMachine {
+    type State = MinerState;
 
-        State::execute(self.current_state, entity, self, miner);
+    fn update(&mut self, entity: &Entity, miner: &mut MinerComponents) {
+        self.global_state.execute(entity, self, miner);
+
+        self.current_state.execute(entity, self, miner);
     }
 
-    fn change_state(&mut self, entity: &Entity, new_state: State, miner: &mut MinerComponents) {
+    fn change_state(
+        &mut self,
+        entity: &Entity,
+        new_state: Self::State,
+        miner: &mut MinerComponents,
+    ) {
         self.previous_state = Some(self.current_state);
 
-        State::exit(self.current_state, entity, self, miner);
+        self.current_state.exit(entity, self, miner);
 
         self.current_state = new_state;
 
-        State::enter(self.current_state, entity, self, miner);
+        self.current_state.enter(entity, self, miner);
     }
 
     fn revert_to_previous_state(&mut self, entity: &Entity, miner: &mut MinerComponents) {
@@ -417,7 +392,7 @@ impl MinerComponents {
 #[derive(Debug)]
 pub struct Miner {
     entity: Entity,
-    state_machine: StateMachine,
+    state_machine: MinerStateMachine,
     components: MinerComponents,
 }
 
@@ -425,7 +400,7 @@ impl Miner {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             entity: Entity::new(name),
-            state_machine: StateMachine::default(),
+            state_machine: MinerStateMachine::default(),
             components: MinerComponents::default(),
         }
     }

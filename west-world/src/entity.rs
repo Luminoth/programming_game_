@@ -1,8 +1,10 @@
 use std::sync::atomic::{AtomicI64, Ordering};
 
+pub type EntityId = i64;
+
 #[derive(Debug)]
 pub struct Entity {
-    id: i64,
+    id: EntityId,
     name: String,
 }
 
@@ -16,7 +18,7 @@ impl Entity {
         }
     }
 
-    pub fn id(&self) -> i64 {
+    pub fn id(&self) -> EntityId {
         self.id
     }
 

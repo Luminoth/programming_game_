@@ -1,15 +1,19 @@
 mod entity;
 mod location;
+mod messaging;
 mod miner;
 mod state;
 mod wife;
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::thread;
 use std::time::Duration;
 
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
+use messaging::MessageDispatcher;
 use miner::Miner;
 use wife::Wife;
 
@@ -26,11 +30,19 @@ fn init_logging() -> anyhow::Result<()> {
 fn main() -> anyhow::Result<()> {
     init_logging()?;
 
-    let mut bob = Miner::new("Miner Bob");
-    let mut elsa = Wife::new("Elsa");
+    let mut dispatcher = MessageDispatcher::default();
+
+    let bob = Rc::new(RefCell::new(Miner::new("Miner Bob")));
+    dispatcher.register_message_receiver(bob.borrow().entity(), bob.clone());
+
+    let elsa = Rc::new(RefCell::new(Wife::new("Elsa")));
+    dispatcher.register_message_receiver(elsa.borrow().entity(), elsa.clone());
+
     loop {
-        bob.update();
-        elsa.update();
+        bob.borrow_mut().update();
+        elsa.borrow_mut().update();
+
+        dispatcher.dispatch_deferred_messages();
 
         thread::sleep(Duration::from_millis(800));
     }

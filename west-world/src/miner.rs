@@ -2,8 +2,9 @@
 
 use tracing::info;
 
-use crate::entity::Entity;
+use crate::entity::{Entity, EntityId};
 use crate::location::Location;
+use crate::messaging::{Message, MessageReceiver};
 use crate::state::{State, StateMachine};
 
 const COMFORT_LEVEL: i64 = 5;
@@ -84,6 +85,23 @@ impl State<MinerComponents> for MinerState {
                 Self::GoHomeAndSleepTilRested_exit(entity, state_machine, miner)
             }
             Self::QuenchThirst => Self::QuenchThirst_exit(entity, state_machine, miner),
+        }
+    }
+
+    fn on_message(
+        self,
+        entity: &Entity,
+        state_machine: &mut Self::StateMachine,
+        data: &mut MinerComponents,
+        sender: EntityId,
+        message: &Message,
+    ) -> bool {
+        match self {
+            Self::GlobalState => false,
+            Self::EnterMineAndDigForNugget => false,
+            Self::VisitBankAndDepositGold => false,
+            Self::GoHomeAndSleepTilRested => false,
+            Self::QuenchThirst => false,
         }
     }
 }
@@ -316,6 +334,24 @@ impl StateMachine<MinerComponents> for MinerStateMachine {
     fn revert_to_previous_state(&mut self, entity: &Entity, miner: &mut MinerComponents) {
         self.change_state(entity, self.previous_state.unwrap(), miner);
     }
+
+    fn handle_message(
+        &mut self,
+        entity: &Entity,
+        miner: &mut MinerComponents,
+        sender: EntityId,
+        message: Message,
+    ) {
+        if self
+            .current_state
+            .on_message(entity, self, miner, sender, &message)
+        {
+            return;
+        }
+
+        self.global_state
+            .on_message(entity, self, miner, sender, &message);
+    }
 }
 
 #[derive(Debug, Default)]
@@ -405,10 +441,21 @@ impl Miner {
         }
     }
 
+    pub fn entity(&self) -> &Entity {
+        &self.entity
+    }
+
     pub fn update(&mut self) {
         self.components.update();
 
         self.state_machine
             .update(&self.entity, &mut self.components);
+    }
+}
+
+impl MessageReceiver for Miner {
+    fn receive_message(&mut self, sender: EntityId, message: Message) {
+        self.state_machine
+            .handle_message(&self.entity, &mut self.components, sender, message);
     }
 }

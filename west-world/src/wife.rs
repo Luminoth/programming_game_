@@ -3,7 +3,8 @@
 use rand::Rng;
 use tracing::info;
 
-use crate::entity::Entity;
+use crate::entity::{Entity, EntityId};
+use crate::messaging::{Message, MessageReceiver};
 use crate::state::{State, StateMachine};
 
 const BATHROOM_CHANCE: f32 = 0.1;
@@ -55,6 +56,21 @@ impl State<WifeComponents> for WifeState {
             Self::GlobalState => Self::WifeGlobalState_exit(entity, state_machine, wife),
             Self::DoHouseWork => Self::DoHouseWork_exit(entity, state_machine, wife),
             Self::VisitBathroom => Self::VisitBathroom_exit(entity, state_machine, wife),
+        }
+    }
+
+    fn on_message(
+        self,
+        entity: &Entity,
+        state_machine: &mut Self::StateMachine,
+        data: &mut WifeComponents,
+        sender: EntityId,
+        message: &Message,
+    ) -> bool {
+        match self {
+            Self::GlobalState => false,
+            Self::DoHouseWork => false,
+            Self::VisitBathroom => false,
         }
     }
 }
@@ -171,6 +187,24 @@ impl StateMachine<WifeComponents> for WifeStateMachine {
     fn revert_to_previous_state(&mut self, entity: &Entity, wife: &mut WifeComponents) {
         self.change_state(entity, self.previous_state.unwrap(), wife);
     }
+
+    fn handle_message(
+        &mut self,
+        entity: &Entity,
+        miner: &mut WifeComponents,
+        sender: EntityId,
+        message: Message,
+    ) {
+        if self
+            .current_state
+            .on_message(entity, self, miner, sender, &message)
+        {
+            return;
+        }
+
+        self.global_state
+            .on_message(entity, self, miner, sender, &message);
+    }
 }
 
 #[derive(Debug, Default)]
@@ -196,10 +230,21 @@ impl Wife {
         }
     }
 
+    pub fn entity(&self) -> &Entity {
+        &self.entity
+    }
+
     pub fn update(&mut self) {
         self.components.update();
 
         self.state_machine
             .update(&self.entity, &mut self.components);
+    }
+}
+
+impl MessageReceiver for Wife {
+    fn receive_message(&mut self, sender: EntityId, message: Message) {
+        self.state_machine
+            .handle_message(&self.entity, &mut self.components, sender, message);
     }
 }

@@ -4,6 +4,7 @@ use std::collections::{BinaryHeap, HashMap};
 use std::rc::Rc;
 
 use chrono::prelude::*;
+use tracing::debug;
 
 use crate::entity::{Entity, EntityId};
 
@@ -46,6 +47,8 @@ impl PartialOrd for Telegram {
 
 impl Ord for Telegram {
     fn cmp(&self, other: &Self) -> Ordering {
+        // TODO: this may need to be reversed
+        // so that we get a time-ordered min-heap?
         self.dispatch_time.cmp(&other.dispatch_time)
     }
 }
@@ -63,48 +66,55 @@ impl Telegram {
 
 #[derive(Default)]
 pub struct MessageDispatcher {
-    receivers: HashMap<EntityId, Rc<RefCell<dyn MessageReceiver>>>,
+    receivers: RefCell<HashMap<EntityId, Rc<RefCell<dyn MessageReceiver>>>>,
 
-    queue: BinaryHeap<Telegram>,
+    queue: RefCell<BinaryHeap<Telegram>>,
 }
 
 impl MessageDispatcher {
     pub fn register_message_receiver(
-        &mut self,
+        &self,
         entity: &Entity,
         receiver: Rc<RefCell<dyn MessageReceiver>>,
     ) {
-        self.receivers.insert(entity.id(), receiver);
+        self.receivers.borrow_mut().insert(entity.id(), receiver);
     }
 
-    pub fn dispatch_deferred_messages(&mut self) {
+    pub fn dispatch_deferred_messages(&self) {
         let now = Utc::now().timestamp_millis();
 
-        while let Some(telegram) = self.queue.peek() {
-            if telegram.dispatch_time > now {
-                break;
+        debug!("now: {}, queue: {:?}", now, self.queue.borrow());
+
+        loop {
+            if let Some(telegram) = self.queue.borrow().peek() {
+                if telegram.dispatch_time > now {
+                    return;
+                }
+            } else {
+                return;
             }
 
-            let telegram = self.queue.pop().unwrap();
+            let telegram = self.queue.borrow_mut().pop().unwrap();
             self.discharge(telegram);
         }
     }
 
-    fn discharge(&mut self, telegram: Telegram) {
-        if let Some(receiver) = self.receivers.get_mut(&telegram.receiver) {
+    fn discharge(&self, telegram: Telegram) {
+        if let Some(receiver) = self.receivers.borrow_mut().get_mut(&telegram.receiver) {
             receiver
                 .borrow_mut()
                 .receive_message(telegram.sender, telegram.message)
         }
     }
 
-    pub fn dispatch_message(&mut self, sender: EntityId, receiver: EntityId, message: Message) {
-        let telegram = Telegram::new(0, sender, receiver, message);
-        self.discharge(telegram);
+    pub fn dispatch_message(&self, sender: EntityId, receiver: EntityId, message: Message) {
+        // we always defer so that entities sending messages to themselves
+        // doesn't cause a double mutable borrow on the receiver
+        self.defer_dispatch_message(sender, receiver, message, 0.0);
     }
 
     pub fn defer_dispatch_message(
-        &mut self,
+        &self,
         sender: EntityId,
         receiver: EntityId,
         message: Message,
@@ -118,6 +128,6 @@ impl MessageDispatcher {
             message,
         );
 
-        self.queue.push(telegram)
+        self.queue.borrow_mut().push(telegram);
     }
 }

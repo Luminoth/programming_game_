@@ -185,7 +185,7 @@ impl WifeState {
 
         state_machine
             .message_dispatcher()
-            .borrow_mut()
+            .borrow()
             .defer_dispatch_message(entity.id(), entity.id(), Message::StewIsReady, 1.5);
 
         wife.cooking = true;
@@ -216,7 +216,7 @@ impl WifeState {
 
                 state_machine
                     .message_dispatcher()
-                    .borrow_mut()
+                    .borrow()
                     .dispatch_message(entity.id(), wife.miner_id.unwrap(), Message::StewIsReady);
 
                 wife.cooking = false;

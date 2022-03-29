@@ -222,7 +222,7 @@ impl MinerState {
 
             state_machine
                 .message_dispatcher()
-                .borrow_mut()
+                .borrow()
                 .dispatch_message(entity.id(), miner.wife_id.unwrap(), Message::HiHoneyImHome);
         }
     }

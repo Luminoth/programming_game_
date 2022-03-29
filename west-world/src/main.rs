@@ -30,19 +30,27 @@ fn init_logging() -> anyhow::Result<()> {
 fn main() -> anyhow::Result<()> {
     init_logging()?;
 
-    let mut dispatcher = MessageDispatcher::default();
+    let dispatcher = Rc::new(RefCell::new(MessageDispatcher::default()));
 
-    let bob = Rc::new(RefCell::new(Miner::new("Miner Bob")));
-    dispatcher.register_message_receiver(bob.borrow().entity(), bob.clone());
+    let bob = Rc::new(RefCell::new(Miner::new("Miner Bob", dispatcher.clone())));
+    dispatcher
+        .borrow_mut()
+        .register_message_receiver(bob.borrow().entity(), bob.clone());
 
-    let elsa = Rc::new(RefCell::new(Wife::new("Elsa")));
-    dispatcher.register_message_receiver(elsa.borrow().entity(), elsa.clone());
+    let elsa = Rc::new(RefCell::new(Wife::new("Elsa", dispatcher.clone())));
+    dispatcher
+        .borrow_mut()
+        .register_message_receiver(elsa.borrow().entity(), elsa.clone());
+
+    bob.borrow_mut().set_wife_id(elsa.borrow().entity().id());
+    elsa.borrow_mut().set_miner_id(bob.borrow().entity().id());
 
     loop {
         bob.borrow_mut().update();
         elsa.borrow_mut().update();
 
-        dispatcher.dispatch_deferred_messages();
+        // TODO: this panics due to multiple mutable borrows
+        dispatcher.borrow_mut().dispatch_deferred_messages();
 
         thread::sleep(Duration::from_millis(800));
     }

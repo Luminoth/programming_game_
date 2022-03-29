@@ -1,10 +1,14 @@
 #![allow(non_snake_case)]
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use chrono::prelude::*;
 use tracing::info;
 
 use crate::entity::{Entity, EntityId};
 use crate::location::Location;
-use crate::messaging::{Message, MessageReceiver};
+use crate::messaging::{Message, MessageDispatcher, MessageReceiver};
 use crate::state::{State, StateMachine};
 
 const COMFORT_LEVEL: i64 = 5;
@@ -20,6 +24,7 @@ enum MinerState {
     VisitBankAndDepositGold,
     GoHomeAndSleepTilRested,
     QuenchThirst,
+    EatStew,
 }
 
 impl State<MinerComponents> for MinerState {
@@ -32,7 +37,7 @@ impl State<MinerComponents> for MinerState {
         miner: &mut MinerComponents,
     ) {
         match self {
-            Self::GlobalState => Self::GlobalState_enter(entity, state_machine, miner),
+            Self::GlobalState => (),
             Self::EnterMineAndDigForNugget => {
                 Self::EnterMineAndDigForNugget_enter(entity, state_machine, miner)
             }
@@ -43,6 +48,7 @@ impl State<MinerComponents> for MinerState {
                 Self::GoHomeAndSleepTilRested_enter(entity, state_machine, miner)
             }
             Self::QuenchThirst => Self::QuenchThirst_enter(entity, state_machine, miner),
+            Self::EatStew => Self::EatStew_enter(entity, state_machine, miner),
         }
     }
 
@@ -53,7 +59,7 @@ impl State<MinerComponents> for MinerState {
         miner: &mut MinerComponents,
     ) {
         match self {
-            Self::GlobalState => Self::GlobalState_execute(entity, state_machine, miner),
+            Self::GlobalState => (),
             Self::EnterMineAndDigForNugget => {
                 Self::EnterMineAndDigForNugget_execute(entity, state_machine, miner)
             }
@@ -64,6 +70,7 @@ impl State<MinerComponents> for MinerState {
                 Self::GoHomeAndSleepTilRested_execute(entity, state_machine, miner)
             }
             Self::QuenchThirst => Self::QuenchThirst_execute(entity, state_machine, miner),
+            Self::EatStew => Self::EatStew_execute(entity, state_machine, miner),
         }
     }
 
@@ -74,7 +81,7 @@ impl State<MinerComponents> for MinerState {
         miner: &mut MinerComponents,
     ) {
         match self {
-            Self::GlobalState => Self::GlobalState_exit(entity, state_machine, miner),
+            Self::GlobalState => (),
             Self::EnterMineAndDigForNugget => {
                 Self::EnterMineAndDigForNugget_exit(entity, state_machine, miner)
             }
@@ -85,6 +92,7 @@ impl State<MinerComponents> for MinerState {
                 Self::GoHomeAndSleepTilRested_exit(entity, state_machine, miner)
             }
             Self::QuenchThirst => Self::QuenchThirst_exit(entity, state_machine, miner),
+            Self::EatStew => Self::EatStew_exit(entity, state_machine, miner),
         }
     }
 
@@ -92,7 +100,7 @@ impl State<MinerComponents> for MinerState {
         self,
         entity: &Entity,
         state_machine: &mut Self::StateMachine,
-        data: &mut MinerComponents,
+        miner: &mut MinerComponents,
         sender: EntityId,
         message: &Message,
     ) -> bool {
@@ -100,28 +108,16 @@ impl State<MinerComponents> for MinerState {
             Self::GlobalState => false,
             Self::EnterMineAndDigForNugget => false,
             Self::VisitBankAndDepositGold => false,
-            Self::GoHomeAndSleepTilRested => false,
+            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_on_message(
+                entity,
+                state_machine,
+                miner,
+                sender,
+                message,
+            ),
             Self::QuenchThirst => false,
+            Self::EatStew => false,
         }
-    }
-}
-
-impl MinerState {
-    fn GlobalState_enter(
-        _entity: &Entity,
-        _: &mut MinerStateMachine,
-        _miner: &mut MinerComponents,
-    ) {
-    }
-
-    fn GlobalState_execute(
-        _entity: &Entity,
-        _state_machine: &mut MinerStateMachine,
-        _miner: &mut MinerComponents,
-    ) {
-    }
-
-    fn GlobalState_exit(_entity: &Entity, _: &mut MinerStateMachine, _miner: &mut MinerComponents) {
     }
 }
 
@@ -216,13 +212,18 @@ impl MinerState {
 impl MinerState {
     fn GoHomeAndSleepTilRested_enter(
         entity: &Entity,
-        _: &mut MinerStateMachine,
+        state_machine: &mut MinerStateMachine,
         miner: &mut MinerComponents,
     ) {
         if miner.location != Location::Shack {
             info!("{}: Walkin' home", entity.name());
 
-            miner.change_location(Location::Shack)
+            miner.change_location(Location::Shack);
+
+            state_machine
+                .message_dispatcher()
+                .borrow_mut()
+                .dispatch_message(entity.id(), miner.wife_id.unwrap(), Message::HiHoneyImHome);
         }
     }
 
@@ -253,6 +254,28 @@ impl MinerState {
         _: &mut MinerComponents,
     ) {
         info!("{}: Leaving the house", entity.name());
+    }
+
+    fn GoHomeAndSleepTilRested_on_message(
+        entity: &Entity,
+        state_machine: &mut MinerStateMachine,
+        miner: &mut MinerComponents,
+        _sender: EntityId,
+        message: &Message,
+    ) -> bool {
+        match message {
+            Message::StewIsReady => {
+                let now = Utc::now();
+
+                info!("Message handled by {} at time: {}", entity.name(), now);
+                info!("{}: Ok hun, ahm a-comin'!", entity.name());
+
+                state_machine.change_state(entity, Self::EatStew, miner);
+
+                true
+            }
+            _ => false,
+        }
     }
 }
 
@@ -289,21 +312,50 @@ impl MinerState {
     }
 }
 
-#[derive(Debug)]
+impl MinerState {
+    fn EatStew_enter(entity: &Entity, _: &mut MinerStateMachine, _: &mut MinerComponents) {
+        info!("{}: Smells reaaal good Elsa!", entity.name());
+    }
+
+    fn EatStew_execute(
+        entity: &Entity,
+        state_machine: &mut MinerStateMachine,
+        miner: &mut MinerComponents,
+    ) {
+        info!("{}: Tastes reaaal good too!", entity.name());
+
+        state_machine.revert_to_previous_state(entity, miner);
+    }
+
+    fn EatStew_exit(entity: &Entity, _: &mut MinerStateMachine, _: &mut MinerComponents) {
+        info!(
+            "{}: Thankya li'lle lady. Ah better get back to whatever ah wuz doin'",
+            entity.name()
+        );
+    }
+}
+
 struct MinerStateMachine {
     global_state: MinerState,
 
     current_state: MinerState,
     previous_state: Option<MinerState>,
+
+    message_dispatcher: Rc<RefCell<MessageDispatcher>>,
 }
 
-impl Default for MinerStateMachine {
-    fn default() -> Self {
+impl MinerStateMachine {
+    fn new(message_dispatcher: Rc<RefCell<MessageDispatcher>>) -> Self {
         Self {
             global_state: MinerState::GlobalState,
             current_state: MinerState::GoHomeAndSleepTilRested,
             previous_state: None,
+            message_dispatcher,
         }
+    }
+
+    fn message_dispatcher(&self) -> &Rc<RefCell<MessageDispatcher>> {
+        &self.message_dispatcher
     }
 }
 
@@ -366,6 +418,7 @@ struct Stats {
 struct MinerComponents {
     location: Location,
     stats: Stats,
+    wife_id: Option<EntityId>,
 }
 
 impl Default for MinerComponents {
@@ -373,6 +426,7 @@ impl Default for MinerComponents {
         Self {
             location: Location::Shack,
             stats: Stats::default(),
+            wife_id: None,
         }
     }
 }
@@ -425,7 +479,6 @@ impl MinerComponents {
     }
 }
 
-#[derive(Debug)]
 pub struct Miner {
     entity: Entity,
     state_machine: MinerStateMachine,
@@ -433,16 +486,23 @@ pub struct Miner {
 }
 
 impl Miner {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        message_dispatcher: Rc<RefCell<MessageDispatcher>>,
+    ) -> Self {
         Self {
             entity: Entity::new(name),
-            state_machine: MinerStateMachine::default(),
+            state_machine: MinerStateMachine::new(message_dispatcher),
             components: MinerComponents::default(),
         }
     }
 
     pub fn entity(&self) -> &Entity {
         &self.entity
+    }
+
+    pub fn set_wife_id(&mut self, wife_id: EntityId) {
+        self.components.wife_id = Some(wife_id);
     }
 
     pub fn update(&mut self) {

@@ -108,10 +108,15 @@ impl MessageDispatcher {
         sender: EntityId,
         receiver: EntityId,
         message: Message,
-        delay: i64,
+        delay_seconds: f64,
     ) {
         let now = Utc::now().timestamp_millis();
-        let telegram = Telegram::new(now + delay, sender, receiver, message);
+        let telegram = Telegram::new(
+            now + (delay_seconds * 1000.0) as i64,
+            sender,
+            receiver,
+            message,
+        );
 
         self.queue.push(telegram)
     }

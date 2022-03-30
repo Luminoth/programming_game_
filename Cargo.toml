@@ -3,4 +3,5 @@
 resolver = "2"
 members = [
     "west-world",
+    "west-world-bevy",
 ]

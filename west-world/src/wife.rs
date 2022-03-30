@@ -137,7 +137,7 @@ impl WifeState {
     ) {
         let mut rng = rand::thread_rng();
 
-        match rng.gen_range(0..2) {
+        match rng.gen_range(0..=2) {
             0 => info!("{}: Moppin' the floor", entity.name()),
             1 => info!("{}: Washin' the dishes", entity.name()),
             2 => info!("{}: Makin' the bed", entity.name()),

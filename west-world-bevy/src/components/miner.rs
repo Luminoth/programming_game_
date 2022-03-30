@@ -1,21 +1,11 @@
 use bevy::prelude::*;
 
+use crate::game::miner::*;
 use crate::game::Location;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Component)]
-pub enum MinerState {
-    EnterMineAndDigForNugget,
-    VisitBankAndDepositGold,
-    GoHomeAndSleepTilRested,
-    QuenchThirst,
-    EatStew,
-}
+use super::state::StateMachine;
 
-impl Default for MinerState {
-    fn default() -> Self {
-        Self::GoHomeAndSleepTilRested
-    }
-}
+pub type MinerStateMachine = StateMachine<MinerState>;
 
 #[derive(Debug, Component)]
 pub struct Miner {
@@ -38,7 +28,7 @@ impl Miner {
         commands
             .spawn()
             .insert(Miner::default())
-            .insert(MinerState::default())
+            .insert(MinerStateMachine::default())
             .insert(Name::new(name));
     }
 }

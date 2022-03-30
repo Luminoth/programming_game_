@@ -1,17 +1,10 @@
 use bevy::prelude::*;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Component)]
-pub enum WifeState {
-    DoHouseWork,
-    VisitBathroom,
-    CookStew,
-}
+use crate::game::wife::*;
 
-impl Default for WifeState {
-    fn default() -> Self {
-        Self::DoHouseWork
-    }
-}
+use super::state::StateMachine;
+
+pub type WifeStateMachine = StateMachine<WifeState>;
 
 #[derive(Debug, Default, Component)]
 pub struct Wife;
@@ -24,7 +17,7 @@ impl Wife {
         commands
             .spawn()
             .insert(Wife::default())
-            .insert(WifeState::default())
+            .insert(WifeStateMachine::default())
             .insert(Name::new(name));
     }
 }

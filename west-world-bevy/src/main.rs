@@ -7,8 +7,6 @@ use bevy::prelude::*;
 
 use components::miner::Miner;
 use components::wife::Wife;
-use game::miner::MinerState;
-use game::wife::WifeState;
 
 fn setup(mut commands: Commands) {
     Miner::spawn(&mut commands, "Bob");
@@ -31,8 +29,18 @@ fn main() {
     app.add_startup_system(setup);
 
     // systems
-    app.add_system(systems::state::update_state::<MinerState>)
-        .add_system(systems::state::update_state::<WifeState>);
+    app.add_system(systems::state::update_miner_global_state.label("miner_global_state"))
+        .add_system(
+            systems::state::update_miner_state
+                .label("miner_state")
+                .after("miner_global_state"),
+        )
+        .add_system(systems::state::update_wife_global_state.label("wife_global_state"))
+        .add_system(
+            systems::state::update_wife_state
+                .label("wife_state")
+                .after("wife_global_state"),
+        );
 
     app.run();
 }

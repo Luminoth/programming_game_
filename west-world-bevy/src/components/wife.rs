@@ -7,7 +7,9 @@ use super::state::StateMachine;
 pub type WifeStateMachine = StateMachine<WifeState>;
 
 #[derive(Debug, Default, Component)]
-pub struct Wife;
+pub struct Wife {
+    cook_timer: Timer,
+}
 
 impl Wife {
     pub fn spawn(commands: &mut Commands, name: impl Into<String>) {

@@ -3,11 +3,15 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::components::state::StateMachine;
+use crate::components::wife::WifeStateMachine;
+use crate::events::state::{StateEnterEvent, StateExitEvent};
 
 use super::state::State;
 
-const BATHROOM_CHANCE: f32 = 0.1;
+pub const BATHROOM_CHANCE: f32 = 0.1;
+
+pub type WifeStateEnterEvent = StateEnterEvent<WifeState>;
+pub type WifeStateExitEvent = StateExitEvent<WifeState>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum WifeState {
@@ -22,18 +26,28 @@ impl Default for WifeState {
     }
 }
 
-impl State for WifeState {
-    fn execute_global(state_machine: &mut StateMachine<WifeState>) {
+impl State for WifeState {}
+
+impl WifeState {
+    pub fn execute_global(
+        entity: Entity,
+        name: impl AsRef<str>,
+        state_machine: &mut WifeStateMachine,
+        exit_events: &mut EventWriter<WifeStateExitEvent>,
+        enter_events: &mut EventWriter<WifeStateEnterEvent>,
+    ) {
+        info!("executing wife global state for {}", name.as_ref());
+
         let mut rng = rand::thread_rng();
 
         if rng.gen::<f32>() < BATHROOM_CHANCE {
-            state_machine.change_state(Self::VisitBathroom);
+            state_machine.change_state(entity, Self::VisitBathroom, exit_events, enter_events);
         }
     }
 
-    fn enter(self, state_machine: &mut StateMachine<WifeState>) {}
+    pub fn enter(self, state_machine: &mut WifeStateMachine) {}
 
-    fn execute(self, state_machine: &mut StateMachine<WifeState>) {
+    pub fn execute(self, state_machine: &mut WifeStateMachine) {
         match self {
             WifeState::DoHouseWork => (),
             WifeState::VisitBathroom => (),
@@ -41,7 +55,7 @@ impl State for WifeState {
         }
     }
 
-    fn exit(self, state_machine: &mut StateMachine<WifeState>) {}
+    pub fn exit(self, state_machine: &mut WifeStateMachine) {}
 }
 
 impl WifeState {

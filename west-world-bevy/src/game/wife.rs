@@ -4,8 +4,7 @@ use bevy::prelude::*;
 use chrono::prelude::*;
 use rand::Rng;
 
-use crate::components::wife::{Wife, WifeStateMachine};
-use crate::events::messaging::MessageEvent;
+use crate::components::wife::*;
 use crate::events::state::{StateEnterEvent, StateExitEvent};
 use crate::resources::messaging::MessageDispatcher;
 
@@ -118,11 +117,11 @@ impl WifeState {
         entity: Entity,
         name: impl AsRef<str>,
         wife: &mut Wife,
+        miner: &WifeMiner,
         state_machine: &mut WifeStateMachine,
         exit_events: &mut EventWriter<WifeStateExitEvent>,
         enter_events: &mut EventWriter<WifeStateEnterEvent>,
         message_dispatcher: &mut MessageDispatcher,
-        message_events: &mut EventWriter<MessageEvent>,
     ) {
         match self {
             Self::DoHouseWork => (),
@@ -132,11 +131,11 @@ impl WifeState {
                 entity,
                 name,
                 wife,
+                miner,
                 state_machine,
                 exit_events,
                 enter_events,
                 message_dispatcher,
-                message_events,
             ),
         }
     }
@@ -203,11 +202,11 @@ impl WifeState {
         entity: Entity,
         name: impl AsRef<str>,
         wife: &mut Wife,
+        miner: &WifeMiner,
         state_machine: &mut WifeStateMachine,
         exit_events: &mut EventWriter<WifeStateExitEvent>,
         enter_events: &mut EventWriter<WifeStateEnterEvent>,
         message_dispatcher: &mut MessageDispatcher,
-        message_events: &mut EventWriter<MessageEvent>,
     ) {
         match message {
             Message::StewIsReady => {
@@ -216,12 +215,7 @@ impl WifeState {
                 debug!("Message received by {} at time: {}", name.as_ref(), now);
                 info!("{}: Stew ready! Let's eat", name.as_ref());
 
-                message_dispatcher.dispatch_message(
-                    entity,
-                    wife.miner.unwrap(),
-                    Message::StewIsReady,
-                    message_events,
-                );
+                message_dispatcher.dispatch_message(entity, miner.miner_id, Message::StewIsReady);
 
                 wife.cooking = false;
 

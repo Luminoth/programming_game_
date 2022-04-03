@@ -84,17 +84,10 @@ impl MessageDispatcher {
         });
     }
 
-    pub fn dispatch_message(
-        &mut self,
-        sender: Entity,
-        receiver: Entity,
-        message: Message,
-        message_events: &mut EventWriter<MessageEvent>,
-    ) {
-        let now = Utc::now().timestamp_millis();
-        let telegram = Telegram::new(now, sender, receiver, message);
-
-        self.discharge(telegram, message_events);
+    pub fn dispatch_message(&mut self, sender: Entity, receiver: Entity, message: Message) {
+        // we always defer so that entities sending messages (as events)
+        // in response to events can work
+        self.defer_dispatch_message(sender, receiver, message, 0.0);
     }
 
     pub fn defer_dispatch_message(

@@ -4,7 +4,6 @@ use bevy::prelude::*;
 use chrono::prelude::*;
 
 use crate::components::miner::*;
-use crate::events::messaging::MessageEvent;
 use crate::events::state::{StateEnterEvent, StateExitEvent};
 use crate::resources::messaging::MessageDispatcher;
 
@@ -45,19 +44,15 @@ impl MinerState {
         entity: Entity,
         name: impl AsRef<str>,
         miner: &mut Miner,
+        wife: &MinerWife,
         message_dispatcher: &mut MessageDispatcher,
-        message_events: &mut EventWriter<MessageEvent>,
     ) {
         match self {
             Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_enter(name, miner),
             Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_enter(name, miner),
-            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_enter(
-                entity,
-                name,
-                miner,
-                message_dispatcher,
-                message_events,
-            ),
+            Self::GoHomeAndSleepTilRested => {
+                Self::GoHomeAndSleepTilRested_enter(entity, name, miner, wife, message_dispatcher)
+            }
             Self::QuenchThirst => Self::QuenchThirst_enter(name, miner),
             Self::EatStew => Self::EatStew_enter(name),
         }
@@ -245,20 +240,15 @@ impl MinerState {
         entity: Entity,
         name: impl AsRef<str>,
         miner: &mut Miner,
+        wife: &MinerWife,
         message_dispatcher: &mut MessageDispatcher,
-        message_events: &mut EventWriter<MessageEvent>,
     ) {
         if miner.location != Location::Shack {
             info!("{}: Walkin' home", name.as_ref());
 
             miner.location = Location::Shack;
 
-            message_dispatcher.dispatch_message(
-                entity,
-                miner.wife.unwrap(),
-                Message::HiHoneyImHome,
-                message_events,
-            );
+            message_dispatcher.dispatch_message(entity, wife.wife_id, Message::HiHoneyImHome);
         }
     }
 

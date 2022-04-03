@@ -21,12 +21,11 @@ pub fn global_state_execute(mut query: Query<&Name, With<MinerStateMachine>>) {
 
 pub fn state_enter(
     mut events: EventReader<MinerStateEnterEvent>,
-    mut message_events: EventWriter<MessageEvent>,
     mut message_dispatcher: ResMut<MessageDispatcher>,
-    mut query: Query<(Entity, &mut Miner, &Name)>,
+    mut query: Query<(Entity, &mut Miner, &MinerWife, &Name)>,
 ) {
     for event in events.iter() {
-        if let Ok((entity, mut miner, name)) = query.get_mut(event.entity()) {
+        if let Ok((entity, mut miner, wife, name)) = query.get_mut(event.entity()) {
             debug!(
                 "entering miner state {:?} for {}",
                 event.state(),
@@ -37,8 +36,8 @@ pub fn state_enter(
                 entity,
                 name.as_str(),
                 &mut miner,
+                wife,
                 &mut message_dispatcher,
-                &mut message_events,
             );
         }
     }

@@ -9,11 +9,10 @@ pub type WifeStateMachine = StateMachine<WifeState>;
 #[derive(Debug, Default, Component)]
 pub struct Wife {
     pub cooking: bool,
-    pub miner: Option<Entity>,
 }
 
 impl Wife {
-    pub fn spawn(commands: &mut Commands, name: impl Into<String>) {
+    pub fn spawn(commands: &mut Commands, name: impl Into<String>) -> Entity {
         let name = name.into();
         info!("spawning wife {}", name);
 
@@ -21,6 +20,12 @@ impl Wife {
             .spawn()
             .insert(Wife::default())
             .insert(WifeStateMachine::default())
-            .insert(Name::new(name));
+            .insert(Name::new(name))
+            .id()
     }
+}
+
+#[derive(Debug, Component)]
+pub struct WifeMiner {
+    pub miner_id: Entity,
 }

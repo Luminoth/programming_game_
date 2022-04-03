@@ -62,20 +62,18 @@ impl Stats {
 #[derive(Debug, Component)]
 pub struct Miner {
     pub location: Location,
-    pub wife: Option<Entity>,
 }
 
 impl Default for Miner {
     fn default() -> Self {
         Self {
             location: Location::Shack,
-            wife: None,
         }
     }
 }
 
 impl Miner {
-    pub fn spawn(commands: &mut Commands, name: impl Into<String>) {
+    pub fn spawn(commands: &mut Commands, name: impl Into<String>) -> Entity {
         let name = name.into();
         info!("spawning miner {}", name);
 
@@ -84,6 +82,12 @@ impl Miner {
             .insert(Miner::default())
             .insert(Stats::default())
             .insert(MinerStateMachine::default())
-            .insert(Name::new(name));
+            .insert(Name::new(name))
+            .id()
     }
+}
+
+#[derive(Debug, Component)]
+pub struct MinerWife {
+    pub wife_id: Entity,
 }

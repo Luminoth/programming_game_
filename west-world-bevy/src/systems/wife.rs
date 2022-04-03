@@ -98,27 +98,28 @@ pub fn state_exit(
 
 pub fn state_on_message(
     mut message_events: EventReader<MessageEvent>,
-    /*mut exit_events: EventWriter<WifeStateExitEvent>,
+    mut exit_events: EventWriter<WifeStateExitEvent>,
     mut enter_events: EventWriter<WifeStateEnterEvent>,
-    mut message_events_writer: EventWriter<MessageEvent>,
-    mut message_dispatcher: ResMut<MessageDispatcher>,*/
-    mut query: Query<(Entity, &mut Wife, &mut WifeStateMachine, &Name)>,
+    mut message_dispatcher: ResMut<MessageDispatcher>,
+    mut query: Query<(Entity, &mut Wife, &WifeMiner, &mut WifeStateMachine, &Name)>,
 ) {
     for event in message_events.iter() {
-        if let Ok((_entity, mut _wife, mut _state_machine, name)) = query.get_mut(event.receiver) {
+        if let Ok((entity, mut wife, miner, mut state_machine, name)) =
+            query.get_mut(event.receiver)
+        {
             debug!("message for wife {}", name.as_str());
 
-            /*state_machine.current_state().on_message(
+            state_machine.current_state().on_message(
                 &event.message,
                 entity,
                 name.as_str(),
                 &mut wife,
+                miner,
                 &mut state_machine,
                 &mut exit_events,
                 &mut enter_events,
                 &mut message_dispatcher,
-                &mut message_events_writer,
-            );*/
+            );
         }
     }
 }

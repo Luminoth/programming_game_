@@ -7,16 +7,19 @@ mod systems;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
-use components::miner::Miner;
-use components::wife::Wife;
+use components::miner::{Miner, MinerWife};
+use components::wife::{Wife, WifeMiner};
 use events::messaging::MessageEvent;
 use game::miner::{MinerStateEnterEvent, MinerStateExitEvent};
 use game::wife::{WifeStateEnterEvent, WifeStateExitEvent};
 use resources::messaging::MessageDispatcher;
 
 fn setup(mut commands: Commands) {
-    Miner::spawn(&mut commands, "Bob");
-    Wife::spawn(&mut commands, "Elsa");
+    let miner_id = Miner::spawn(&mut commands, "Bob");
+    let wife_id = Wife::spawn(&mut commands, "Elsa");
+
+    commands.entity(miner_id).insert(MinerWife { wife_id });
+    commands.entity(wife_id).insert(WifeMiner { miner_id });
 
     commands.insert_resource(MessageDispatcher::default());
 }

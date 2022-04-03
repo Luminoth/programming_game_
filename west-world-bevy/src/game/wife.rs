@@ -40,7 +40,7 @@ impl WifeState {
         exit_events: &mut EventWriter<WifeStateExitEvent>,
         enter_events: &mut EventWriter<WifeStateEnterEvent>,
     ) {
-        info!("executing wife global state for {}", name.as_ref());
+        debug!("executing wife global state for {}", name.as_ref());
 
         let mut rng = rand::thread_rng();
 

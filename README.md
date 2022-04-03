@@ -5,3 +5,4 @@
 ## West World (Chapter 2)
 
 * https://hoverbear.org/blog/rust-state-machine-pattern/
+* One key difference in the bevy example is that it runs at full frame rater rather than once every 800ms

@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::components::miner::{Miner, MinerStateMachine, Stats};
+use crate::components::miner::*;
 use crate::events::state::{StateEnterEvent, StateExitEvent};
 
 use super::state::State;

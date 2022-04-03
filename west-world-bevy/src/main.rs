@@ -27,7 +27,7 @@ fn main() {
 
     // basic bevy
     app.insert_resource(bevy::log::LogSettings {
-        level: bevy::log::Level::DEBUG,
+        level: bevy::log::Level::INFO,
         ..Default::default()
     })
     .add_plugins(MinimalPlugins)

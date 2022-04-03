@@ -25,6 +25,7 @@ impl Wife {
     }
 }
 
+// this is a separate component because we have to add it after spawning the entities
 #[derive(Debug, Component)]
 pub struct WifeMiner {
     pub miner_id: Entity,

@@ -5,16 +5,14 @@ use bevy::prelude::*;
 use chrono::prelude::*;
 
 use crate::events::messaging::MessageEvent;
-use crate::game::messaging::Message;
 
 #[derive(Debug)]
 struct Telegram {
     dispatch_time: i64,
 
-    pub sender: Entity,
     pub receiver: Entity,
 
-    pub message: Message,
+    pub message: MessageEvent,
 }
 
 impl Eq for Telegram {}
@@ -22,7 +20,6 @@ impl Eq for Telegram {}
 impl PartialEq for Telegram {
     fn eq(&self, other: &Self) -> bool {
         self.dispatch_time == other.dispatch_time
-            && self.sender == other.sender
             && self.receiver == other.receiver
             && self.message == other.message
     }
@@ -43,10 +40,9 @@ impl Ord for Telegram {
 }
 
 impl Telegram {
-    fn new(dispatch_time: i64, sender: Entity, receiver: Entity, message: Message) -> Self {
+    fn new(dispatch_time: i64, receiver: Entity, message: MessageEvent) -> Self {
         Self {
             dispatch_time,
-            sender,
             receiver,
             message,
         }
@@ -59,7 +55,10 @@ pub struct MessageDispatcher {
 }
 
 impl MessageDispatcher {
-    pub fn dispatch_deferred_messages(&mut self, message_events: &mut EventWriter<MessageEvent>) {
+    pub fn dispatch_deferred_messages(
+        &mut self,
+        message_events: &mut EventWriter<(Entity, MessageEvent)>,
+    ) {
         let now = Utc::now().timestamp_millis();
 
         loop {
@@ -76,34 +75,28 @@ impl MessageDispatcher {
         }
     }
 
-    fn discharge(&self, telegram: Telegram, message_events: &mut EventWriter<MessageEvent>) {
-        message_events.send(MessageEvent {
-            receiver: telegram.receiver,
-            sender: telegram.sender,
-            message: telegram.message,
-        });
+    fn discharge(
+        &self,
+        telegram: Telegram,
+        message_events: &mut EventWriter<(Entity, MessageEvent)>,
+    ) {
+        message_events.send((telegram.receiver, telegram.message));
     }
 
-    pub fn dispatch_message(&mut self, sender: Entity, receiver: Entity, message: Message) {
+    pub fn dispatch_message(&mut self, receiver: Entity, message: MessageEvent) {
         // we always defer so that entities sending messages (as events)
         // in response to events can work
-        self.defer_dispatch_message(sender, receiver, message, 0.0);
+        self.defer_dispatch_message(receiver, message, 0.0);
     }
 
     pub fn defer_dispatch_message(
         &mut self,
-        sender: Entity,
         receiver: Entity,
-        message: Message,
+        message: MessageEvent,
         delay_seconds: f64,
     ) {
         let now = Utc::now().timestamp_millis();
-        let telegram = Telegram::new(
-            now + (delay_seconds * 1000.0) as i64,
-            sender,
-            receiver,
-            message,
-        );
+        let telegram = Telegram::new(now + (delay_seconds * 1000.0) as i64, receiver, message);
 
         self.queue.push(telegram);
     }

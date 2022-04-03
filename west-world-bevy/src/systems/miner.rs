@@ -76,17 +76,17 @@ pub fn state_exit(
 }
 
 pub fn state_on_message(
-    mut message_events: EventReader<MessageEvent>,
+    mut message_events: EventReader<(Entity, MessageEvent)>,
     mut exit_events: EventWriter<MinerStateExitEvent>,
     mut enter_events: EventWriter<MinerStateEnterEvent>,
     mut query: Query<(Entity, &mut MinerStateMachine, &Name)>,
 ) {
-    for event in message_events.iter() {
-        if let Ok((entity, mut state_machine, name)) = query.get_mut(event.receiver) {
+    for (receiver, event) in message_events.iter() {
+        if let Ok((entity, mut state_machine, name)) = query.get_mut(*receiver) {
             debug!("message for miner {}", name.as_str());
 
             state_machine.current_state().on_message(
-                &event.message,
+                event,
                 entity,
                 name.as_str(),
                 &mut state_machine,

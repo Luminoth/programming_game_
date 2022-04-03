@@ -5,10 +5,10 @@ use chrono::prelude::*;
 use rand::Rng;
 
 use crate::components::wife::*;
+use crate::events::messaging::MessageEvent;
 use crate::events::state::{StateEnterEvent, StateExitEvent};
 use crate::resources::messaging::MessageDispatcher;
 
-use super::messaging::Message;
 use super::state::State;
 
 pub const BATHROOM_CHANCE: f32 = 0.1;
@@ -49,7 +49,7 @@ impl WifeState {
     }
 
     pub fn on_message_global(
-        message: &Message,
+        message: &MessageEvent,
         entity: Entity,
         name: impl AsRef<str>,
         state_machine: &mut WifeStateMachine,
@@ -57,7 +57,7 @@ impl WifeState {
         enter_events: &mut EventWriter<WifeStateEnterEvent>,
     ) {
         match message {
-            Message::HiHoneyImHome => {
+            MessageEvent::HiHoneyImHome(_) => {
                 let now = Utc::now();
 
                 debug!("Message handled by {} at time: {}", name.as_ref(), now);
@@ -113,7 +113,7 @@ impl WifeState {
 
     pub fn on_message(
         self,
-        message: &Message,
+        message: &MessageEvent,
         entity: Entity,
         name: impl AsRef<str>,
         wife: &mut Wife,
@@ -192,13 +192,13 @@ impl WifeState {
 
         info!("{}: Puttin' the stew in the oven", name.as_ref());
 
-        message_dispatcher.defer_dispatch_message(entity, entity, Message::StewIsReady, 1.5);
+        message_dispatcher.defer_dispatch_message(entity, MessageEvent::StewIsReady(entity), 1.5);
 
         wife.cooking = true;
     }
 
     fn CookStew_on_message(
-        message: &Message,
+        message: &MessageEvent,
         entity: Entity,
         name: impl AsRef<str>,
         wife: &mut Wife,
@@ -209,13 +209,14 @@ impl WifeState {
         message_dispatcher: &mut MessageDispatcher,
     ) {
         match message {
-            Message::StewIsReady => {
+            MessageEvent::StewIsReady(_) => {
                 let now = Utc::now();
 
                 debug!("Message received by {} at time: {}", name.as_ref(), now);
                 info!("{}: Stew ready! Let's eat", name.as_ref());
 
-                message_dispatcher.dispatch_message(entity, miner.miner_id, Message::StewIsReady);
+                message_dispatcher
+                    .dispatch_message(miner.miner_id, MessageEvent::StewIsReady(entity));
 
                 wife.cooking = false;
 

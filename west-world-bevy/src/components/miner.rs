@@ -59,6 +59,7 @@ impl Stats {
     }
 }
 
+// TODO: should the location be its own separate component?
 #[derive(Debug, Component)]
 pub struct Miner {
     pub location: Location,
@@ -87,6 +88,7 @@ impl Miner {
     }
 }
 
+// this is a separate component because we have to add it after spawning the entities
 #[derive(Debug, Component)]
 pub struct MinerWife {
     pub wife_id: Entity,

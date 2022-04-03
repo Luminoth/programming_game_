@@ -1,11 +1,7 @@
 use bevy::prelude::*;
 
-use crate::game::messaging::Message;
-
-#[derive(Debug)]
-pub struct MessageEvent {
-    pub receiver: Entity,
-
-    pub sender: Entity,
-    pub message: Message,
+#[derive(Debug, PartialEq, Eq)]
+pub enum MessageEvent {
+    HiHoneyImHome(Entity),
+    StewIsReady(Entity),
 }

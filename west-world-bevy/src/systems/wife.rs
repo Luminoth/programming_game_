@@ -24,17 +24,17 @@ pub fn global_state_execute(
 }
 
 pub fn global_state_on_message(
-    mut message_events: EventReader<MessageEvent>,
+    mut message_events: EventReader<(Entity, MessageEvent)>,
     mut exit_events: EventWriter<WifeStateExitEvent>,
     mut enter_events: EventWriter<WifeStateEnterEvent>,
     mut query: Query<(Entity, &mut WifeStateMachine, &Name)>,
 ) {
-    for event in message_events.iter() {
-        if let Ok((entity, mut state_machine, name)) = query.get_mut(event.receiver) {
+    for (receiver, event) in message_events.iter() {
+        if let Ok((entity, mut state_machine, name)) = query.get_mut(*receiver) {
             debug!("global message for wife {}", name.as_str());
 
             WifeState::on_message_global(
-                &event.message,
+                event,
                 entity,
                 name.as_str(),
                 &mut state_machine,
@@ -97,20 +97,18 @@ pub fn state_exit(
 }
 
 pub fn state_on_message(
-    mut message_events: EventReader<MessageEvent>,
+    mut message_events: EventReader<(Entity, MessageEvent)>,
     mut exit_events: EventWriter<WifeStateExitEvent>,
     mut enter_events: EventWriter<WifeStateEnterEvent>,
     mut message_dispatcher: ResMut<MessageDispatcher>,
     mut query: Query<(Entity, &mut Wife, &WifeMiner, &mut WifeStateMachine, &Name)>,
 ) {
-    for event in message_events.iter() {
-        if let Ok((entity, mut wife, miner, mut state_machine, name)) =
-            query.get_mut(event.receiver)
-        {
+    for (receiver, event) in message_events.iter() {
+        if let Ok((entity, mut wife, miner, mut state_machine, name)) = query.get_mut(*receiver) {
             debug!("message for wife {}", name.as_str());
 
             state_machine.current_state().on_message(
-                &event.message,
+                event,
                 entity,
                 name.as_str(),
                 &mut wife,

@@ -4,10 +4,10 @@ use bevy::prelude::*;
 use chrono::prelude::*;
 
 use crate::components::miner::*;
+use crate::events::messaging::MessageEvent;
 use crate::events::state::{StateEnterEvent, StateExitEvent};
 use crate::resources::messaging::MessageDispatcher;
 
-use super::messaging::Message;
 use super::state::State;
 use super::Location;
 
@@ -118,7 +118,7 @@ impl MinerState {
 
     pub fn on_message(
         self,
-        message: &Message,
+        message: &MessageEvent,
         entity: Entity,
         name: impl AsRef<str>,
         state_machine: &mut MinerStateMachine,
@@ -248,7 +248,7 @@ impl MinerState {
 
             miner.location = Location::Shack;
 
-            message_dispatcher.dispatch_message(entity, wife.wife_id, Message::HiHoneyImHome);
+            message_dispatcher.dispatch_message(wife.wife_id, MessageEvent::HiHoneyImHome(entity));
         }
     }
 
@@ -291,7 +291,7 @@ impl MinerState {
     }
 
     fn GoHomeAndSleepTilRested_on_message(
-        message: &Message,
+        message: &MessageEvent,
         entity: Entity,
         name: impl AsRef<str>,
         state_machine: &mut MinerStateMachine,
@@ -299,7 +299,7 @@ impl MinerState {
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
         match message {
-            Message::StewIsReady => {
+            MessageEvent::StewIsReady(_) => {
                 let now = Utc::now();
 
                 debug!("Message handled by {} at time: {}", name.as_ref(), now);

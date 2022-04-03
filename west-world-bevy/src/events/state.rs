@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::game::state::State;
 
-#[derive(Debug, Component)]
+#[derive(Debug)]
 pub struct StateEnterEvent<T>
 where
     T: State,
@@ -28,7 +28,7 @@ where
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug)]
 pub struct StateExitEvent<T>
 where
     T: State,

@@ -62,12 +62,14 @@ impl Stats {
 #[derive(Debug, Component)]
 pub struct Miner {
     pub location: Location,
+    pub wife: Option<Entity>,
 }
 
 impl Default for Miner {
     fn default() -> Self {
         Self {
             location: Location::Shack,
+            wife: None,
         }
     }
 }

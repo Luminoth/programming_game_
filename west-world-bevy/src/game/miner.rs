@@ -1,10 +1,14 @@
 #![allow(non_snake_case)]
 
 use bevy::prelude::*;
+use chrono::prelude::*;
 
 use crate::components::miner::*;
+use crate::events::messaging::MessageEvent;
 use crate::events::state::{StateEnterEvent, StateExitEvent};
+use crate::resources::messaging::MessageDispatcher;
 
+use super::messaging::Message;
 use super::state::State;
 use super::Location;
 
@@ -36,11 +40,24 @@ impl State for MinerState {}
 impl MinerState {
     pub fn execute_global() {}
 
-    pub fn enter(self, name: impl AsRef<str>, miner: &mut Miner) {
+    pub fn enter(
+        self,
+        entity: Entity,
+        name: impl AsRef<str>,
+        miner: &mut Miner,
+        message_dispatcher: &mut MessageDispatcher,
+        message_events: &mut EventWriter<MessageEvent>,
+    ) {
         match self {
             Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_enter(name, miner),
             Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_enter(name, miner),
-            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_enter(name, miner),
+            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_enter(
+                entity,
+                name,
+                miner,
+                message_dispatcher,
+                message_events,
+            ),
             Self::QuenchThirst => Self::QuenchThirst_enter(name, miner),
             Self::EatStew => Self::EatStew_enter(name),
         }
@@ -101,6 +118,31 @@ impl MinerState {
             Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_exit(name),
             Self::QuenchThirst => Self::QuenchThirst_exit(name),
             Self::EatStew => Self::EatStew_exit(name),
+        }
+    }
+
+    pub fn on_message(
+        self,
+        message: &Message,
+        entity: Entity,
+        name: impl AsRef<str>,
+        state_machine: &mut MinerStateMachine,
+        exit_events: &mut EventWriter<MinerStateExitEvent>,
+        enter_events: &mut EventWriter<MinerStateEnterEvent>,
+    ) {
+        match self {
+            Self::EnterMineAndDigForNugget => (),
+            Self::VisitBankAndDepositGold => (),
+            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_on_message(
+                message,
+                entity,
+                name,
+                state_machine,
+                exit_events,
+                enter_events,
+            ),
+            Self::QuenchThirst => (),
+            Self::EatStew => (),
         }
     }
 }
@@ -199,16 +241,24 @@ impl MinerState {
 }
 
 impl MinerState {
-    fn GoHomeAndSleepTilRested_enter(name: impl AsRef<str>, miner: &mut Miner) {
+    fn GoHomeAndSleepTilRested_enter(
+        entity: Entity,
+        name: impl AsRef<str>,
+        miner: &mut Miner,
+        message_dispatcher: &mut MessageDispatcher,
+        message_events: &mut EventWriter<MessageEvent>,
+    ) {
         if miner.location != Location::Shack {
             info!("{}: Walkin' home", name.as_ref());
 
             miner.location = Location::Shack;
 
-            /*state_machine
-            .message_dispatcher()
-            .borrow()
-            .dispatch_message(entity.id(), miner.wife_id.unwrap(), Message::HiHoneyImHome);*/
+            message_dispatcher.dispatch_message(
+                entity,
+                miner.wife.unwrap(),
+                Message::HiHoneyImHome,
+                message_events,
+            );
         }
     }
 
@@ -248,6 +298,27 @@ impl MinerState {
 
     fn GoHomeAndSleepTilRested_exit(name: impl AsRef<str>) {
         info!("{}: Leaving the house", name.as_ref());
+    }
+
+    fn GoHomeAndSleepTilRested_on_message(
+        message: &Message,
+        entity: Entity,
+        name: impl AsRef<str>,
+        state_machine: &mut MinerStateMachine,
+        exit_events: &mut EventWriter<MinerStateExitEvent>,
+        enter_events: &mut EventWriter<MinerStateEnterEvent>,
+    ) {
+        match message {
+            Message::StewIsReady => {
+                let now = Utc::now();
+
+                debug!("Message handled by {} at time: {}", name.as_ref(), now);
+                info!("{}: Ok hun, ahm a-comin'!", name.as_ref());
+
+                state_machine.change_state(entity, Self::EatStew, exit_events, enter_events);
+            }
+            _ => (),
+        }
     }
 }
 

@@ -1,11 +1,15 @@
 #![allow(non_snake_case)]
 
 use bevy::prelude::*;
+use chrono::prelude::*;
 use rand::Rng;
 
 use crate::components::wife::{Wife, WifeStateMachine};
+use crate::events::messaging::MessageEvent;
 use crate::events::state::{StateEnterEvent, StateExitEvent};
+use crate::resources::messaging::MessageDispatcher;
 
+use super::messaging::Message;
 use super::state::State;
 
 pub const BATHROOM_CHANCE: f32 = 0.1;
@@ -45,11 +49,41 @@ impl WifeState {
         }
     }
 
-    pub fn enter(self, name: impl AsRef<str>, wife: &mut Wife) {
+    pub fn on_message_global(
+        message: &Message,
+        entity: Entity,
+        name: impl AsRef<str>,
+        state_machine: &mut WifeStateMachine,
+        exit_events: &mut EventWriter<WifeStateExitEvent>,
+        enter_events: &mut EventWriter<WifeStateEnterEvent>,
+    ) {
+        match message {
+            Message::HiHoneyImHome => {
+                let now = Utc::now();
+
+                debug!("Message handled by {} at time: {}", name.as_ref(), now);
+                info!(
+                    "{}: Hi honey. Let me make you some of mah fine country stew",
+                    name.as_ref()
+                );
+
+                state_machine.change_state(entity, Self::CookStew, exit_events, enter_events);
+            }
+            _ => (),
+        }
+    }
+
+    pub fn enter(
+        self,
+        entity: Entity,
+        name: impl AsRef<str>,
+        wife: &mut Wife,
+        message_dispatcher: &mut MessageDispatcher,
+    ) {
         match self {
             Self::DoHouseWork => (),
             Self::VisitBathroom => Self::VisitBathroom_enter(name),
-            Self::CookStew => Self::CookStew_enter(name, wife),
+            Self::CookStew => Self::CookStew_enter(entity, name, wife, message_dispatcher),
         }
     }
 
@@ -75,6 +109,35 @@ impl WifeState {
             Self::DoHouseWork => (),
             Self::VisitBathroom => Self::VisitBathroom_exit(name),
             Self::CookStew => (),
+        }
+    }
+
+    pub fn on_message(
+        self,
+        message: &Message,
+        entity: Entity,
+        name: impl AsRef<str>,
+        wife: &mut Wife,
+        state_machine: &mut WifeStateMachine,
+        exit_events: &mut EventWriter<WifeStateExitEvent>,
+        enter_events: &mut EventWriter<WifeStateEnterEvent>,
+        message_dispatcher: &mut MessageDispatcher,
+        message_events: &mut EventWriter<MessageEvent>,
+    ) {
+        match self {
+            Self::DoHouseWork => (),
+            Self::VisitBathroom => (),
+            Self::CookStew => Self::CookStew_on_message(
+                message,
+                entity,
+                name,
+                wife,
+                state_machine,
+                exit_events,
+                enter_events,
+                message_dispatcher,
+                message_events,
+            ),
         }
     }
 }
@@ -118,18 +181,53 @@ impl WifeState {
 }
 
 impl WifeState {
-    fn CookStew_enter(name: impl AsRef<str>, wife: &mut Wife) {
-        if wife.is_cooking() {
+    fn CookStew_enter(
+        entity: Entity,
+        name: impl AsRef<str>,
+        wife: &mut Wife,
+        message_dispatcher: &mut MessageDispatcher,
+    ) {
+        if wife.cooking {
             return;
         }
 
         info!("{}: Puttin' the stew in the oven", name.as_ref());
 
-        /*state_machine
-        .message_dispatcher()
-        .borrow()
-        .defer_dispatch_message(entity.id(), entity.id(), Message::StewIsReady, 1.5);*/
+        message_dispatcher.defer_dispatch_message(entity, entity, Message::StewIsReady, 1.5);
 
-        wife.start_cooking();
+        wife.cooking = true;
+    }
+
+    fn CookStew_on_message(
+        message: &Message,
+        entity: Entity,
+        name: impl AsRef<str>,
+        wife: &mut Wife,
+        state_machine: &mut WifeStateMachine,
+        exit_events: &mut EventWriter<WifeStateExitEvent>,
+        enter_events: &mut EventWriter<WifeStateEnterEvent>,
+        message_dispatcher: &mut MessageDispatcher,
+        message_events: &mut EventWriter<MessageEvent>,
+    ) {
+        match message {
+            Message::StewIsReady => {
+                let now = Utc::now();
+
+                debug!("Message received by {} at time: {}", name.as_ref(), now);
+                info!("{}: Stew ready! Let's eat", name.as_ref());
+
+                message_dispatcher.dispatch_message(
+                    entity,
+                    wife.miner.unwrap(),
+                    Message::StewIsReady,
+                    message_events,
+                );
+
+                wife.cooking = false;
+
+                state_machine.change_state(entity, Self::DoHouseWork, exit_events, enter_events);
+            }
+            _ => (),
+        }
     }
 }

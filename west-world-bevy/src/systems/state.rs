@@ -68,6 +68,12 @@ pub fn miner_state_exit(
     }
 }
 
+pub fn wife_update(time: Res<Time>, mut query: Query<&mut Wife>) {
+    for mut wife in query.iter_mut() {
+        wife.update(time.delta());
+    }
+}
+
 pub fn wife_global_state_execute(
     mut enter_events: EventWriter<WifeStateEnterEvent>,
     mut exit_events: EventWriter<WifeStateExitEvent>,
@@ -88,7 +94,7 @@ pub fn wife_global_state_execute(
 
 pub fn wife_state_enter(
     mut events: EventReader<WifeStateEnterEvent>,
-    mut query: Query<(&mut WifeStateMachine, &Name)>,
+    mut query: Query<(&mut Wife, &Name)>,
 ) {
     for event in events.iter() {
         if let Ok((mut wife, name)) = query.get_mut(event.entity()) {
@@ -98,22 +104,35 @@ pub fn wife_state_enter(
                 name.as_str()
             );
 
-            //event.state().enter(name.as_str(), &mut miner);
+            event.state().enter(name.as_str(), &mut wife);
         }
     }
 }
 
-pub fn wife_state_execute(mut query: Query<(&mut WifeStateMachine, &Name)>) {
-    for (mut state_machine, name) in query.iter_mut() {
+pub fn wife_state_execute(
+    mut exit_events: EventWriter<WifeStateExitEvent>,
+    mut enter_events: EventWriter<WifeStateEnterEvent>,
+    mut query: Query<(Entity, &mut WifeStateMachine, &Name)>,
+) {
+    for (entity, mut state_machine, name) in query.iter_mut() {
         debug!("executing wife state for {}", name.as_str());
+
+        state_machine.current_state().execute(
+            entity,
+            name.as_str(),
+            &mut state_machine,
+            &mut exit_events,
+            &mut enter_events,
+        );
     }
 }
 
-pub fn wife_state_exit(
-    mut events: EventReader<WifeStateExitEvent>,
-    mut query: Query<(&mut WifeStateMachine, &Name)>,
-) {
-    for (mut state_machine, name) in query.iter_mut() {
-        debug!("exiting wife state for {}", name.as_str());
+pub fn wife_state_exit(mut events: EventReader<WifeStateExitEvent>, query: Query<&Name>) {
+    for event in events.iter() {
+        if let Ok(name) = query.get(event.entity()) {
+            debug!("exiting wife state for {}", name.as_str());
+
+            event.state().exit(name.as_str());
+        }
     }
 }

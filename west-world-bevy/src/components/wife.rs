@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::game::wife::*;
@@ -21,5 +23,21 @@ impl Wife {
             .insert(Wife::default())
             .insert(WifeStateMachine::default())
             .insert(Name::new(name));
+    }
+
+    pub fn update(&mut self, dt: Duration) {
+        self.cook_timer.tick(dt);
+    }
+
+    pub fn start_cooking(&mut self) {
+        self.cook_timer = Timer::from_seconds(1.5, false);
+    }
+
+    pub fn is_cooking(&self) -> bool {
+        !self.cook_timer.finished()
+    }
+
+    pub fn finished_cooking(&self) {
+        self.cook_timer.just_finished();
     }
 }

@@ -55,6 +55,7 @@ fn main() {
                 .label("miner_state_execute")
                 .after("miner_global_state_execute"),
         )
+        .add_system(systems::state::wife_update)
         .add_system(systems::state::wife_state_exit.label("wife_state_exit"))
         .add_system(
             systems::state::wife_state_enter

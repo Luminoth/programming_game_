@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::bundles::vehicle::VehicleBundle;
+use crate::components::steering::*;
 
 fn setup(mut commands: Commands) {
     // cameras
@@ -42,6 +43,10 @@ fn main() {
 
     // main setup
     app.add_startup_system(setup);
+
+    // physics
+    app.add_system(systems::steering::update_steering::<SteeringTest>.label("steering"))
+        .add_system(systems::physics::update.label("physics").after("steering"));
 
     app.run();
 }

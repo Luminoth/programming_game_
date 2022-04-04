@@ -2,21 +2,18 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::components::agent::*;
-use crate::components::entity::*;
 use crate::components::physics::*;
 use crate::components::vehicle::*;
+
+use super::entity::GameEntityBundle;
 
 const VEHICLE_SIZE: f32 = 20.0;
 
 #[derive(Debug, Default, Bundle)]
 pub struct VehicleBundle {
-    pub game_entity: BaseGameEntity,
     pub agent: Agent,
     pub vehicle: Vehicle,
     pub physical: Physical,
-
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
 }
 
 impl VehicleBundle {
@@ -26,12 +23,13 @@ impl VehicleBundle {
         info!("spawning vehicle {}", name);
 
         let mut bundle = commands.spawn_bundle(VehicleBundle {
-            game_entity: BaseGameEntity::default(),
             agent: Agent::default(),
             vehicle: Vehicle::default(),
             physical: Physical::default(),
             ..Default::default()
         });
+
+        bundle.insert_bundle(GameEntityBundle::default());
 
         bundle.with_children(|parent| {
             parent

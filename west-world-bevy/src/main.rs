@@ -56,46 +56,46 @@ fn main() {
 
     // miner systems
     app.add_system(systems::miner::update)
-        .add_system(systems::miner::state_exit.label("miner_state_exit"))
+        .add_system(systems::miner::state_exit.label("state_exit"))
         .add_system(
             systems::miner::state_enter
-                .label("miner_state_enter")
-                .after("miner_state_exit"),
+                .label("state_enter")
+                .after("state_exit"),
         )
         .add_system(
             systems::miner::global_state_execute
-                .label("miner_global_state_execute")
-                .after("miner_state_enter"),
+                .label("global_state_execute")
+                .after("state_enter"),
         )
         .add_system(
             systems::miner::state_execute
-                .label("miner_state_execute")
-                .after("miner_global_state_execute"),
+                .label("state_execute")
+                .after("global_state_execute"),
         )
-        .add_system(systems::miner::state_on_message.label("miner_state_on_message"));
+        .add_system(systems::miner::state_on_message.label("state_on_message"));
 
     // wife systems
-    app.add_system(systems::wife::state_exit.label("wife_state_exit"))
+    app.add_system(systems::wife::state_exit.label("state_exit"))
         .add_system(
             systems::wife::state_enter
-                .label("wife_state_enter")
-                .after("wife_state_exit"),
+                .label("state_enter")
+                .after("state_exit"),
         )
         .add_system(
             systems::wife::global_state_execute
-                .label("wife_global_state_execute")
-                .after("wife_state_exit"),
+                .label("global_state_execute")
+                .after("state_enter"),
         )
         .add_system(
             systems::wife::state_execute
-                .label("wife_state_execute")
-                .after("wife_global_state_execute"),
+                .label("state_execute")
+                .after("global_state_execute"),
         )
-        .add_system(systems::wife::global_state_on_message.label("wife_global_state_on_message"))
+        .add_system(systems::wife::global_state_on_message.label("global_state_on_message"))
         .add_system(
             systems::wife::state_on_message
-                .label("wife_state_on_message")
-                .after("wife_global_state_on_message"),
+                .label("state_on_message")
+                .after("global_state_on_message"),
         );
 
     app.run();

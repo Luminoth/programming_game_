@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(clippy::single_match)]
 
 use bevy::prelude::*;
 use chrono::prelude::*;

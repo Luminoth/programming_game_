@@ -25,7 +25,15 @@ impl<T> VehicleBundle<T>
 where
     T: Steering + Default,
 {
-    pub fn spawn(commands: &mut Commands, steering: T, name: impl Into<String>) {
+    pub fn spawn(
+        commands: &mut Commands,
+        steering: T,
+        mass: f32,
+        max_speed: f32,
+        max_force: f32,
+        max_turn_rate: f32,
+        name: impl Into<String>,
+    ) {
         let name = name.into();
 
         info!("spawning vehicle {}", name);
@@ -34,7 +42,7 @@ where
             agent: Agent::default(),
             steering,
             vehicle: Vehicle::default(),
-            physical: Physical::default(),
+            physical: Physical::new(mass, max_speed, max_force, max_turn_rate),
             ..Default::default()
         });
 

@@ -17,6 +17,19 @@ pub struct Physical {
 }
 
 impl Physical {
+    pub fn new(mass: f32, max_speed: f32, max_force: f32, max_turn_rate: f32) -> Self {
+        Self {
+            acceleration: Vec2::default(),
+            velocity: Vec2::default(),
+            heading: Vec2::default(),
+            side: Vec2::default(),
+            mass,
+            max_speed,
+            max_force,
+            max_turn_rate,
+        }
+    }
+
     pub fn apply_force(&mut self, force: Vec2) {
         let force = if self.mass > 0.0 {
             force / self.mass

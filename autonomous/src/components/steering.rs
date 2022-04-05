@@ -9,6 +9,6 @@ pub struct SteeringTest;
 
 impl Steering for SteeringTest {
     fn force(&self) -> Vec2 {
-        Vec2::new(1.0, 0.0)
+        Vec2::new(10.0, 0.0)
     }
 }

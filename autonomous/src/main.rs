@@ -5,6 +5,7 @@ mod plugins;
 mod resources;
 mod systems;
 
+use bevy::core::FixedTimestep;
 use bevy::diagnostic::*;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
@@ -13,6 +14,7 @@ use bevy_inspector_egui::WorldInspectorParams;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::bundles::vehicle::*;
+use crate::components::physics::PHYSICS_STEP;
 use crate::components::steering::*;
 use crate::plugins::debug::*;
 
@@ -79,8 +81,12 @@ fn main() {
     app.add_startup_system(setup);
 
     // physics
-    app.add_system(systems::steering::update_steering::<SteeringTest>.label("steering"))
-        .add_system(systems::physics::update.label("physics").after("steering"));
+    app.add_system_set(
+        SystemSet::new()
+            .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
+            .with_system(systems::steering::update_steering::<SteeringTest>.label("steering"))
+            .with_system(systems::physics::update.label("physics").after("steering")),
+    );
 
     app.run();
 }

@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
+// 50hz, the same as Unity
+pub const PHYSICS_STEP: f32 = 0.02;
+
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Physical {
     pub acceleration: Vec2,
@@ -40,7 +43,10 @@ impl Physical {
         self.acceleration += force;
     }
 
-    pub fn update(&mut self, transform: &mut Transform, dt: f32) {
+    pub fn update(&mut self, transform: &mut Transform) {
+        // https://github.com/bevyengine/bevy/issues/2041
+        let dt = PHYSICS_STEP;
+
         // semi-implicit euler integration
         self.velocity += self.acceleration * dt;
         self.velocity = self.velocity.clamp_length_max(self.max_speed);

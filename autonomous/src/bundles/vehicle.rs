@@ -41,7 +41,6 @@ impl VehicleBundle {
             steering,
             vehicle: Vehicle::default(),
             physical: Physical::new(mass, max_speed, max_force, max_turn_rate),
-            ..Default::default()
         });
 
         bundle.insert(Name::new(name));

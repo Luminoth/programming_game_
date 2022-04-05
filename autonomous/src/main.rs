@@ -3,6 +3,7 @@ mod components;
 mod events;
 mod plugins;
 mod resources;
+mod states;
 mod systems;
 
 use bevy::core::FixedTimestep;
@@ -13,50 +14,20 @@ use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::WorldInspectorParams;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::bundles::vehicle::*;
 use crate::components::physics::PHYSICS_STEP;
-use crate::components::steering::*;
 use crate::plugins::debug::*;
+use crate::resources::ui::*;
+use crate::states::*;
 
-fn setup(mut commands: Commands) {
-    // cameras
-    commands.insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)));
-    commands
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
-        .insert(Name::new("Camera"));
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    #[cfg(debug_assertions)]
+    asset_server.watch_for_changes().unwrap();
 
-    VehicleBundle::spawn(
-        &mut commands,
-        SteeringBehavior::Seek(Vec2::new(-200.0, 200.0)),
-        1.0,
-        100.0,
-        100.0,
-        10.0,
-        "seek",
-        Color::RED,
-    );
-
-    VehicleBundle::spawn(
-        &mut commands,
-        SteeringBehavior::Flee(Vec2::new(1.0, 1.0)),
-        1.0,
-        100.0,
-        100.0,
-        10.0,
-        "flee",
-        Color::GREEN,
-    );
-
-    VehicleBundle::spawn(
-        &mut commands,
-        SteeringBehavior::Arrive(Vec2::new(200.0, -200.0), Deceleration::Slow),
-        1.0,
-        100.0,
-        100.0,
-        10.0,
-        "arrive",
-        Color::BLUE,
-    );
+    // assets
+    let fonts = Fonts {
+        normal: asset_server.load("fonts/FiraSans-Bold.ttf"),
+    };
+    commands.insert_resource(fonts);
 }
 
 #[bevy_main]
@@ -101,17 +72,32 @@ fn main() {
     // plugins
     app.add_plugin(DebugPlugin);
 
+    // initial game state
+    app.add_state(GameState::Intro);
+
     // main setup
     app.add_startup_system(setup);
 
-    // physics
-    app.add_system_set(
-        SystemSet::new()
-            .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
-            .with_system(systems::steering::update_steering.label("steering"))
-            .with_system(systems::physics::update.label("physics").after("steering")),
-    )
-    .add_system(systems::wrap.after("physics"));
+    // intro state
+    app.add_system_set(SystemSet::on_enter(GameState::Intro).with_system(states::intro::setup))
+        .add_system_set(
+            SystemSet::on_update(GameState::Intro).with_system(states::intro::button_handler),
+        )
+        .add_system_set(SystemSet::on_exit(GameState::Intro).with_system(states::intro::teardown));
+
+    // game state
+    app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
+        // physics
+        .add_system_set(
+            SystemSet::on_update(GameState::Main)
+                .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
+                .with_system(systems::steering::update_steering.label("steering"))
+                .with_system(systems::physics::update.label("physics").after("steering"))
+                .with_system(systems::wrap.after("physics")),
+        )
+        // TODO: non-physics systems here
+        //.add_system_set(SystemSet::on_update(GameState::Main).with_system())
+        .add_system_set(SystemSet::on_exit(GameState::Main).with_system(states::main::teardown));
 
     app.run();
 }

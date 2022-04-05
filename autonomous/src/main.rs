@@ -15,7 +15,7 @@ fn setup(mut commands: Commands) {
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(Name::new("Camera"));
 
-    VehicleBundle::spawn(&mut commands, "test");
+    VehicleBundle::spawn(&mut commands, SteeringTest::default(), "test");
 }
 
 #[bevy_main]

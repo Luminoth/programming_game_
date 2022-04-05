@@ -33,6 +33,18 @@ fn setup(mut commands: Commands) {
         100.0,
         10.0,
         "test",
+        Color::WHITE,
+    );
+
+    VehicleBundle::spawn(
+        &mut commands,
+        SteeringBehavior::Seek(Vec2::new(-200.0, 200.0)),
+        1.0,
+        100.0,
+        100.0,
+        10.0,
+        "seek",
+        Color::RED,
     );
 }
 

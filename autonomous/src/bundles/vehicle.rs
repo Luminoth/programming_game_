@@ -27,10 +27,14 @@ impl VehicleBundle {
         max_force: f32,
         max_turn_rate: f32,
         name: impl Into<String>,
+        color: Color,
     ) {
         let name = name.into();
 
-        info!("spawning vehicle {}", name);
+        info!(
+            "spawning vehicle {} with steering behavior {:?}",
+            name, steering
+        );
 
         let mut bundle = commands.spawn_bundle(VehicleBundle {
             agent: Agent::default(),
@@ -52,7 +56,7 @@ impl VehicleBundle {
                     ..Default::default()
                 },
                 DrawMode::Fill(FillMode {
-                    color: Color::WHITE,
+                    color,
                     options: FillOptions::default(),
                 }),
                 Transform::default(),

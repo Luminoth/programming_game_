@@ -5,6 +5,7 @@ mod plugins;
 mod resources;
 mod systems;
 
+use bevy::diagnostic::*;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_inspector_egui::prelude::*;
@@ -43,7 +44,8 @@ fn main() {
         ..Default::default()
     })
     .insert_resource(Msaa { samples: 4 })
-    .add_plugins(DefaultPlugins);
+    .add_plugins(DefaultPlugins)
+    .add_plugin(FrameTimeDiagnosticsPlugin);
 
     // prototype lyon
     app.add_plugin(ShapePlugin);

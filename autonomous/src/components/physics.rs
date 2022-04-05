@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::prelude::*;
 
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Inspectable)]
 pub struct Physical {
     pub acceleration: Vec2,
     pub velocity: Vec2,

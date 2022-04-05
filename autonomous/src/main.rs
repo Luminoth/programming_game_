@@ -1,12 +1,19 @@
 mod bundles;
 mod components;
+mod events;
+mod plugins;
+mod resources;
 mod systems;
 
 use bevy::prelude::*;
+use bevy_egui::{EguiPlugin, EguiSettings};
+use bevy_inspector_egui::prelude::*;
+use bevy_inspector_egui::WorldInspectorParams;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::bundles::vehicle::VehicleBundle;
+use crate::bundles::vehicle::*;
 use crate::components::steering::*;
+use crate::plugins::debug::*;
 
 fn setup(mut commands: Commands) {
     // cameras
@@ -40,6 +47,23 @@ fn main() {
 
     // prototype lyon
     app.add_plugin(ShapePlugin);
+
+    // egui
+    app.insert_resource(EguiSettings { scale_factor: 0.75 })
+        .add_plugin(EguiPlugin);
+
+    // inspector
+    app.insert_resource(WorldInspectorParams {
+        enabled: false,
+        despawnable_entities: true,
+        ..Default::default()
+    })
+    .add_plugin(WorldInspectorPlugin::new())
+    // inspectable types
+    .register_inspectable::<components::physics::Physical>();
+
+    // plugins
+    app.add_plugin(DebugPlugin);
 
     // main setup
     app.add_startup_system(setup);

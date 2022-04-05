@@ -27,17 +27,6 @@ fn setup(mut commands: Commands) {
 
     VehicleBundle::spawn(
         &mut commands,
-        SteeringBehavior::Test,
-        1.0,
-        100.0,
-        100.0,
-        10.0,
-        "test",
-        Color::WHITE,
-    );
-
-    VehicleBundle::spawn(
-        &mut commands,
         SteeringBehavior::Seek(Vec2::new(-200.0, 200.0)),
         1.0,
         100.0,
@@ -45,6 +34,17 @@ fn setup(mut commands: Commands) {
         10.0,
         "seek",
         Color::RED,
+    );
+
+    VehicleBundle::spawn(
+        &mut commands,
+        SteeringBehavior::Flee(Vec2::new(1.0, 1.0)),
+        1.0,
+        100.0,
+        100.0,
+        10.0,
+        "flee",
+        Color::GREEN,
     );
 }
 
@@ -84,7 +84,8 @@ fn main() {
     })
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
-    .register_inspectable::<components::physics::Physical>();
+    .register_inspectable::<components::physics::Physical>()
+    .register_inspectable::<components::steering::SteeringBehavior>();
 
     // plugins
     app.add_plugin(DebugPlugin);

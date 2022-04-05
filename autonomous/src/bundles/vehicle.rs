@@ -38,23 +38,23 @@ where
             ..Default::default()
         });
 
+        bundle.insert(Name::new(name));
+
         bundle.insert_bundle(GameEntityBundle::default());
 
         bundle.with_children(|parent| {
-            parent
-                .spawn_bundle(GeometryBuilder::build_as(
-                    &shapes::RegularPolygon {
-                        sides: 3,
-                        feature: shapes::RegularPolygonFeature::SideLength(VEHICLE_SIZE),
-                        ..Default::default()
-                    },
-                    DrawMode::Fill(FillMode {
-                        color: Color::WHITE,
-                        options: FillOptions::default(),
-                    }),
-                    Transform::default(),
-                ))
-                .insert(Name::new(name));
+            parent.spawn_bundle(GeometryBuilder::build_as(
+                &shapes::RegularPolygon {
+                    sides: 3,
+                    feature: shapes::RegularPolygonFeature::SideLength(VEHICLE_SIZE),
+                    ..Default::default()
+                },
+                DrawMode::Fill(FillMode {
+                    color: Color::WHITE,
+                    options: FillOptions::default(),
+                }),
+                Transform::default(),
+            ));
         });
     }
 }

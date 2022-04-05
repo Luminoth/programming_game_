@@ -46,6 +46,17 @@ fn setup(mut commands: Commands) {
         "flee",
         Color::GREEN,
     );
+
+    VehicleBundle::spawn(
+        &mut commands,
+        SteeringBehavior::Arrive(Vec2::new(200.0, -200.0), Deceleration::Slow),
+        1.0,
+        100.0,
+        100.0,
+        10.0,
+        "arrive",
+        Color::BLUE,
+    );
 }
 
 #[bevy_main]

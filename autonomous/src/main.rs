@@ -86,7 +86,8 @@ fn main() {
             .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
             .with_system(systems::steering::update_steering::<SteeringTest>.label("steering"))
             .with_system(systems::physics::update.label("physics").after("steering")),
-    );
+    )
+    .add_system(systems::wrap.after("physics"));
 
     app.run();
 }

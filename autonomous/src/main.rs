@@ -27,7 +27,7 @@ fn setup(mut commands: Commands) {
 
     VehicleBundle::spawn(
         &mut commands,
-        SteeringTest::default(),
+        SteeringBehavior::Test,
         1.0,
         100.0,
         100.0,
@@ -84,7 +84,7 @@ fn main() {
     app.add_system_set(
         SystemSet::new()
             .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
-            .with_system(systems::steering::update_steering::<SteeringTest>.label("steering"))
+            .with_system(systems::steering::update_steering.label("steering"))
             .with_system(systems::physics::update.label("physics").after("steering")),
     )
     .add_system(systems::wrap.after("physics"));

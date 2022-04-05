@@ -11,23 +11,17 @@ use super::entity::GameEntityBundle;
 const VEHICLE_SIZE: f32 = 20.0;
 
 #[derive(Debug, Default, Bundle)]
-pub struct VehicleBundle<T>
-where
-    T: Steering + Default,
-{
+pub struct VehicleBundle {
     pub agent: Agent,
-    pub steering: T,
+    pub steering: SteeringBehavior,
     pub vehicle: Vehicle,
     pub physical: Physical,
 }
 
-impl<T> VehicleBundle<T>
-where
-    T: Steering + Default,
-{
+impl VehicleBundle {
     pub fn spawn(
         commands: &mut Commands,
-        steering: T,
+        steering: SteeringBehavior,
         mass: f32,
         max_speed: f32,
         max_force: f32,

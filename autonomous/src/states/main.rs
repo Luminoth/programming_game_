@@ -25,6 +25,8 @@ pub fn setup(mut commands: Commands) {
 
     let flee_entity = VehicleBundle::spawn(
         &mut commands,
+        // TODO: if this spawns on top of the postion its fleeing
+        // something breaks the numbers, but I'm not sure what / where
         SteeringBehavior::Flee(Vec2::new(1.0, 1.0)),
         1.0,
         100.0,

@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use crate::components::entity::*;
+use crate::components::actor::*;
 
 #[derive(Debug, Default, Bundle)]
-pub struct GameEntityBundle {
-    pub game_entity: BaseGameEntity,
+pub struct ActorBundle {
+    pub actor: Actor,
 
     pub transform: Transform,
     pub global_transform: GlobalTransform,

@@ -6,7 +6,7 @@ use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::vehicle::*;
 
-use super::entity::GameEntityBundle;
+use super::actor::ActorBundle;
 
 const VEHICLE_SIZE: f32 = 20.0;
 
@@ -45,7 +45,7 @@ impl VehicleBundle {
 
         bundle.insert(Name::new(name));
 
-        bundle.insert_bundle(GameEntityBundle::default());
+        bundle.insert_bundle(ActorBundle::default());
 
         bundle.with_children(|parent| {
             parent.spawn_bundle(GeometryBuilder::build_as(

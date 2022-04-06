@@ -23,7 +23,7 @@ pub fn setup(mut commands: Commands) {
         Color::RED,
     );
 
-    VehicleBundle::spawn(
+    let flee_entity = VehicleBundle::spawn(
         &mut commands,
         SteeringBehavior::Flee(Vec2::new(1.0, 1.0)),
         1.0,
@@ -43,6 +43,17 @@ pub fn setup(mut commands: Commands) {
         10.0,
         "arrive",
         Color::BLUE,
+    );
+
+    VehicleBundle::spawn(
+        &mut commands,
+        SteeringBehavior::Pursuit(Some(flee_entity)),
+        1.0,
+        75.0,
+        75.0,
+        10.0,
+        "pursuit",
+        Color::PURPLE,
     );
 }
 

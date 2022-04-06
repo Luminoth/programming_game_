@@ -33,6 +33,10 @@ impl Physical {
         }
     }
 
+    pub fn speed(&self) -> f32 {
+        self.velocity.length()
+    }
+
     pub fn apply_force(&mut self, force: Vec2) {
         let force = if self.mass > 0.0 {
             force / self.mass
@@ -55,7 +59,7 @@ impl Physical {
 
         // update local coordinate system
         if self.velocity.length_squared() > f32::EPSILON {
-            self.heading = self.velocity.normalize();
+            self.heading = self.velocity.normalize_or_zero();
             self.side = self.heading.perp();
         }
 

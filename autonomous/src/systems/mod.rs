@@ -34,7 +34,7 @@ pub fn facing(_time: Res<Time>, mut query: Query<(&mut Transform, &Physical)>) {
             continue;
         }
 
-        let angle = -physical.velocity.normalize().angle_between(Vec2::Y);
+        let angle = -physical.velocity.normalize_or_zero().angle_between(Vec2::Y);
         transform.rotation = transform.rotation.slerp(Quat::from_rotation_z(angle), dt);
     }
 }

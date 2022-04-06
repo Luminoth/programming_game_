@@ -28,7 +28,7 @@ impl VehicleBundle {
         max_turn_rate: f32,
         name: impl Into<String>,
         color: Color,
-    ) {
+    ) -> Entity {
         let name = name.into();
 
         info!(
@@ -61,5 +61,7 @@ impl VehicleBundle {
                 Transform::default(),
             ));
         });
+
+        bundle.id()
     }
 }

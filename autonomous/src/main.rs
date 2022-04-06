@@ -96,7 +96,8 @@ fn main() {
                 .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
                 .with_system(systems::steering::update_steering.label("steering"))
                 .with_system(systems::physics::update.label("physics").after("steering"))
-                .with_system(systems::wrap.after("physics")),
+                .with_system(systems::wrap.after("physics"))
+                .with_system(systems::facing.after("steering").before("physics")),
         )
         // TODO: non-physics systems here
         //.add_system_set(SystemSet::on_update(GameState::Main).with_system())

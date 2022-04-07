@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::bundles::vehicle::*;
 use crate::components::camera::*;
-use crate::components::steering::*;
+use crate::components::steering;
 
 pub fn setup(mut commands: Commands) {
     // cameras
@@ -12,9 +12,10 @@ pub fn setup(mut commands: Commands) {
         .insert(MainCamera)
         .insert(Name::new("Main Camera"));
 
-    VehicleBundle::spawn(
+    let entity = VehicleBundle::spawn(
         &mut commands,
-        SteeringBehavior::Seek(Vec2::new(-200.0, 200.0)),
+        steering::Seek::default(),
+        Vec2::ZERO,
         1.0,
         100.0,
         100.0,
@@ -23,11 +24,14 @@ pub fn setup(mut commands: Commands) {
         Color::RED,
     );
 
-    let flee_entity = VehicleBundle::spawn(
+    commands.entity(entity).insert(steering::SeekTarget {
+        position: Vec2::new(-200.0, 200.0),
+    });
+
+    let entity = VehicleBundle::spawn(
         &mut commands,
-        // TODO: if this spawns on top of the postion its fleeing
-        // something breaks the numbers, but I'm not sure what / where
-        SteeringBehavior::Flee(Vec2::new(1.0, 1.0)),
+        steering::Flee::default(),
+        Vec2::ZERO,
         1.0,
         100.0,
         100.0,
@@ -36,9 +40,16 @@ pub fn setup(mut commands: Commands) {
         Color::GREEN,
     );
 
-    VehicleBundle::spawn(
+    commands.entity(entity).insert(steering::FleeTarget {
+        position: Vec2::new(1.0, 1.0),
+    });
+
+    let entity = VehicleBundle::spawn(
         &mut commands,
-        SteeringBehavior::Arrive(Vec2::new(200.0, -200.0), Deceleration::Slow),
+        steering::Arrive {
+            deceleration: steering::Deceleration::Slow,
+        },
+        Vec2::ZERO,
         1.0,
         100.0,
         100.0,
@@ -47,9 +58,28 @@ pub fn setup(mut commands: Commands) {
         Color::BLUE,
     );
 
-    VehicleBundle::spawn(
+    commands.entity(entity).insert(steering::ArriveTarget {
+        position: Vec2::new(200.0, -200.0),
+    });
+
+    let evade_entity = VehicleBundle::spawn(
         &mut commands,
-        SteeringBehavior::Pursuit(Some(flee_entity)),
+        steering::Evade::default(),
+        //Vec2::ZERO,
+        Vec2::new(10.0, 10.0),
+        1.0,
+        100.0,
+        100.0,
+        10.0,
+        "evade",
+        Color::PINK,
+    );
+
+    let pursuit_entity = VehicleBundle::spawn(
+        &mut commands,
+        steering::Pursuit::default(),
+        //Vec2::ZERO,
+        Vec2::new(-10.0, -10.0),
         1.0,
         75.0,
         75.0,
@@ -57,6 +87,16 @@ pub fn setup(mut commands: Commands) {
         "pursuit",
         Color::PURPLE,
     );
+
+    commands.entity(evade_entity).insert(steering::EvadeTarget {
+        entity: pursuit_entity,
+    });
+
+    commands
+        .entity(pursuit_entity)
+        .insert(steering::PursuitTarget {
+            entity: evade_entity,
+        });
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

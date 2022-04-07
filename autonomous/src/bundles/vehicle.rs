@@ -11,17 +11,24 @@ use super::actor::ActorBundle;
 const VEHICLE_SIZE: f32 = 20.0;
 
 #[derive(Debug, Default, Bundle)]
-pub struct VehicleBundle {
+pub struct VehicleBundle<T>
+where
+    T: SteeringBehavior,
+{
     pub agent: Agent,
-    pub steering: SteeringBehavior,
+    pub steering: T,
     pub vehicle: Vehicle,
     pub physical: Physical,
 }
 
-impl VehicleBundle {
+impl<T> VehicleBundle<T>
+where
+    T: SteeringBehavior,
+{
     pub fn spawn(
         commands: &mut Commands,
-        steering: SteeringBehavior,
+        steering: T,
+        position: Vec2,
         mass: f32,
         max_speed: f32,
         max_force: f32,
@@ -32,8 +39,8 @@ impl VehicleBundle {
         let name = name.into();
 
         info!(
-            "spawning vehicle {} with steering behavior {:?}",
-            name, steering
+            "spawning vehicle {} ({:?}) at {} with steering behavior {:?}",
+            name, color, position, steering
         );
 
         let mut bundle = commands.spawn_bundle(VehicleBundle {
@@ -45,7 +52,7 @@ impl VehicleBundle {
 
         bundle.insert(Name::new(name));
 
-        bundle.insert_bundle(ActorBundle::default());
+        bundle.insert_bundle(ActorBundle::new(position));
 
         bundle.with_children(|parent| {
             parent.spawn_bundle(GeometryBuilder::build_as(

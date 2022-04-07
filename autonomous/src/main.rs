@@ -70,7 +70,16 @@ fn main() {
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
     .register_inspectable::<components::physics::Physical>()
-    .register_inspectable::<components::steering::SteeringBehavior>();
+    .register_inspectable::<components::steering::Seek>()
+    .register_inspectable::<components::steering::SeekTarget>()
+    .register_inspectable::<components::steering::Flee>()
+    .register_inspectable::<components::steering::FleeTarget>()
+    .register_inspectable::<components::steering::Arrive>()
+    .register_inspectable::<components::steering::ArriveTarget>()
+    .register_inspectable::<components::steering::Pursuit>()
+    .register_inspectable::<components::steering::PursuitTarget>()
+    .register_inspectable::<components::steering::Evade>()
+    .register_inspectable::<components::steering::EvadeTarget>();
 
     // plugins
     app.add_plugin(DebugPlugin);
@@ -94,7 +103,19 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(GameState::Main)
                 .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
-                .with_system(systems::steering::update_steering.label("steering"))
+                .with_system(systems::steering::update_seek.label("steering"))
+                .with_system(systems::steering::update_flee.label("steering"))
+                .with_system(systems::steering::update_arrive.label("steering"))
+                .with_system(
+                    systems::steering::update_pursuit
+                        .label("steering")
+                        .label("pursuit"),
+                )
+                .with_system(
+                    systems::steering::update_evade
+                        .label("steering")
+                        .after("pursuit"),
+                )
                 .with_system(systems::physics::update.label("physics").after("steering"))
                 .with_system(systems::wrap.after("physics"))
                 .with_system(systems::facing.after("steering").before("physics")),

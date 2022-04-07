@@ -99,6 +99,19 @@ impl SteeringBehavior {
         Vec2::ZERO
     }
 
+    fn turnaround_time(&self, target: Vec2, physical: &Physical, transform: &Transform) -> f32 {
+        let to_target = (target - transform.translation.truncate()).normalize_or_zero();
+        let dot = physical.heading.dot(to_target);
+
+        // adjust to get ~1 second for 180 turn
+        // higher max turn means higher coefficient
+        let coefficient = 0.5;
+
+        // dot == 1.0 if ahead, -1.0 if behind
+        // this should give a value proportional to our rotational displacement
+        (dot - 1.0) * -coefficient
+    }
+
     fn pursuit_force(
         &self,
         target: Entity,
@@ -122,8 +135,11 @@ impl SteeringBehavior {
             // not ahead, so predict future position and seek that
             // look-ahead time is proportional to the distance between the evader
             // and us; and is inversly proportional to the sum of our velocities
-            let look_ahead_time =
+            let mut look_ahead_time =
                 to_evader.length() / (physical.max_speed + evader_physical.speed());
+
+            look_ahead_time +=
+                self.turnaround_time(evader_transform.translation.truncate(), physical, transform);
 
             return self.seek_force(
                 evader_transform.translation.truncate()

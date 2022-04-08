@@ -55,18 +55,20 @@ where
         bundle.insert_bundle(ActorBundle::new(position));
 
         bundle.with_children(|parent| {
-            parent.spawn_bundle(GeometryBuilder::build_as(
-                &shapes::RegularPolygon {
-                    sides: 3,
-                    feature: shapes::RegularPolygonFeature::SideLength(VEHICLE_SIZE),
-                    ..Default::default()
-                },
-                DrawMode::Fill(FillMode {
-                    color,
-                    options: FillOptions::default(),
-                }),
-                Transform::default(),
-            ));
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::RegularPolygon {
+                        sides: 3,
+                        feature: shapes::RegularPolygonFeature::SideLength(VEHICLE_SIZE),
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Name::new("Model"));
         });
 
         bundle.id()

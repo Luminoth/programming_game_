@@ -5,6 +5,13 @@ use super::physics::Physical;
 
 pub trait SteeringBehavior: std::fmt::Debug + Component {}
 
+fn seek_force(target: Vec2, physical: &Physical, transform: &Transform) -> Vec2 {
+    let translation = transform.translation.truncate();
+
+    let desired_velocity = (target - translation).normalize_or_zero() * physical.max_speed;
+    desired_velocity - physical.velocity
+}
+
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct SeekTarget {
     pub position: Vec2,
@@ -19,6 +26,18 @@ impl Seek {
     pub fn force(&self, target: &SeekTarget, physical: &Physical, transform: &Transform) -> Vec2 {
         seek_force(target.position, physical, transform)
     }
+}
+
+fn flee_force(target: Vec2, physical: &Physical, transform: &Transform) -> Vec2 {
+    let translation = transform.translation.truncate();
+
+    let panic_distance_squared = 100.0 * 100.0;
+    if translation.distance_squared(target) > panic_distance_squared {
+        return Vec2::ZERO;
+    }
+
+    let desired_velocity = (translation - target).normalize_or_zero() * physical.max_speed;
+    desired_velocity - physical.velocity
 }
 
 // TODO: if the agent spawns on top of the postion its fleeing
@@ -84,6 +103,19 @@ impl Arrive {
 
         Vec2::ZERO
     }
+}
+
+fn turnaround_time(target: Vec2, physical: &Physical, transform: &Transform) -> f32 {
+    let to_target = (target - transform.translation.truncate()).normalize_or_zero();
+    let dot = physical.heading.dot(to_target);
+
+    // adjust to get ~1 second for 180 turn
+    // higher max turn means higher coefficient
+    let coefficient = 0.5;
+
+    // dot == 1.0 if ahead, -1.0 if behind
+    // this should give a value proportional to our rotational displacement
+    (dot - 1.0) * -coefficient
 }
 
 #[derive(Debug, Component, Inspectable)]
@@ -177,36 +209,4 @@ impl Evade {
         warn!("evade has invalid target!");
         Vec2::ZERO
     }
-}
-
-fn seek_force(target: Vec2, physical: &Physical, transform: &Transform) -> Vec2 {
-    let translation = transform.translation.truncate();
-
-    let desired_velocity = (target - translation).normalize_or_zero() * physical.max_speed;
-    desired_velocity - physical.velocity
-}
-
-fn flee_force(target: Vec2, physical: &Physical, transform: &Transform) -> Vec2 {
-    let translation = transform.translation.truncate();
-
-    let panic_distance_squared = 100.0 * 100.0;
-    if translation.distance_squared(target) > panic_distance_squared {
-        return Vec2::ZERO;
-    }
-
-    let desired_velocity = (translation - target).normalize_or_zero() * physical.max_speed;
-    desired_velocity - physical.velocity
-}
-
-fn turnaround_time(target: Vec2, physical: &Physical, transform: &Transform) -> f32 {
-    let to_target = (target - transform.translation.truncate()).normalize_or_zero();
-    let dot = physical.heading.dot(to_target);
-
-    // adjust to get ~1 second for 180 turn
-    // higher max turn means higher coefficient
-    let coefficient = 0.5;
-
-    // dot == 1.0 if ahead, -1.0 if behind
-    // this should give a value proportional to our rotational displacement
-    (dot - 1.0) * -coefficient
 }

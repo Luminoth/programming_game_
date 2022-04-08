@@ -4,7 +4,7 @@ use bevy_inspector_egui::prelude::*;
 // 50hz, the same as Unity
 pub const PHYSICS_STEP: f32 = 0.02;
 
-#[derive(Debug, Default, Component, Inspectable)]
+#[derive(Debug, Component, Inspectable)]
 pub struct Physical {
     pub acceleration: Vec2,
     pub velocity: Vec2,
@@ -19,6 +19,26 @@ pub struct Physical {
     pub max_turn_rate: f32,
 }
 
+impl Default for Physical {
+    fn default() -> Self {
+        let heading = Vec2::new(0.0, 1.0);
+        let side = heading.perp();
+
+        Self {
+            acceleration: Vec2::default(),
+            velocity: Vec2::default(),
+            heading,
+            side,
+
+            // TODO: these defaults aren't good
+            mass: 0.0,
+            max_speed: 0.0,
+            max_force: 0.0,
+            max_turn_rate: 0.0,
+        }
+    }
+}
+
 impl Physical {
     pub fn speed(&self) -> f32 {
         self.velocity.length()
@@ -31,7 +51,7 @@ impl Physical {
             force
         };
 
-        self.acceleration += force;
+        self.acceleration += force.clamp_length_max(self.max_force);
     }
 
     pub fn update(&mut self, transform: &mut Transform) {

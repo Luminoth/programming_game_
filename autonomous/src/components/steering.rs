@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 use rand::Rng;
 
+use crate::util::point_to_world_space;
+
 use super::physics::Physical;
 
 pub trait SteeringBehavior: std::fmt::Debug + Component {}
@@ -215,7 +217,7 @@ impl Evade {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Wander {
     pub radius: f32,
-    pub distance: Vec2,
+    pub distance: f32,
     pub jitter: f32,
 
     target: Vec2,
@@ -225,7 +227,7 @@ impl SteeringBehavior for Wander {}
 
 impl Wander {
     // distance also determines the general direction we wander in
-    pub fn new(radius: f32, distance: Vec2, jitter: f32) -> Self {
+    pub fn new(radius: f32, distance: f32, jitter: f32) -> Self {
         Self {
             radius,
             distance,
@@ -234,8 +236,7 @@ impl Wander {
         }
     }
 
-    // TODO: this just doesn't seem to be right
-    pub fn force(&mut self) -> Vec2 {
+    pub fn force(&mut self, physical: &Physical, transform: &Transform) -> Vec2 {
         let mut rng = rand::thread_rng();
 
         // add some jitter to the target
@@ -247,7 +248,13 @@ impl Wander {
         // extend out to the circle radius
         self.target = self.target.normalize_or_zero() * self.radius;
 
+        let translation = transform.translation.truncate();
+
+        // project into world space
+        let local = self.target + Vec2::new(self.distance, 0.0);
+        let world = point_to_world_space(local, physical.heading, physical.side, translation);
+
         // move the target out front
-        self.target + self.distance
+        world - translation
     }
 }

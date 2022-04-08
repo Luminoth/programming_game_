@@ -41,6 +41,7 @@ pub fn setup(mut commands: Commands) {
     );
 
     commands.entity(entity).insert(steering::FleeTarget {
+        //position: Vec2::ZERO,
         position: Vec2::new(1.0, 1.0),
     });
 
@@ -100,7 +101,7 @@ pub fn setup(mut commands: Commands) {
 
     VehicleBundle::spawn(
         &mut commands,
-        steering::Wander::new(100.0, Vec2::new(100.0, -100.0), 50.0),
+        steering::Wander::new(100.0, 100.0, 50.0),
         Vec2::ZERO,
         1.0,
         100.0,

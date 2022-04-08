@@ -47,12 +47,21 @@ where
             agent: Agent::default(),
             steering,
             vehicle: Vehicle::default(),
-            physical: Physical::new(mass, max_speed, max_force, max_turn_rate),
+            physical: Physical {
+                mass,
+                max_speed,
+                max_force,
+                max_turn_rate,
+                ..Default::default()
+            },
         });
 
         bundle.insert(Name::new(name));
 
-        bundle.insert_bundle(ActorBundle::new(position));
+        bundle.insert_bundle(ActorBundle {
+            transform: Transform::from_translation(position.extend(0.0)),
+            ..Default::default()
+        });
 
         bundle.with_children(|parent| {
             parent

@@ -75,3 +75,10 @@ pub fn update_evade(
         }
     }
 }
+
+pub fn update_wander(mut query: Query<(&mut Wander, &mut Physical)>) {
+    for (mut steering, mut physical) in query.iter_mut() {
+        let force = steering.force();
+        physical.apply_force(force);
+    }
+}

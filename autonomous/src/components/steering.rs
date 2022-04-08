@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
+use rand::Rng;
 
 use super::physics::Physical;
 
@@ -208,5 +209,44 @@ impl Evade {
 
         warn!("evade has invalid target!");
         Vec2::ZERO
+    }
+}
+
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct Wander {
+    pub radius: f32,
+    pub distance: f32,
+    pub jitter: f32,
+
+    target: Vec2,
+}
+
+impl SteeringBehavior for Wander {}
+
+impl Wander {
+    pub fn new(radius: f32, distance: f32, jitter: f32) -> Self {
+        Self {
+            radius,
+            distance,
+            jitter,
+            target: Vec2::ZERO,
+        }
+    }
+
+    // TODO: this just doesn't seem to be right
+    pub fn force(&mut self) -> Vec2 {
+        let mut rng = rand::thread_rng();
+
+        // add some jitter to the target
+        self.target += Vec2::new(
+            rng.gen_range(-1.0..=1.0) * self.jitter,
+            rng.gen_range(-1.0..=1.0) * self.jitter,
+        );
+
+        // extend out to the circle radius
+        self.target = self.target.normalize_or_zero() * self.radius;
+
+        // move the target out front
+        self.target + Vec2::new(self.distance, 0.0)
     }
 }

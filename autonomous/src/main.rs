@@ -79,7 +79,8 @@ fn main() {
     .register_inspectable::<components::steering::Pursuit>()
     .register_inspectable::<components::steering::PursuitTarget>()
     .register_inspectable::<components::steering::Evade>()
-    .register_inspectable::<components::steering::EvadeTarget>();
+    .register_inspectable::<components::steering::EvadeTarget>()
+    .register_inspectable::<components::steering::Wander>();
 
     // plugins
     app.add_plugin(DebugPlugin);
@@ -116,6 +117,7 @@ fn main() {
                         .label("steering")
                         .after("pursuit"),
                 )
+                .with_system(systems::steering::update_wander.label("steering"))
                 .with_system(systems::physics::update.label("physics").after("steering"))
                 .with_system(systems::wrap.after("physics"))
                 .with_system(systems::facing.after("steering").before("physics")),

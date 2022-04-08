@@ -97,6 +97,18 @@ pub fn setup(mut commands: Commands) {
         .insert(steering::PursuitTarget {
             entity: evade_entity,
         });
+
+    VehicleBundle::spawn(
+        &mut commands,
+        steering::Wander::new(10.0, 10.0, 10.0),
+        Vec2::ZERO,
+        1.0,
+        100.0,
+        100.0,
+        10.0,
+        "wander",
+        Color::YELLOW,
+    );
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

@@ -215,7 +215,7 @@ impl Evade {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Wander {
     pub radius: f32,
-    pub distance: f32,
+    pub distance: Vec2,
     pub jitter: f32,
 
     target: Vec2,
@@ -224,7 +224,8 @@ pub struct Wander {
 impl SteeringBehavior for Wander {}
 
 impl Wander {
-    pub fn new(radius: f32, distance: f32, jitter: f32) -> Self {
+    // distance also determines the general direction we wander in
+    pub fn new(radius: f32, distance: Vec2, jitter: f32) -> Self {
         Self {
             radius,
             distance,
@@ -247,6 +248,6 @@ impl Wander {
         self.target = self.target.normalize_or_zero() * self.radius;
 
         // move the target out front
-        self.target + Vec2::new(self.distance, 0.0)
+        self.target + self.distance
     }
 }

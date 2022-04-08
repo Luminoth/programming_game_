@@ -100,7 +100,7 @@ pub fn setup(mut commands: Commands) {
 
     VehicleBundle::spawn(
         &mut commands,
-        steering::Wander::new(10.0, 10.0, 10.0),
+        steering::Wander::new(100.0, Vec2::new(100.0, -100.0), 50.0),
         Vec2::ZERO,
         1.0,
         100.0,

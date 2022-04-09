@@ -29,19 +29,21 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>, window: Res<
     // vehicles
     let entity = VehicleBundle::spawn(
         &mut commands,
-        steering::Seek::default(),
         Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
-        1.0,
-        100.0,
-        100.0,
-        10.0,
+        params.vehicle_mass,
+        params.vehicle_max_speed,
+        params.vehicle_max_steering_force,
+        params.vehicle_max_turn_rate,
         "seek",
         Color::RED,
     );
 
-    commands.entity(entity).insert(steering::SeekTarget {
-        position: Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
-    });
+    commands
+        .entity(entity)
+        .insert(steering::Seek::default())
+        .insert(steering::SeekTarget {
+            position: Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
+        });
 
     // TODO: fleeing seems like it may not be working quite right
     // based on how it has to be setup to flee from something right next to it
@@ -57,83 +59,98 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>, window: Res<
 
     let entity = VehicleBundle::spawn(
         &mut commands,
-        steering::Flee::default(),
         flee_position,
-        1.0,
-        100.0,
-        100.0,
-        10.0,
+        params.vehicle_mass,
+        params.vehicle_max_speed,
+        params.vehicle_max_steering_force,
+        params.vehicle_max_turn_rate,
         "flee",
         Color::GREEN,
     );
 
-    commands.entity(entity).insert(steering::FleeTarget {
-        position: flee_position + Vec2::new(1.0, 1.0),
-    });
+    commands
+        .entity(entity)
+        .insert(steering::Flee::default())
+        .insert(steering::FleeTarget {
+            position: flee_position + Vec2::new(1.0, 1.0),
+        });
 
     let entity = VehicleBundle::spawn(
         &mut commands,
-        steering::Arrive {
-            deceleration: steering::Deceleration::Slow,
-        },
         Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
-        1.0,
-        100.0,
-        100.0,
-        10.0,
+        params.vehicle_mass,
+        params.vehicle_max_speed,
+        params.vehicle_max_steering_force,
+        params.vehicle_max_turn_rate,
         "arrive",
         Color::BLUE,
     );
 
-    commands.entity(entity).insert(steering::ArriveTarget {
-        position: Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
-    });
+    commands
+        .entity(entity)
+        .insert(steering::Arrive {
+            deceleration: steering::Deceleration::Slow,
+        })
+        .insert(steering::ArriveTarget {
+            position: Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
+        });
 
     let evade_entity = VehicleBundle::spawn(
         &mut commands,
-        steering::Evade::default(),
         Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
-        1.0,
-        100.0,
-        100.0,
-        10.0,
+        params.vehicle_mass,
+        params.vehicle_max_speed,
+        params.vehicle_max_steering_force,
+        params.vehicle_max_turn_rate,
         "evade",
         Color::SALMON,
     );
 
     let pursuit_entity = VehicleBundle::spawn(
         &mut commands,
-        steering::Pursuit::default(),
         Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
-        1.0,
-        75.0,
-        75.0,
-        10.0,
+        params.vehicle_mass,
+        params.vehicle_max_speed * 0.75,
+        params.vehicle_max_steering_force * 0.75,
+        params.vehicle_max_turn_rate,
         "pursuit",
         Color::PURPLE,
     );
 
-    commands.entity(evade_entity).insert(steering::EvadeTarget {
-        entity: pursuit_entity,
-    });
+    commands
+        .entity(evade_entity)
+        .insert(steering::Evade::default())
+        .insert(steering::EvadeTarget {
+            entity: pursuit_entity,
+        });
 
     commands
         .entity(pursuit_entity)
+        .insert(steering::Pursuit::default())
         .insert(steering::PursuitTarget {
             entity: evade_entity,
         });
 
-    VehicleBundle::spawn(
+    // TODO: interpose pursuit and evade (bodyguard)
+
+    let entity = VehicleBundle::spawn(
         &mut commands,
-        steering::Wander::new(100.0, 100.0, 50.0),
         Vec2::new(rng.gen_range(min_x..max_x), rng.gen_range(min_y..max_y)),
-        1.0,
-        100.0,
-        100.0,
-        10.0,
+        params.vehicle_mass,
+        params.vehicle_max_speed,
+        params.vehicle_max_steering_force,
+        params.vehicle_max_turn_rate,
         "wander",
         Color::YELLOW,
     );
+
+    commands
+        .entity(entity)
+        .insert(steering::Wander::new(100.0, 100.0, 50.0));
+
+    // TODO: wander plus wall avoidance
+
+    // TODO: hide from wanderer
 
     // build a set of non-overlapping obstacles
     let max_tries = 2000;

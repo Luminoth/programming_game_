@@ -13,3 +13,7 @@ pub struct ObstacleAvoidance {
 
 #[derive(Debug, Default, Component)]
 pub struct ObstacleAvoidanceDebug;
+
+// TODO: walls for wall avoidance
+
+// TODO: hide

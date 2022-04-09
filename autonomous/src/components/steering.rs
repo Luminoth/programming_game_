@@ -171,6 +171,8 @@ impl Pursuit {
     }
 }
 
+// TODO: offset pursuit
+
 #[derive(Debug, Component, Inspectable)]
 pub struct EvadeTarget {
     pub entity: Entity,
@@ -258,3 +260,7 @@ impl Wander {
         world - translation
     }
 }
+
+// TODO: interpose
+
+// TODO: path follow

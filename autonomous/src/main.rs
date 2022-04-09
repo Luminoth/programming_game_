@@ -34,12 +34,25 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     };
     commands.insert_resource(fonts);
 
+    let steering_force_tweaker = 200.0;
+
     commands.insert_resource(SimulationParams {
         window_border: 10.0,
+        vehicle_mass: 1.0,
+        vehicle_max_speed: 150.0,
+        vehicle_max_steering_force: 2.0 * steering_force_tweaker,
+        vehicle_max_turn_rate: std::f32::consts::PI,
         num_obstacles: 7,
         min_obstacle_radius: 10.0,
         max_obstacle_radius: 30.0,
         min_gap_between_obstacles: 20.0,
+        seek_weight: 1.0,
+        flee_weight: 1.0,
+        arrive_weight: 1.0,
+        evade_weight: 0.5,
+        pursuit_weight: 1.0,
+        wander_weight: 1.0,
+        obstacle_avoidance_weight: 10.0,
         min_detection_box_length: 40.0,
     });
 }
@@ -115,6 +128,11 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(GameState::Main)
                 .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
+                .with_system(
+                    systems::steering::update_obstacle_avoidance
+                        .label("avoidance")
+                        .before("steering"),
+                )
                 .with_system(systems::steering::update_seek.label("steering"))
                 .with_system(systems::steering::update_flee.label("steering"))
                 .with_system(systems::steering::update_arrive.label("steering"))
@@ -129,14 +147,9 @@ fn main() {
                         .after("pursuit"),
                 )
                 .with_system(systems::steering::update_wander.label("steering"))
-                .with_system(
-                    systems::steering::update_obstacle_avoidance
-                        .label("avoidance")
-                        .after("steering"),
-                )
-                .with_system(systems::physics::update.label("physics").after("avoidance"))
+                .with_system(systems::physics::update.label("physics").after("steering"))
                 .with_system(systems::wrap.after("physics"))
-                .with_system(systems::facing.after("avoidance").before("physics")),
+                .with_system(systems::facing.after("physics")),
         )
         // TODO: non-physics systems here
         //.add_system_set(SystemSet::on_update(GameState::Main).with_system())

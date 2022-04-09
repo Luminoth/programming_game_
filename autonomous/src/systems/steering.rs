@@ -11,28 +11,38 @@ use crate::components::steering::*;
 use crate::resources::*;
 use crate::util::*;
 
-pub fn update_seek(mut query: Query<(&Seek, &SeekTarget, &mut Physical, &Transform)>) {
+pub fn update_seek(
+    params: Res<SimulationParams>,
+    mut query: Query<(&Seek, &SeekTarget, &mut Physical, &Transform)>,
+) {
     for (steering, target, mut physical, transform) in query.iter_mut() {
         let force = steering.force(target, &physical, transform);
-        physical.apply_force(force);
+        physical.accumulate_stearing_force(force, params.seek_weight);
     }
 }
 
-pub fn update_flee(mut query: Query<(&Flee, &FleeTarget, &mut Physical, &Transform)>) {
+pub fn update_flee(
+    params: Res<SimulationParams>,
+    mut query: Query<(&Flee, &FleeTarget, &mut Physical, &Transform)>,
+) {
     for (steering, target, mut physical, transform) in query.iter_mut() {
         let force = steering.force(target, &physical, transform);
-        physical.apply_force(force);
+        physical.accumulate_stearing_force(force, params.flee_weight);
     }
 }
 
-pub fn update_arrive(mut query: Query<(&Arrive, &ArriveTarget, &mut Physical, &Transform)>) {
+pub fn update_arrive(
+    params: Res<SimulationParams>,
+    mut query: Query<(&Arrive, &ArriveTarget, &mut Physical, &Transform)>,
+) {
     for (steering, target, mut physical, transform) in query.iter_mut() {
         let force = steering.force(target, &physical, transform);
-        physical.apply_force(force);
+        physical.accumulate_stearing_force(force, params.arrive_weight);
     }
 }
 
 pub fn update_pursuit(
+    params: Res<SimulationParams>,
     pursuers: Query<(Entity, &Pursuit, &PursuitTarget)>,
     mut entities: Query<(&mut Physical, &Transform)>,
 ) {
@@ -52,12 +62,13 @@ pub fn update_pursuit(
     for (entity, _, _) in pursuers.iter() {
         if let Ok((mut physical, _)) = entities.get_mut(entity) {
             let force = forces.entry(entity).or_insert_with(Vec2::default);
-            physical.apply_force(*force);
+            physical.accumulate_stearing_force(*force, params.pursuit_weight);
         }
     }
 }
 
 pub fn update_evade(
+    params: Res<SimulationParams>,
     evaders: Query<(Entity, &Evade, &EvadeTarget)>,
     mut entities: Query<(&mut Physical, &Transform)>,
 ) {
@@ -77,17 +88,24 @@ pub fn update_evade(
     for (entity, _, _) in evaders.iter() {
         if let Ok((mut physical, _)) = entities.get_mut(entity) {
             let force = forces.entry(entity).or_insert_with(Vec2::default);
-            physical.apply_force(*force);
+            physical.accumulate_stearing_force(*force, params.evade_weight);
         }
     }
 }
 
-pub fn update_wander(mut query: Query<(&mut Wander, &mut Physical, &Transform)>) {
+pub fn update_wander(
+    params: Res<SimulationParams>,
+    mut query: Query<(&mut Wander, &mut Physical, &Transform)>,
+) {
     for (mut steering, mut physical, transform) in query.iter_mut() {
         let force = steering.force(&physical, transform);
-        physical.apply_force(force);
+        physical.accumulate_stearing_force(force, params.wander_weight);
     }
 }
+
+// TODO: interpose
+
+// TODO: path follow
 
 pub fn update_obstacle_avoidance(
     params: Res<SimulationParams>,
@@ -204,7 +222,14 @@ pub fn update_obstacle_avoidance(
 
             let heading = physical.heading;
             let side = physical.side;
-            physical.apply_force(vector_to_world_space(force, heading, side));
+            physical.accumulate_stearing_force(
+                vector_to_world_space(force, heading, side),
+                params.obstacle_avoidance_weight,
+            );
         }
     }
 }
+
+// TODO: wall avoidance
+
+// TODO: hide

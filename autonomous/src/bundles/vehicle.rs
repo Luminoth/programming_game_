@@ -5,7 +5,6 @@ use crate::components::actor::*;
 use crate::components::agent::*;
 use crate::components::obstacle::*;
 use crate::components::physics::*;
-use crate::components::steering::*;
 use crate::components::vehicle::*;
 
 use super::actor::ActorBundle;
@@ -13,25 +12,17 @@ use super::actor::ActorBundle;
 pub const VEHICLE_RADIUS: f32 = 10.0;
 
 #[derive(Debug, Default, Bundle)]
-pub struct VehicleBundle<T>
-where
-    T: SteeringBehavior,
-{
+pub struct VehicleBundle {
+    pub physical: Physical,
     pub agent: Agent,
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
-    pub steering: T,
     pub vehicle: Vehicle,
-    pub physical: Physical,
 }
 
-impl<T> VehicleBundle<T>
-where
-    T: SteeringBehavior,
-{
+impl VehicleBundle {
     pub fn spawn(
         commands: &mut Commands,
-        steering: T,
         position: Vec2,
         mass: f32,
         max_speed: f32,
@@ -42,21 +33,11 @@ where
     ) -> Entity {
         let name = name.into();
 
-        info!(
-            "spawning vehicle {} ({:?}) at {} with steering behavior {:?}",
-            name, color, position, steering
-        );
+        info!("spawning vehicle {} ({:?}) at {}", name, color, position);
 
         let obstacle_avoidance_box_length = 0.0;
 
         let mut bundle = commands.spawn_bundle(VehicleBundle {
-            agent: Agent::default(),
-            obstacle: Obstacle::default(),
-            obstacle_avoidance: ObstacleAvoidance {
-                box_length: obstacle_avoidance_box_length,
-            },
-            steering,
-            vehicle: Vehicle::default(),
             physical: Physical {
                 mass,
                 max_speed,
@@ -64,6 +45,12 @@ where
                 max_turn_rate,
                 ..Default::default()
             },
+            agent: Agent::default(),
+            obstacle: Obstacle::default(),
+            obstacle_avoidance: ObstacleAvoidance {
+                box_length: obstacle_avoidance_box_length,
+            },
+            vehicle: Vehicle::default(),
         });
 
         bundle.insert(Name::new(name));

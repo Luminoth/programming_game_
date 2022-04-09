@@ -6,6 +6,8 @@ pub const PHYSICS_STEP: f32 = 0.02;
 
 #[derive(Debug, Component, Inspectable)]
 pub struct Physical {
+    pub steering_force: Vec2,
+
     pub acceleration: Vec2,
     pub velocity: Vec2,
 
@@ -25,6 +27,7 @@ impl Default for Physical {
         let side = heading.perp();
 
         Self {
+            steering_force: Vec2::default(),
             acceleration: Vec2::default(),
             velocity: Vec2::default(),
             heading,
@@ -44,6 +47,23 @@ impl Physical {
         self.velocity.length()
     }
 
+    pub fn accumulate_stearing_force(&mut self, force: Vec2, weight: f32) {
+        let force = force * weight;
+
+        let mag_so_far = self.steering_force.length();
+        let mag_remain = self.max_force - mag_so_far;
+        if mag_remain <= 0.0 {
+            return;
+        }
+
+        let to_add = force.length();
+        self.steering_force += if to_add < mag_remain {
+            force
+        } else {
+            force.normalize_or_zero() * mag_remain
+        };
+    }
+
     pub fn apply_force(&mut self, force: Vec2) {
         let force = if self.mass > 0.0 {
             force / self.mass
@@ -55,6 +75,9 @@ impl Physical {
     }
 
     pub fn update(&mut self, transform: &mut Transform) {
+        self.apply_force(self.steering_force);
+        self.steering_force = Vec2::ZERO;
+
         // https://github.com/bevyengine/bevy/issues/2041
         let dt = PHYSICS_STEP;
 

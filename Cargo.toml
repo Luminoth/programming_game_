@@ -5,4 +5,5 @@ members = [
     "autonomous",
     "west-world",
     "west-world-bevy",
+    "soccer",
 ]

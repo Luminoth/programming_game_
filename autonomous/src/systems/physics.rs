@@ -7,3 +7,5 @@ pub fn update(_time: Res<Time>, mut query: Query<(&mut Physical, &mut Transform)
         physical.update(&mut transform /*, time.delta_seconds()*/);
     }
 }
+
+// TODO: non-penetration constrait

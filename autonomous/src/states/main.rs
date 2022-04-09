@@ -98,7 +98,7 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>, window: Res<
         100.0,
         10.0,
         "evade",
-        Color::PINK,
+        Color::SALMON,
     );
 
     let pursuit_entity = VehicleBundle::spawn(

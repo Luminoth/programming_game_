@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use bevy_prototype_lyon::prelude::*;
 
+use crate::bundles::vehicle::*;
 use crate::components::actor::*;
 use crate::components::obstacle::*;
 use crate::components::physics::*;
@@ -89,13 +91,37 @@ pub fn update_wander(mut query: Query<(&mut Wander, &mut Physical, &Transform)>)
 
 pub fn update_obstacle_avoidance(
     params: Res<SimulationParams>,
-    mut query: Query<(Entity, &Actor, &mut Physical, &Transform, &Name), With<ObstacleAvoidance>>,
+    mut query: Query<(
+        Entity,
+        &Actor,
+        &mut Physical,
+        &Transform,
+        &Name,
+        &mut ObstacleAvoidance,
+        &Children,
+    )>,
     obstacles: Query<(Entity, &Actor, &Transform, &Name), With<Obstacle>>,
+    mut shapes: Query<&mut Path, With<ObstacleAvoidanceDebug>>,
 ) {
-    for (entity, actor, mut physical, transform, name) in query.iter_mut() {
-        let box_length = params.min_detection_box_length
+    for (entity, actor, mut physical, transform, name, mut avoidance, children) in query.iter_mut()
+    {
+        avoidance.box_length = params.min_detection_box_length
             + (physical.speed() / physical.max_speed) * params.min_detection_box_length;
 
+        // update debug visual
+        for child in children.iter() {
+            if let Ok(mut path) = shapes.get_mut(*child) {
+                *path = ShapePath::build_as(&shapes::Rectangle {
+                    extents: Vec2::new(VEHICLE_RADIUS, avoidance.box_length),
+                    origin: RectangleOrigin::CustomCenter(Vec2::new(
+                        0.0,
+                        avoidance.box_length * 0.5,
+                    )),
+                });
+            }
+        }
+
+        // find the closest obstacle for avoidance
         let mut closest_obstacle = None;
         let mut dist_to_closest = f32::MAX;
         for (obstacle, obstacle_actor, obstacle_transform, obstacle_name) in obstacles.iter() {
@@ -106,11 +132,12 @@ pub fn update_obstacle_avoidance(
 
             // ignore anything out of range in front
             let to = obstacle_transform.translation - transform.translation;
-            let range = obstacle_actor.bounding_radius + actor.bounding_radius;
-            if to.length_squared() >= range * range {
+            let range = avoidance.box_length + obstacle_actor.bounding_radius;
+            if to.length_squared() > range * range {
                 continue;
             }
 
+            // convert obstacle to local space
             let obstacle_position = obstacle_transform.translation.truncate();
             let local_position = point_to_local_space(
                 obstacle_position,
@@ -126,11 +153,11 @@ pub fn update_obstacle_avoidance(
 
             // ignore anything out of range above or below
             let expanded_radius = obstacle_actor.bounding_radius + actor.bounding_radius;
-            if local_position.y >= expanded_radius {
+            if local_position.y > expanded_radius {
                 continue;
             }
 
-            // line / circle intersection test
+            // line / circle intersection test (x = cX +/-sqrt(r^2-cY^2) for y=0)
             let cx = local_position.x;
             let cy = local_position.y;
             let sqrt_part = (expanded_radius * expanded_radius - cy * cy).sqrt();
@@ -156,7 +183,7 @@ pub fn update_obstacle_avoidance(
         // calculate the steering force
         if let Some((obstacle_name, position, radius, local_position, distance)) = closest_obstacle
         {
-            info!(
+            debug!(
                 "{} avoiding obstacle {} at {} ({})",
                 name.as_str(),
                 obstacle_name.as_str(),
@@ -165,7 +192,7 @@ pub fn update_obstacle_avoidance(
             );
 
             // the closer we are to the obstacle, the stronger the steering force
-            let multiplier = 1.0 + (box_length - local_position.x) / box_length;
+            let multiplier = 1.0 + (avoidance.box_length - local_position.x) / avoidance.box_length;
 
             let y = (radius - local_position.y) * multiplier;
 

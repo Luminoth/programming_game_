@@ -26,15 +26,12 @@ pub fn wrap(window: Res<WindowDescriptor>, mut query: Query<&mut Transform>) {
 }
 
 pub fn facing(_time: Res<Time>, mut query: Query<(&mut Transform, &Physical)>) {
-    // https://github.com/bevyengine/bevy/issues/2041
-    let dt = PHYSICS_STEP;
-
     for (mut transform, physical) in query.iter_mut() {
         if physical.heading.length_squared() < std::f32::EPSILON {
             continue;
         }
 
         let angle = -physical.heading.angle_between(Vec2::Y);
-        transform.rotation = transform.rotation.slerp(Quat::from_rotation_z(angle), dt);
+        transform.rotation = Quat::from_rotation_z(angle);
     }
 }

@@ -47,10 +47,14 @@ where
             name, color, position, steering
         );
 
+        let obstacle_avoidance_box_length = 0.0;
+
         let mut bundle = commands.spawn_bundle(VehicleBundle {
             agent: Agent::default(),
             obstacle: Obstacle::default(),
-            obstacle_avoidance: ObstacleAvoidance::default(),
+            obstacle_avoidance: ObstacleAvoidance {
+                box_length: obstacle_avoidance_box_length,
+            },
             steering,
             vehicle: Vehicle::default(),
             physical: Physical {
@@ -88,6 +92,42 @@ where
                 ))
                 .insert(Name::new("Model"));
         });
+
+        // debug bounding volume
+        /*bundle.with_children(|parent| {
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::Circle {
+                        radius: VEHICLE_RADIUS,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::PINK,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Name::new("Bounding Volume"))
+                .insert(ObstacleDebug);
+        });*/
+
+        // debug avoidance volume
+        /*bundle.with_children(|parent| {
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::Rectangle {
+                        extents: Vec2::new(VEHICLE_RADIUS, obstacle_avoidance_box_length),
+                        origin: RectangleOrigin::Center,
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::WHITE,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Name::new("Avoidance Volume"))
+                .insert(ObstacleAvoidanceDebug);
+        });*/
 
         bundle.id()
     }

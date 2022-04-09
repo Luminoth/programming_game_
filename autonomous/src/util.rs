@@ -14,7 +14,7 @@ pub fn vector_to_world_space(vector: Vec2, heading: Vec2, side: Vec2) -> Vec2 {
     // rotate
     let transform = Mat3::from_cols(heading.extend(0.0), side.extend(0.0), Vec3::Z);
 
-    transform.transform_vector2(vector)
+    transform.transform_point2(vector)
 }
 
 pub fn point_to_local_space(point: Vec2, heading: Vec2, side: Vec2, position: Vec2) -> Vec2 {
@@ -24,7 +24,7 @@ pub fn point_to_local_space(point: Vec2, heading: Vec2, side: Vec2, position: Ve
     let transform = Mat3::from_cols(
         Vec3::new(heading.x, side.x, 0.0),
         Vec3::new(heading.y, side.y, 0.0),
-        Vec3::new(tx, ty, 0.0),
+        Vec3::new(tx, ty, 1.0),
     );
 
     transform.transform_point2(point)
@@ -37,7 +37,7 @@ pub fn point_to_local_space(point: Vec2, heading: Vec2, side: Vec2, position: Ve
         Vec3::Z,
     );
 
-    transform.transform_vector2(vector)
+    transform.transform_point2(vector)
 }*/
 
 pub fn circles_overlap(apos: Vec2, aradius: f32, bpos: Vec2, bradius: f32) -> bool {

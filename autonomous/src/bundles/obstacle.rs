@@ -48,6 +48,24 @@ impl ObstacleBundle {
                 .insert(Name::new("Model"));
         });
 
+        // debug bounding volume
+        /*bundle.with_children(|parent| {
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::Circle {
+                        radius: radius,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::PINK,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Name::new("Bounding Volume"))
+                .insert(ObstacleDebug);
+        });*/
+
         bundle.id()
     }
 }

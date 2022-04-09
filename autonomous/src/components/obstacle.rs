@@ -1,0 +1,7 @@
+use bevy::prelude::*;
+
+#[derive(Debug, Default, Component)]
+pub struct Obstacle;
+
+#[derive(Debug, Default, Component)]
+pub struct ObstacleAvoidance;

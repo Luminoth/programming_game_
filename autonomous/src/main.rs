@@ -21,6 +21,7 @@ use bevy_prototype_lyon::prelude::*;
 use crate::components::physics::PHYSICS_STEP;
 use crate::plugins::debug::*;
 use crate::resources::ui::*;
+use crate::resources::*;
 use crate::states::*;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -32,6 +33,15 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         normal: asset_server.load("fonts/FiraSans-Bold.ttf"),
     };
     commands.insert_resource(fonts);
+
+    commands.insert_resource(SimulationParams {
+        window_border: 10.0,
+        num_obstacles: 7,
+        min_obstacle_radius: 10.0,
+        max_obstacle_radius: 30.0,
+        min_gap_between_obstacles: 20.0,
+        min_detection_box_length: 40.0,
+    });
 }
 
 #[bevy_main]
@@ -119,9 +129,14 @@ fn main() {
                         .after("pursuit"),
                 )
                 .with_system(systems::steering::update_wander.label("steering"))
-                .with_system(systems::physics::update.label("physics").after("steering"))
+                .with_system(
+                    systems::steering::update_obstacle_avoidance
+                        .label("avoidance")
+                        .after("steering"),
+                )
+                .with_system(systems::physics::update.label("physics").after("avoidance"))
                 .with_system(systems::wrap.after("physics"))
-                .with_system(systems::facing.after("steering").before("physics")),
+                .with_system(systems::facing.after("avoidance").before("physics")),
         )
         // TODO: non-physics systems here
         //.add_system_set(SystemSet::on_update(GameState::Main).with_system())

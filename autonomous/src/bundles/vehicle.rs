@@ -1,14 +1,16 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
+use crate::components::actor::*;
 use crate::components::agent::*;
+use crate::components::obstacle::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::vehicle::*;
 
 use super::actor::ActorBundle;
 
-const VEHICLE_SIZE: f32 = 20.0;
+pub const VEHICLE_RADIUS: f32 = 10.0;
 
 #[derive(Debug, Default, Bundle)]
 pub struct VehicleBundle<T>
@@ -16,6 +18,8 @@ where
     T: SteeringBehavior,
 {
     pub agent: Agent,
+    pub obstacle: Obstacle,
+    pub obstacle_avoidance: ObstacleAvoidance,
     pub steering: T,
     pub vehicle: Vehicle,
     pub physical: Physical,
@@ -45,6 +49,8 @@ where
 
         let mut bundle = commands.spawn_bundle(VehicleBundle {
             agent: Agent::default(),
+            obstacle: Obstacle::default(),
+            obstacle_avoidance: ObstacleAvoidance::default(),
             steering,
             vehicle: Vehicle::default(),
             physical: Physical {
@@ -59,6 +65,9 @@ where
         bundle.insert(Name::new(name));
 
         bundle.insert_bundle(ActorBundle {
+            actor: Actor {
+                bounding_radius: VEHICLE_RADIUS,
+            },
             transform: Transform::from_translation(position.extend(0.0)),
             ..Default::default()
         });
@@ -68,7 +77,7 @@ where
                 .spawn_bundle(GeometryBuilder::build_as(
                     &shapes::RegularPolygon {
                         sides: 3,
-                        feature: shapes::RegularPolygonFeature::SideLength(VEHICLE_SIZE),
+                        feature: shapes::RegularPolygonFeature::SideLength(VEHICLE_RADIUS * 2.0),
                         ..Default::default()
                     },
                     DrawMode::Fill(FillMode {

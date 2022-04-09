@@ -13,6 +13,7 @@ pub struct Physical {
 
     // local coordinate system
     pub heading: Vec2,
+    // TODO: smoothed heading
     pub side: Vec2,
 
     pub mass: f32,

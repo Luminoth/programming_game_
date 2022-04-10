@@ -15,14 +15,21 @@ use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::WorldInspectorParams;
+use bevy_prototype_lyon::prelude::*;
 
 use plugins::debug::DebugPlugin;
 use plugins::states::StatesPlugins;
+use resources::SimulationParams;
 use states::GameState;
 
-fn setup(mut _commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
     asset_server.watch_for_changes().unwrap();
+
+    commands.insert_resource(SimulationParams {
+        pitch_extents: Vec2::new(900.0, 450.0),
+        goal_extents: Vec2::new(40.0, 90.0),
+    });
 }
 
 #[bevy_main]
@@ -46,6 +53,9 @@ fn main() {
     .add_plugins(DefaultPlugins)
     .add_plugin(FrameTimeDiagnosticsPlugin);
 
+    // prototype lyon
+    app.add_plugin(ShapePlugin);
+
     // egui
     app.insert_resource(EguiSettings { scale_factor: 0.75 })
         .add_plugin(EguiPlugin);
@@ -59,6 +69,7 @@ fn main() {
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
     .register_inspectable::<game::Team>()
+    .register_inspectable::<components::actor::Actor>()
     .register_inspectable::<components::ball::Ball>()
     .register_inspectable::<components::goal::Goal>()
     .register_inspectable::<components::pitch::Pitch>()

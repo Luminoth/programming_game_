@@ -2923,6 +2923,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_egui",
+ "bevy_prototype_lyon",
 ]
 
 [[package]]

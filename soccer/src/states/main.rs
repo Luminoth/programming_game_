@@ -6,8 +6,9 @@ use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
 use crate::game::Team;
+use crate::resources::SimulationParams;
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     debug!("entering main state");
 
     // cameras
@@ -18,11 +19,22 @@ pub fn setup(mut commands: Commands) {
         .insert(Name::new("Main Camera"));
 
     // pitch
-    PitchBundle::spawn(&mut commands, Vec2::ZERO);
+    PitchBundle::spawn(&mut commands, params.pitch_extents);
 
     // goals
-    GoalBundle::spawn(&mut commands, Vec2::new(-250.0, 0.0), Team::Red);
-    GoalBundle::spawn(&mut commands, Vec2::new(250.0, 0.0), Team::Blue);
+    let hw = params.pitch_extents.x * 0.5;
+    GoalBundle::spawn(
+        &mut commands,
+        Vec2::new(-hw, 0.0),
+        params.goal_extents,
+        Team::Red,
+    );
+    GoalBundle::spawn(
+        &mut commands,
+        Vec2::new(hw, 0.0),
+        params.goal_extents,
+        Team::Blue,
+    );
 
     // ball
     BallBundle::spawn(&mut commands, Vec2::ZERO);
@@ -31,13 +43,13 @@ pub fn setup(mut commands: Commands) {
     spawn_team(
         &mut commands,
         Vec2::new(-100.0, 0.0),
-        Vec2::new(-200.0, 0.0),
+        Vec2::new(-hw + 10.0, 0.0),
         Team::Red,
     );
     spawn_team(
         &mut commands,
         Vec2::new(100.0, 0.0),
-        Vec2::new(200.0, 0.0),
+        Vec2::new(hw - 10.0, 0.0),
         Team::Blue,
     );
 }

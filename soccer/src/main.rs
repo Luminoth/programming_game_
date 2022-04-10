@@ -61,7 +61,9 @@ fn main() {
     .register_inspectable::<game::Team>()
     .register_inspectable::<components::ball::Ball>()
     .register_inspectable::<components::goal::Goal>()
-    .register_inspectable::<components::pitch::Pitch>();
+    .register_inspectable::<components::pitch::Pitch>()
+    .register_inspectable::<components::team::FieldPlayer>()
+    .register_inspectable::<components::team::Goalie>();
 
     // plugins
     app.add_plugin(DebugPlugin).add_plugins(StatesPlugins);

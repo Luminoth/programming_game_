@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::bundles::ball::*;
 use crate::bundles::goal::*;
 use crate::bundles::pitch::*;
+use crate::bundles::team::*;
 use crate::components::camera::*;
 use crate::game::Team;
 
@@ -25,6 +26,20 @@ pub fn setup(mut commands: Commands) {
 
     // ball
     BallBundle::spawn(&mut commands, Vec2::ZERO);
+
+    // teams
+    spawn_team(
+        &mut commands,
+        Vec2::new(-100.0, 0.0),
+        Vec2::new(-200.0, 0.0),
+        Team::Red,
+    );
+    spawn_team(
+        &mut commands,
+        Vec2::new(100.0, 0.0),
+        Vec2::new(200.0, 0.0),
+        Team::Blue,
+    );
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

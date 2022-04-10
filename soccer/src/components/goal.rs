@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
-#[derive(Debug, Component, Inspectable)]
-pub struct Goal;
+use crate::game::Team;
+
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct Goal {
+    pub team: Team,
+}

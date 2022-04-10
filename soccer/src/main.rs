@@ -4,6 +4,7 @@
 mod bundles;
 mod components;
 mod events;
+mod game;
 mod plugins;
 mod resources;
 mod states;
@@ -57,6 +58,7 @@ fn main() {
     })
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
+    .register_inspectable::<game::Team>()
     .register_inspectable::<components::ball::Ball>()
     .register_inspectable::<components::goal::Goal>()
     .register_inspectable::<components::pitch::Pitch>();

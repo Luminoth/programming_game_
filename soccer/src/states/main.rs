@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
+use crate::bundles::ball::*;
+use crate::bundles::goal::*;
+use crate::bundles::pitch::*;
 use crate::components::camera::*;
+use crate::game::Team;
 
 pub fn setup(mut commands: Commands) {
     debug!("entering main state");
@@ -11,6 +15,16 @@ pub fn setup(mut commands: Commands) {
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(MainCamera)
         .insert(Name::new("Main Camera"));
+
+    // pitch
+    PitchBundle::spawn(&mut commands, Vec2::ZERO);
+
+    // goals
+    GoalBundle::spawn(&mut commands, Vec2::new(-250.0, 0.0), Team::Red);
+    GoalBundle::spawn(&mut commands, Vec2::new(250.0, 0.0), Team::Blue);
+
+    // ball
+    BallBundle::spawn(&mut commands, Vec2::ZERO);
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

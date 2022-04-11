@@ -18,7 +18,7 @@ impl GoalBundle {
 
         let mut bundle = commands.spawn_bundle(GoalBundle {
             goal: Goal { team },
-            transform: Transform::from_translation(position.extend(0.0)),
+            transform: Transform::from_translation(position.extend(2.0)),
             ..Default::default()
         });
 

@@ -25,7 +25,7 @@ impl BallBundle {
             actor: Actor {
                 bounding_radius: BALL_RADIUS,
             },
-            transform: Transform::from_translation(position.extend(0.0)),
+            transform: Transform::from_translation(position.extend(2.0)),
             ..Default::default()
         });
 

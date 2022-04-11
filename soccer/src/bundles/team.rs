@@ -32,7 +32,7 @@ impl FieldPlayerBundle {
             actor: Actor {
                 bounding_radius: PLAYER_RADIUS,
             },
-            transform: Transform::from_translation(position.extend(0.0)),
+            transform: Transform::from_translation(position.extend(2.0)),
             ..Default::default()
         });
 
@@ -80,7 +80,7 @@ impl GoalieBundle {
             actor: Actor {
                 bounding_radius: PLAYER_RADIUS,
             },
-            transform: Transform::from_translation(position.extend(0.0)),
+            transform: Transform::from_translation(position.extend(2.0)),
             ..Default::default()
         });
 

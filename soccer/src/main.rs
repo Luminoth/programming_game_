@@ -60,7 +60,7 @@ fn main() {
     app.insert_resource(EguiSettings { scale_factor: 0.75 })
         .add_plugin(EguiPlugin);
 
-    // inspector
+    // inspectorActor
     app.insert_resource(WorldInspectorParams {
         enabled: false,
         despawnable_entities: true,
@@ -70,6 +70,8 @@ fn main() {
     // inspectable types
     .register_inspectable::<game::Team>()
     .register_inspectable::<components::actor::Actor>()
+    .register_inspectable::<components::obstacle::Obstacle>()
+    .register_inspectable::<components::steering::ObstacleAvoidance>()
     .register_inspectable::<components::ball::Ball>()
     .register_inspectable::<components::goal::Goal>()
     .register_inspectable::<components::pitch::Pitch>()

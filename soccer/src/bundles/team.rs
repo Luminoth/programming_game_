@@ -6,7 +6,8 @@ use crate::components::actor::*;
 use crate::components::obstacle::*;
 use crate::components::steering::*;
 use crate::components::team::*;
-use crate::game::{Team, PLAYER_RADIUS};
+use crate::game::{Team, PLAYER_RADIUS, PLAYER_SPREAD};
+use crate::PLAYER_SORT;
 
 #[derive(Debug, Default, Bundle)]
 struct FieldPlayerBundle {
@@ -32,7 +33,7 @@ impl FieldPlayerBundle {
             actor: Actor {
                 bounding_radius: PLAYER_RADIUS,
             },
-            transform: Transform::from_translation(position.extend(2.0)),
+            transform: Transform::from_translation(position.extend(PLAYER_SORT)),
             ..Default::default()
         });
 
@@ -80,7 +81,7 @@ impl GoalieBundle {
             actor: Actor {
                 bounding_radius: PLAYER_RADIUS,
             },
-            transform: Transform::from_translation(position.extend(2.0)),
+            transform: Transform::from_translation(position.extend(PLAYER_SORT)),
             ..Default::default()
         });
 
@@ -92,7 +93,7 @@ impl GoalieBundle {
                         ..Default::default()
                     },
                     DrawMode::Fill(FillMode {
-                        color: Color::DARK_GREEN,
+                        color: Color::YELLOW,
                         options: FillOptions::default(),
                     }),
                     Transform::default(),
@@ -115,17 +116,28 @@ pub fn spawn_team(
         Team::Blue => 1.0,
     };
 
+    // TODO: we should treat the field position as the center
+    // rather than the inner-most point
+
     // players
-    FieldPlayerBundle::spawn(commands, field_position + Vec2::new(0.0, 50.0), team);
     FieldPlayerBundle::spawn(
         commands,
-        field_position + Vec2::new(100.0 * sign, 50.0),
+        field_position + Vec2::new(0.0, PLAYER_SPREAD.y),
         team,
     );
-    FieldPlayerBundle::spawn(commands, field_position + Vec2::new(0.0, -50.0), team);
     FieldPlayerBundle::spawn(
         commands,
-        field_position + Vec2::new(100.0 * sign, -50.0),
+        field_position + Vec2::new(PLAYER_SPREAD.x * sign, PLAYER_SPREAD.y),
+        team,
+    );
+    FieldPlayerBundle::spawn(
+        commands,
+        field_position + Vec2::new(0.0, -PLAYER_SPREAD.y),
+        team,
+    );
+    FieldPlayerBundle::spawn(
+        commands,
+        field_position + Vec2::new(PLAYER_SPREAD.x * sign, -PLAYER_SPREAD.y),
         team,
     );
 

@@ -22,6 +22,12 @@ use plugins::states::StatesPlugins;
 use resources::SimulationParams;
 use states::GameState;
 
+pub const BALL_SORT: f32 = 2.0;
+pub const GOAL_SORT: f32 = 2.0;
+pub const PITCH_SORT: f32 = 0.0;
+pub const BORDER_SORT: f32 = 3.0;
+pub const PLAYER_SORT: f32 = 2.0;
+
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
     asset_server.watch_for_changes().unwrap();

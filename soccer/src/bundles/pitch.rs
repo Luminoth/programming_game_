@@ -3,6 +3,8 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::components::obstacle::Wall;
 use crate::components::pitch::*;
+use crate::game::BORDER_WIDTH;
+use crate::{BORDER_SORT, PITCH_SORT};
 
 #[derive(Debug, Default, Bundle)]
 struct PitchBorderBundle {
@@ -19,7 +21,7 @@ impl PitchBorderBundle {
             .spawn_bundle(PitchBorderBundle {
                 border: PitchBorder::default(),
                 wall: Wall::default(),
-                transform: Transform::from_translation(position.extend(1.0)),
+                transform: Transform::from_translation(position.extend(BORDER_SORT)),
                 ..Default::default()
             })
             .insert(Name::new(format!("{} Border", name.as_ref())))
@@ -55,7 +57,7 @@ impl PitchBundle {
 
         let mut bundle = commands.spawn_bundle(PitchBundle {
             pitch: Pitch::default(),
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            transform: Transform::from_translation(Vec2::ZERO.extend(PITCH_SORT)),
             ..Default::default()
         });
 
@@ -84,25 +86,25 @@ impl PitchBundle {
             PitchBorderBundle::spawn(
                 parent,
                 Vec2::new(-hw, 0.0),
-                Vec2::new(5.0, extents.y),
+                Vec2::new(BORDER_WIDTH, extents.y),
                 "West",
             );
             PitchBorderBundle::spawn(
                 parent,
                 Vec2::new(0.0, hh),
-                Vec2::new(extents.x, 5.0),
+                Vec2::new(extents.x, BORDER_WIDTH),
                 "North",
             );
             PitchBorderBundle::spawn(
                 parent,
                 Vec2::new(hw, 0.0),
-                Vec2::new(5.0, extents.y),
+                Vec2::new(BORDER_WIDTH, extents.y),
                 "East",
             );
             PitchBorderBundle::spawn(
                 parent,
                 Vec2::new(0.0, -hh),
-                Vec2::new(extents.x, 5.0),
+                Vec2::new(extents.x, BORDER_WIDTH),
                 "South",
             );
         });

@@ -3,6 +3,7 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::components::goal::*;
 use crate::game::{Team, GOAL_BAR_WIDTH};
+use crate::GOAL_SORT;
 
 #[derive(Debug, Default, Bundle)]
 pub struct GoalBundle {
@@ -18,7 +19,7 @@ impl GoalBundle {
 
         let mut bundle = commands.spawn_bundle(GoalBundle {
             goal: Goal { team },
-            transform: Transform::from_translation(position.extend(2.0)),
+            transform: Transform::from_translation(position.extend(GOAL_SORT)),
             ..Default::default()
         });
 

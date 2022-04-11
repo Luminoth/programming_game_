@@ -5,6 +5,7 @@ use crate::bundles::actor::*;
 use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::game::BALL_RADIUS;
+use crate::BALL_SORT;
 
 #[derive(Debug, Default, Bundle)]
 pub struct BallBundle {
@@ -25,7 +26,7 @@ impl BallBundle {
             actor: Actor {
                 bounding_radius: BALL_RADIUS,
             },
-            transform: Transform::from_translation(position.extend(2.0)),
+            transform: Transform::from_translation(position.extend(BALL_SORT)),
             ..Default::default()
         });
 

@@ -6,7 +6,7 @@ use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
 use crate::game::{Team, GOALIE_PAD, PLAYER_RADIUS, TEAM_SPREAD};
-use crate::resources::SimulationParams;
+use crate::resources::{GameState, SimulationParams};
 
 pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     debug!("entering main state");
@@ -17,6 +17,9 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(MainCamera)
         .insert(Name::new("Main Camera"));
+
+    // game state
+    commands.insert_resource(GameState::default());
 
     // pitch
     PitchBundle::spawn(&mut commands, params.pitch_extents);
@@ -62,5 +65,6 @@ pub fn teardown(mut commands: Commands, entities: Query<Entity>) {
         commands.entity(entity).despawn_recursive();
     }
 
+    commands.remove_resource::<GameState>();
     commands.remove_resource::<ClearColor>();
 }

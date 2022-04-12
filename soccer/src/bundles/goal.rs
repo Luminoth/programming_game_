@@ -25,6 +25,11 @@ impl GoalBundle {
 
         bundle.insert(Name::new(format!("{:?} Goal", team)));
 
+        let color = match team {
+            Team::Red => Color::SALMON,
+            Team::Blue => Color::TURQUOISE,
+        };
+
         bundle.with_children(|parent| {
             parent
                 .spawn_bundle(GeometryBuilder::build_as(
@@ -34,7 +39,7 @@ impl GoalBundle {
                     },
                     // TODO: we don't want a fill color ...
                     DrawMode::Outlined {
-                        fill_mode: FillMode::color(Color::GRAY),
+                        fill_mode: FillMode::color(color),
                         outline_mode: StrokeMode::new(Color::GRAY, GOAL_BAR_WIDTH),
                     },
                     Transform::default(),

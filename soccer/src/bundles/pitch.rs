@@ -16,11 +16,17 @@ struct PitchBorderBundle {
 }
 
 impl PitchBorderBundle {
-    fn spawn(parent: &mut ChildBuilder, position: Vec2, extents: Vec2, name: impl AsRef<str>) {
+    fn spawn(
+        parent: &mut ChildBuilder,
+        position: Vec2,
+        extents: Vec2,
+        normal: Vec2,
+        name: impl AsRef<str>,
+    ) {
         parent
             .spawn_bundle(PitchBorderBundle {
                 border: PitchBorder::default(),
-                wall: Wall::default(),
+                wall: Wall { extents, normal },
                 transform: Transform::from_translation(position.extend(BORDER_SORT)),
                 ..Default::default()
             })
@@ -43,7 +49,7 @@ impl PitchBorderBundle {
     }
 }
 
-#[derive(Debug, Default, Bundle)]
+#[derive(Debug, Bundle)]
 pub struct PitchBundle {
     pub pitch: Pitch,
 
@@ -56,9 +62,9 @@ impl PitchBundle {
         info!("spawning pitch");
 
         let mut bundle = commands.spawn_bundle(PitchBundle {
-            pitch: Pitch::default(),
+            pitch: Pitch::new(extents),
             transform: Transform::from_translation(Vec2::ZERO.extend(PITCH_SORT)),
-            ..Default::default()
+            global_transform: GlobalTransform::default(),
         });
 
         bundle.insert(Name::new("Pitch"));
@@ -87,24 +93,28 @@ impl PitchBundle {
                 parent,
                 Vec2::new(-hw, 0.0),
                 Vec2::new(BORDER_WIDTH, extents.y),
+                Vec2::X,
                 "West",
             );
             PitchBorderBundle::spawn(
                 parent,
                 Vec2::new(0.0, hh),
                 Vec2::new(extents.x, BORDER_WIDTH),
+                -Vec2::Y,
                 "North",
             );
             PitchBorderBundle::spawn(
                 parent,
                 Vec2::new(hw, 0.0),
                 Vec2::new(BORDER_WIDTH, extents.y),
+                -Vec2::X,
                 "East",
             );
             PitchBorderBundle::spawn(
                 parent,
                 Vec2::new(0.0, -hh),
                 Vec2::new(extents.x, BORDER_WIDTH),
+                Vec2::Y,
                 "South",
             );
         });

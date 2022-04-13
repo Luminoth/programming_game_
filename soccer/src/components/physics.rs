@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
+use crate::resources::SimulationParams;
+
 // 50hz, the same as Unity
 pub const PHYSICS_STEP: f32 = 0.02;
 
@@ -44,6 +46,48 @@ impl Physical {
     #[allow(dead_code)]
     pub fn speed(&self) -> f32 {
         self.velocity.length()
+    }
+
+    #[allow(dead_code)]
+    pub fn future_position(&self, params: &SimulationParams, transform: &Transform) -> Vec2 {
+        // x = ut + 1/2(-a)t^2
+        // x = distance, a = friction, u = starting velocity
+
+        // https://github.com/bevyengine/bevy/issues/2041
+        let dt = PHYSICS_STEP;
+
+        let ut = self.velocity * dt;
+        let half_a_t_squared = 0.5 * -params.friction * dt * dt;
+
+        let scalar_to_vector = half_a_t_squared * self.velocity.normalize_or_zero();
+
+        transform.translation.truncate() + ut + scalar_to_vector
+    }
+
+    #[allow(dead_code)]
+    pub fn time_to_cover_distance(
+        &self,
+        params: &SimulationParams,
+        a: Vec2,
+        b: Vec2,
+        force: f32,
+    ) -> f32 {
+        let speed = force / self.mass;
+
+        // v^2 = u^2 + 2(-a)x
+
+        let distance = a.distance(b);
+        let term = speed * speed + 2.0 * distance * -params.friction;
+
+        // if u^2 + 2(-a)x is negative, then we can't reach point b
+        if term <= 0.0 {
+            return -1.0;
+        }
+
+        let v = term.sqrt();
+
+        // t = (v-u) / a
+        (v - speed) / -params.friction
     }
 
     pub fn apply_force(&mut self, force: Vec2) {

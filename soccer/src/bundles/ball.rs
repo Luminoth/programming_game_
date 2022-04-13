@@ -4,21 +4,21 @@ use bevy_prototype_lyon::prelude::*;
 use crate::bundles::actor::*;
 use crate::components::actor::*;
 use crate::components::ball::*;
+use crate::components::physics::*;
 use crate::game::BALL_RADIUS;
 use crate::BALL_SORT;
 
 #[derive(Debug, Default, Bundle)]
 pub struct BallBundle {
     pub ball: Ball,
+    pub physical: Physical,
 }
 
 impl BallBundle {
     pub fn spawn(commands: &mut Commands, position: Vec2) -> Entity {
         info!("spawning ball at {}", position);
 
-        let mut bundle = commands.spawn_bundle(BallBundle {
-            ball: Ball::default(),
-        });
+        let mut bundle = commands.spawn_bundle(BallBundle::default());
 
         bundle.insert(Name::new("Ball"));
 

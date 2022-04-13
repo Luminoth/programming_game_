@@ -3,6 +3,7 @@ pub mod ball;
 pub mod camera;
 pub mod goal;
 pub mod obstacle;
+pub mod physics;
 pub mod pitch;
 pub mod steering;
 pub mod team;

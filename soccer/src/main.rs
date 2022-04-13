@@ -75,10 +75,13 @@ fn main() {
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
     .register_inspectable::<game::Team>()
+    .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::actor::Actor>()
     .register_inspectable::<components::obstacle::Obstacle>()
+    .register_inspectable::<components::steering::Steering>()
     .register_inspectable::<components::steering::ObstacleAvoidance>()
     .register_inspectable::<components::ball::Ball>()
+    .register_inspectable::<components::ball::BallOwner>()
     .register_inspectable::<components::goal::Goal>()
     .register_inspectable::<components::pitch::Pitch>()
     .register_inspectable::<components::team::FieldPlayer>()

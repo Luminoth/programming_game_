@@ -20,13 +20,13 @@ impl PitchBorderBundle {
         parent: &mut ChildBuilder,
         position: Vec2,
         extents: Vec2,
-        normal: Vec2,
+        facing: Vec2,
         name: impl AsRef<str>,
     ) {
         parent
             .spawn_bundle(PitchBorderBundle {
                 border: PitchBorder::default(),
-                wall: Wall { extents, normal },
+                wall: Wall { extents, facing },
                 transform: Transform::from_translation(position.extend(BORDER_SORT)),
                 ..Default::default()
             })

@@ -30,12 +30,14 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
         &mut commands,
         Vec2::new(-hw, 0.0),
         params.goal_extents,
+        Vec2::X,
         Team::Red,
     );
     GoalBundle::spawn(
         &mut commands,
         Vec2::new(hw, 0.0),
         params.goal_extents,
+        -Vec2::X,
         Team::Blue,
     );
 

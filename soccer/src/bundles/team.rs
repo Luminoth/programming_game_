@@ -4,6 +4,7 @@ use bevy_prototype_lyon::prelude::*;
 use crate::bundles::actor::*;
 use crate::components::actor::*;
 use crate::components::obstacle::*;
+use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
 use crate::game::{Team, PLAYER_RADIUS, PLAYER_SPREAD};
@@ -12,6 +13,7 @@ use crate::PLAYER_SORT;
 #[derive(Debug, Default, Bundle)]
 struct FieldPlayerBundle {
     pub player: FieldPlayer,
+    pub physical: Physical,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
@@ -23,8 +25,7 @@ impl FieldPlayerBundle {
 
         let mut bundle = commands.spawn_bundle(FieldPlayerBundle {
             player: FieldPlayer { team },
-            obstacle: Obstacle::default(),
-            obstacle_avoidance: ObstacleAvoidance::default(),
+            ..Default::default()
         });
 
         bundle.insert(Name::new(format!("{:?} Field Player", team)));
@@ -59,7 +60,8 @@ impl FieldPlayerBundle {
 
 #[derive(Debug, Default, Bundle)]
 struct GoalieBundle {
-    goalie: Goalie,
+    pub goalie: Goalie,
+    pub physical: Physical,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
@@ -71,8 +73,7 @@ impl GoalieBundle {
 
         let mut bundle = commands.spawn_bundle(GoalieBundle {
             goalie: Goalie { team },
-            obstacle: Obstacle::default(),
-            obstacle_avoidance: ObstacleAvoidance::default(),
+            ..Default::default()
         });
 
         bundle.insert(Name::new(format!("{:?} Goalie", team)));

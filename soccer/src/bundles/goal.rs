@@ -14,11 +14,17 @@ pub struct GoalBundle {
 }
 
 impl GoalBundle {
-    pub fn spawn(commands: &mut Commands, position: Vec2, extents: Vec2, team: Team) -> Entity {
+    pub fn spawn(
+        commands: &mut Commands,
+        position: Vec2,
+        extents: Vec2,
+        facing: Vec2,
+        team: Team,
+    ) -> Entity {
         info!("spawning goal for team {:?} at {}", team, position);
 
         let mut bundle = commands.spawn_bundle(GoalBundle {
-            goal: Goal { team },
+            goal: Goal { team, facing },
             transform: Transform::from_translation(position.extend(GOAL_SORT)),
             ..Default::default()
         });

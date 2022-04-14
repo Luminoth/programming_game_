@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
+use crate::components::team::*;
+
 use super::state::State;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Inspectable)]
@@ -37,6 +39,12 @@ impl Default for SoccerTeamState {
 
 impl State for SoccerTeamState {}
 
+impl SoccerTeamState {
+    pub fn execute_global(soccer_team: &SoccerTeam) {
+        debug!("executing global state for team {:?}", soccer_team.team);
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum FieldPlayerState {
     Idle,
@@ -50,6 +58,12 @@ impl Default for FieldPlayerState {
 
 impl State for FieldPlayerState {}
 
+impl FieldPlayerState {
+    pub fn execute_global(name: impl AsRef<str>) {
+        debug!("executing global state for player {}", name.as_ref());
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum GoalieState {
     Idle,
@@ -62,3 +76,9 @@ impl Default for GoalieState {
 }
 
 impl State for GoalieState {}
+
+impl GoalieState {
+    pub fn execute_global(name: impl AsRef<str>) {
+        debug!("executing global state for goalie {}", name.as_ref());
+    }
+}

@@ -51,7 +51,23 @@ impl Plugin for MainStatePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
                     // messaging
-                    .with_system(systems::messaging::update),
+                    .with_system(systems::messaging::update)
+                    // team states
+                    .with_system(
+                        systems::team::soccer_team_global_state_execute
+                            .label("global_state_execute")
+                            .after("state_enter"),
+                    )
+                    .with_system(
+                        systems::team::field_player_global_state_execute
+                            .label("global_state_execute")
+                            .after("state_enter"),
+                    )
+                    .with_system(
+                        systems::team::goalie_global_state_execute
+                            .label("global_state_execute")
+                            .after("state_enter"),
+                    ),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

@@ -14,6 +14,7 @@ use crate::PLAYER_SORT;
 struct FieldPlayerBundle {
     pub player: FieldPlayer,
     pub physical: Physical,
+    pub state: FieldPlayerStateMachine,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
@@ -62,6 +63,7 @@ impl FieldPlayerBundle {
 struct GoalieBundle {
     pub goalie: Goalie,
     pub physical: Physical,
+    pub state: GoalieStateMachine,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,

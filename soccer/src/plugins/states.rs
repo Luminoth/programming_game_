@@ -3,6 +3,7 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
+use crate::game::team::*;
 use crate::states;
 use crate::states::*;
 use crate::systems;
@@ -19,6 +20,12 @@ struct MainStatePlugin;
 
 impl Plugin for MainStatePlugin {
     fn build(&self, app: &mut App) {
+        // events
+        app.add_event::<FieldPlayerStateEnterEvent>()
+            .add_event::<FieldPlayerStateExitEvent>()
+            .add_event::<GoalieStateExitEvent>()
+            .add_event::<GoalieStateExitEvent>();
+
         // systems
         app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
             // physics

@@ -5,5 +5,6 @@ pub mod goal;
 pub mod obstacle;
 pub mod physics;
 pub mod pitch;
+pub mod state;
 pub mod steering;
 pub mod team;

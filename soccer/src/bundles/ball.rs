@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::bundles::actor::*;
 use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::physics::*;
 use crate::game::BALL_RADIUS;
 use crate::BALL_SORT;
+
+use super::actor::*;
 
 #[derive(Debug, Default, Bundle)]
 pub struct BallBundle {

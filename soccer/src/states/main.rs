@@ -5,7 +5,7 @@ use crate::bundles::goal::*;
 use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
-use crate::game::{Team, GOALIE_PAD, PLAYER_RADIUS, TEAM_SPREAD};
+use crate::game::team::Team;
 use crate::resources::{GameState, SimulationParams};
 
 pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
@@ -25,39 +25,15 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     PitchBundle::spawn(&mut commands, params.pitch_extents);
 
     // goals
-    let hw = params.pitch_extents.x * 0.5 - params.goal_extents.x * 0.5;
-    GoalBundle::spawn(
-        &mut commands,
-        Vec2::new(-hw, 0.0),
-        params.goal_extents,
-        Vec2::X,
-        Team::Red,
-    );
-    GoalBundle::spawn(
-        &mut commands,
-        Vec2::new(hw, 0.0),
-        params.goal_extents,
-        -Vec2::X,
-        Team::Blue,
-    );
+    GoalBundle::spawn(&mut commands, &params, Team::Red);
+    GoalBundle::spawn(&mut commands, &params, Team::Blue);
 
     // ball
     BallBundle::spawn(&mut commands, Vec2::ZERO);
 
     // teams
-    let hw = params.pitch_extents.x * 0.5 - params.goal_extents.x - PLAYER_RADIUS - GOALIE_PAD;
-    spawn_team(
-        &mut commands,
-        Vec2::new(-TEAM_SPREAD, 0.0),
-        Vec2::new(-hw, 0.0),
-        Team::Red,
-    );
-    spawn_team(
-        &mut commands,
-        Vec2::new(TEAM_SPREAD, 0.0),
-        Vec2::new(hw, 0.0),
-        Team::Blue,
-    );
+    SoccerTeamBundle::spawn(&mut commands, &params, Team::Red);
+    SoccerTeamBundle::spawn(&mut commands, &params, Team::Blue);
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

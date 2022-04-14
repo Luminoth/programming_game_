@@ -21,9 +21,11 @@ struct MainStatePlugin;
 impl Plugin for MainStatePlugin {
     fn build(&self, app: &mut App) {
         // events
-        app.add_event::<FieldPlayerStateEnterEvent>()
+        app.add_event::<SoccerTeamStateEnterEvent>()
+            .add_event::<SoccerTeamStateExitEvent>()
+            .add_event::<FieldPlayerStateEnterEvent>()
             .add_event::<FieldPlayerStateExitEvent>()
-            .add_event::<GoalieStateExitEvent>()
+            .add_event::<GoalieStateEnterEvent>()
             .add_event::<GoalieStateExitEvent>();
 
         // systems

@@ -78,18 +78,27 @@ fn main() {
     })
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
-    .register_inspectable::<game::Team>()
+    .register_inspectable::<game::team::Team>()
+    .register_inspectable::<game::team::SoccerTeamState>()
+    .register_inspectable::<game::team::FieldPlayerState>()
+    .register_inspectable::<game::team::GoalieState>()
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::actor::Actor>()
     .register_inspectable::<components::obstacle::Obstacle>()
+    .register_inspectable::<components::obstacle::Wall>()
     .register_inspectable::<components::steering::Steering>()
     .register_inspectable::<components::steering::ObstacleAvoidance>()
     .register_inspectable::<components::ball::Ball>()
     .register_inspectable::<components::ball::BallOwner>()
     .register_inspectable::<components::goal::Goal>()
     .register_inspectable::<components::pitch::Pitch>()
+    .register_inspectable::<components::pitch::PitchBorder>()
+    .register_inspectable::<components::team::SoccerTeam>()
+    .register_inspectable::<components::team::SoccerTeamStateMachine>()
     .register_inspectable::<components::team::FieldPlayer>()
-    .register_inspectable::<components::team::Goalie>();
+    .register_inspectable::<components::team::FieldPlayerStateMachine>()
+    .register_inspectable::<components::team::Goalie>()
+    .register_inspectable::<components::team::GoalieStateMachine>();
 
     // plugins
     app.add_plugin(DebugPlugin).add_plugins(StatesPlugins);

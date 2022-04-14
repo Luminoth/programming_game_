@@ -1,9 +1,10 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::prelude::*;
 
 use crate::events::state::{StateEnterEvent, StateExitEvent};
 use crate::game::state::State;
 
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Inspectable)]
 pub struct StateMachine<T>
 where
     T: State,

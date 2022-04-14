@@ -1,11 +1,51 @@
+use bevy::prelude::*;
+use bevy_inspector_egui::prelude::*;
+
 use crate::events::state::*;
 
 use super::state::State;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Inspectable)]
+pub enum Team {
+    Red,
+    Blue,
+}
+
+impl Default for Team {
+    fn default() -> Self {
+        Self::Red
+    }
+}
+
+impl Team {
+    pub fn color(&self) -> Color {
+        match self {
+            Self::Red => Color::RED,
+            Self::Blue => Color::BLUE,
+        }
+    }
+}
+
+pub type SoccerTeamStateEnterEvent = StateEnterEvent<SoccerTeamState>;
+pub type SoccerTeamStateExitEvent = StateExitEvent<SoccerTeamState>;
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
+pub enum SoccerTeamState {
+    Idle,
+}
+
+impl Default for SoccerTeamState {
+    fn default() -> Self {
+        Self::Idle
+    }
+}
+
+impl State for SoccerTeamState {}
+
 pub type FieldPlayerStateEnterEvent = StateEnterEvent<FieldPlayerState>;
 pub type FieldPlayerStateExitEvent = StateExitEvent<FieldPlayerState>;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum FieldPlayerState {
     Idle,
 }
@@ -21,7 +61,7 @@ impl State for FieldPlayerState {}
 pub type GoalieStateEnterEvent = StateEnterEvent<GoalieState>;
 pub type GoalieStateExitEvent = StateExitEvent<GoalieState>;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum GoalieState {
     Idle,
 }

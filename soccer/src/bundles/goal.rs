@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::components::goal::*;
-use crate::game::{Team, GOAL_BAR_WIDTH};
+use crate::game::{team::Team, GOAL_BAR_WIDTH};
+use crate::resources::SimulationParams;
 use crate::GOAL_SORT;
 
 #[derive(Debug, Default, Bundle)]
@@ -14,17 +15,20 @@ pub struct GoalBundle {
 }
 
 impl GoalBundle {
-    pub fn spawn(
-        commands: &mut Commands,
-        position: Vec2,
-        extents: Vec2,
-        facing: Vec2,
-        team: Team,
-    ) -> Entity {
-        info!("spawning goal for team {:?} at {}", team, position);
+    pub fn spawn(commands: &mut Commands, params: &SimulationParams, team: Team) -> Entity {
+        info!("spawning goal for team {:?}", team);
+
+        let hw = params.pitch_extents.x * 0.5 - params.goal_extents.x * 0.5;
+        let (position, sign) = match team {
+            Team::Red => (Vec2::new(-hw, 0.0), 1.0),
+            Team::Blue => (Vec2::new(hw, 0.0), -1.0),
+        };
 
         let mut bundle = commands.spawn_bundle(GoalBundle {
-            goal: Goal { team, facing },
+            goal: Goal {
+                team,
+                facing: sign * Vec2::X,
+            },
             transform: Transform::from_translation(position.extend(GOAL_SORT)),
             ..Default::default()
         });
@@ -40,7 +44,7 @@ impl GoalBundle {
             parent
                 .spawn_bundle(GeometryBuilder::build_as(
                     &shapes::Rectangle {
-                        extents,
+                        extents: params.goal_extents,
                         ..Default::default()
                     },
                     // TODO: we don't want a fill color ...

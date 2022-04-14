@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
-use crate::events::state::*;
-
 use super::state::State;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Inspectable)]
@@ -26,9 +24,6 @@ impl Team {
     }
 }
 
-pub type SoccerTeamStateEnterEvent = StateEnterEvent<SoccerTeamState>;
-pub type SoccerTeamStateExitEvent = StateExitEvent<SoccerTeamState>;
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum SoccerTeamState {
     Idle,
@@ -42,9 +37,6 @@ impl Default for SoccerTeamState {
 
 impl State for SoccerTeamState {}
 
-pub type FieldPlayerStateEnterEvent = StateEnterEvent<FieldPlayerState>;
-pub type FieldPlayerStateExitEvent = StateExitEvent<FieldPlayerState>;
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum FieldPlayerState {
     Idle,
@@ -57,9 +49,6 @@ impl Default for FieldPlayerState {
 }
 
 impl State for FieldPlayerState {}
-
-pub type GoalieStateEnterEvent = StateEnterEvent<GoalieState>;
-pub type GoalieStateExitEvent = StateExitEvent<GoalieState>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum GoalieState {

@@ -6,7 +6,8 @@ use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
 use crate::game::team::Team;
-use crate::resources::{GameState, SimulationParams};
+use crate::resources::messaging::*;
+use crate::resources::*;
 
 pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     debug!("entering main state");
@@ -20,6 +21,9 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
 
     // game state
     commands.insert_resource(GameState::default());
+
+    // messaging
+    commands.insert_resource(MessageDispatcher::default());
 
     // pitch
     PitchBundle::spawn(&mut commands, params.pitch_extents);

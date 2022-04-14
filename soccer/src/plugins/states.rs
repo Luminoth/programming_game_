@@ -3,7 +3,8 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
-use crate::game::team::*;
+use crate::events::messaging::MessageEvent;
+use crate::events::team::*;
 use crate::states;
 use crate::states::*;
 use crate::systems;
@@ -21,7 +22,8 @@ struct MainStatePlugin;
 impl Plugin for MainStatePlugin {
     fn build(&self, app: &mut App) {
         // events
-        app.add_event::<SoccerTeamStateEnterEvent>()
+        app.add_event::<(Entity, MessageEvent)>()
+            .add_event::<SoccerTeamStateEnterEvent>()
             .add_event::<SoccerTeamStateExitEvent>()
             .add_event::<FieldPlayerStateEnterEvent>()
             .add_event::<FieldPlayerStateExitEvent>()
@@ -44,6 +46,12 @@ impl Plugin for MainStatePlugin {
                             .label("physics")
                             .after("steering_update"),
                     ),
+            )
+            // per-frame systems
+            .add_system_set(
+                SystemSet::on_update(GameState::Main)
+                    // messaging
+                    .with_system(systems::messaging::update),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

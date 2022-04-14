@@ -54,17 +54,17 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::messaging::update)
                     // team states
                     .with_system(
-                        systems::team::soccer_team_global_state_execute
+                        systems::team::soccer_team::global_state_execute
                             .label("global_state_execute")
                             .after("state_enter"),
                     )
                     .with_system(
-                        systems::team::field_player_global_state_execute
+                        systems::team::field_player::global_state_execute
                             .label("global_state_execute")
                             .after("state_enter"),
                     )
                     .with_system(
-                        systems::team::goalie_global_state_execute
+                        systems::team::goalie::global_state_execute
                             .label("global_state_execute")
                             .after("state_enter"),
                     ),

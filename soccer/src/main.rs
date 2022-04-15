@@ -89,7 +89,6 @@ fn main() {
     .register_inspectable::<components::steering::Steering>()
     .register_inspectable::<components::steering::ObstacleAvoidance>()
     .register_inspectable::<components::ball::Ball>()
-    .register_inspectable::<components::ball::BallOwner>()
     .register_inspectable::<components::goal::Goal>()
     .register_inspectable::<components::pitch::Pitch>()
     .register_inspectable::<components::pitch::PitchBorder>()
@@ -98,7 +97,11 @@ fn main() {
     .register_inspectable::<components::team::FieldPlayer>()
     .register_inspectable::<components::team::FieldPlayerStateMachine>()
     .register_inspectable::<components::team::Goalie>()
-    .register_inspectable::<components::team::GoalieStateMachine>();
+    .register_inspectable::<components::team::GoalieStateMachine>()
+    .register_inspectable::<components::team::ReceivingPlayer>()
+    .register_inspectable::<components::team::ClosestPlayer>()
+    .register_inspectable::<components::team::ControllingPlayer>()
+    .register_inspectable::<components::team::SupportingPlayer>();
 
     // plugins
     app.add_plugin(DebugPlugin).add_plugins(StatesPlugins);

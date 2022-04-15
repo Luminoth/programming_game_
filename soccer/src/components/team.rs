@@ -25,3 +25,19 @@ pub struct Goalie {
 }
 
 pub type GoalieStateMachine = StateMachine<GoalieState>;
+
+#[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
+pub struct ReceivingPlayer;
+
+#[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
+pub struct ClosestPlayer;
+
+#[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
+pub struct ControllingPlayer;
+
+#[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
+pub struct SupportingPlayer;

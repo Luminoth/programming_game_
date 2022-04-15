@@ -8,6 +8,7 @@ use crate::events::team::*;
 use crate::states;
 use crate::states::*;
 use crate::systems;
+use crate::systems::Systems;
 
 pub struct StatesPlugins;
 
@@ -38,13 +39,13 @@ impl Plugin for MainStatePlugin {
                     .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
                     .with_system(
                         systems::steering::update
-                            .label("steering_update")
-                            .after("steering"),
+                            .label(Systems::SteeringUpdatePhysics)
+                            .after(Systems::Steering),
                     )
                     .with_system(
                         systems::physics::update
-                            .label("physics")
-                            .after("steering_update"),
+                            .label(Systems::Physics)
+                            .after(Systems::SteeringUpdatePhysics),
                     ),
             )
             // per-frame systems
@@ -55,18 +56,18 @@ impl Plugin for MainStatePlugin {
                     // team states
                     .with_system(
                         systems::team::global_state_execute
-                            .label("global_state_execute")
-                            .after("state_enter"),
+                            .label(Systems::GlobalStateExecute)
+                            .after(Systems::StateEnter),
                     )
                     .with_system(
                         systems::team::field_player::global_state_execute
-                            .label("global_state_execute")
-                            .after("state_enter"),
+                            .label(Systems::GlobalStateExecute)
+                            .after(Systems::StateEnter),
                     )
                     .with_system(
                         systems::team::goalie::global_state_execute
-                            .label("global_state_execute")
-                            .after("state_enter"),
+                            .label(Systems::GlobalStateExecute)
+                            .after(Systems::StateEnter),
                     ),
             )
             .add_system_set(

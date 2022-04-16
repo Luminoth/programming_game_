@@ -9,6 +9,7 @@ use crate::states;
 use crate::states::*;
 use crate::systems;
 use crate::systems::Systems;
+use crate::SUPPORT_UPDATE_STEP;
 
 pub struct StatesPlugins;
 
@@ -69,6 +70,12 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::GlobalStateExecute)
                             .after(Systems::StateEnter),
                     ),
+            )
+            // low frequency updates
+            .add_system_set(
+                SystemSet::on_update(GameState::Main)
+                    .with_run_criteria(FixedTimestep::step(SUPPORT_UPDATE_STEP as f64))
+                    .with_system(systems::team::update_support_spot),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

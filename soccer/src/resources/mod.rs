@@ -11,6 +11,9 @@ pub struct SimulationParams {
     pub num_regions_horizontal: usize,
     pub num_regions_vertical: usize,
 
+    pub num_support_spots_horizontal: usize,
+    pub num_support_spots_vertical: usize,
+
     // physics
     pub friction: f32,
 }

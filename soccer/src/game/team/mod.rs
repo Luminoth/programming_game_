@@ -30,6 +30,14 @@ impl Team {
             Self::Blue => Color::BLUE,
         }
     }
+
+    #[allow(dead_code)]
+    pub fn sign(&self) -> f32 {
+        match self {
+            Self::Red => -1.0,
+            Self::Blue => 1.0,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]

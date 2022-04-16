@@ -27,6 +27,7 @@ pub const GOAL_SORT: f32 = 2.0;
 pub const PITCH_SORT: f32 = 0.0;
 pub const BORDER_SORT: f32 = 3.0;
 pub const PLAYER_SORT: f32 = 2.0;
+pub const SUPPORT_UPDATE_STEP: f32 = 0.02;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
@@ -38,6 +39,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
         num_regions_horizontal: 6,
         num_regions_vertical: 3,
+
+        num_support_spots_horizontal: 13,
+        num_support_spots_vertical: 6,
 
         // NOTE: this is negative in the example source
         // so anywhere it's used, it needs to be negated
@@ -97,6 +101,8 @@ fn main() {
     .register_inspectable::<components::pitch::PitchBorder>()
     .register_inspectable::<components::team::SoccerTeam>()
     .register_inspectable::<components::team::SoccerTeamStateMachine>()
+    .register_inspectable::<components::team::SupportSpot>()
+    .register_inspectable::<components::team::SupportSpotCalculator>()
     .register_inspectable::<components::team::FieldPlayer>()
     .register_inspectable::<components::team::FieldPlayerStateMachine>()
     .register_inspectable::<components::team::Goalie>()

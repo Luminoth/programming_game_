@@ -10,12 +10,6 @@ pub struct Region {
     pub extents: Vec2,
 }
 
-impl Region {
-    fn new(position: Vec2, extents: Vec2) -> Self {
-        Self { position, extents }
-    }
-}
-
 #[derive(Debug, Component, Inspectable)]
 pub struct Pitch {
     pub extents: Vec2,
@@ -27,7 +21,7 @@ impl Pitch {
         let hw = params.pitch_extents.x * 0.5;
         let hh = params.pitch_extents.y * 0.5;
 
-        let region_count = (params.num_regions_horizontal * params.num_regions_vertical) as usize;
+        let region_count = params.num_regions_horizontal * params.num_regions_vertical;
         let region_size = Vec2::new(
             params.pitch_extents.x / params.num_regions_horizontal as f32,
             params.pitch_extents.y / params.num_regions_vertical as f32,
@@ -45,10 +39,10 @@ impl Pitch {
                     -hw + (x as f32 * region_size.x),
                     -hh + (y as f32 * region_size.y),
                 );
-                regions.push(Region::new(
+                regions.push(Region {
                     position,
-                    Vec2::new(region_size.x, region_size.y),
-                ));
+                    extents: Vec2::new(region_size.x, region_size.y),
+                });
             }
         }
 

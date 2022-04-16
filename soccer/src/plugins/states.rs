@@ -74,7 +74,7 @@ impl Plugin for MainStatePlugin {
             // low frequency updates
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
-                    .with_run_criteria(FixedTimestep::step(SUPPORT_UPDATE_STEP as f64))
+                    .with_run_criteria(FixedTimestep::step(SUPPORT_UPDATE_STEP))
                     .with_system(systems::team::update_support_spot),
             )
             .add_system_set(

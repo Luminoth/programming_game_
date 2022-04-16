@@ -7,4 +7,12 @@ use crate::game::team::Team;
 pub struct Goal {
     pub team: Team,
     pub facing: Vec2,
+
+    // scoring offsets
+    pub top: Vec2,
+    pub bottom: Vec2,
+    pub score_center: Vec2,
 }
+
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct GoalDebug;

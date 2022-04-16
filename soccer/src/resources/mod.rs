@@ -14,6 +14,13 @@ pub struct SimulationParams {
     pub num_support_spots_horizontal: usize,
     pub num_support_spots_vertical: usize,
 
+    pub max_passing_force: f32,
+
+    pub num_attempts_to_find_valid_strike: usize,
+    pub pass_safe_score: f32,
+    pub can_score_score: f32,
+    pub distance_from_controller_player_score: f32,
+
     // physics
     pub friction: f32,
 }

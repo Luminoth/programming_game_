@@ -9,6 +9,7 @@ mod plugins;
 mod resources;
 mod states;
 mod systems;
+mod util;
 
 use bevy::diagnostic::*;
 use bevy::prelude::*;
@@ -27,7 +28,7 @@ pub const GOAL_SORT: f32 = 2.0;
 pub const PITCH_SORT: f32 = 0.0;
 pub const BORDER_SORT: f32 = 3.0;
 pub const PLAYER_SORT: f32 = 2.0;
-pub const SUPPORT_UPDATE_STEP: f32 = 0.02;
+pub const SUPPORT_UPDATE_STEP: f64 = 1.0;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
@@ -42,6 +43,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
         num_support_spots_horizontal: 13,
         num_support_spots_vertical: 6,
+
+        max_passing_force: 3.0,
+
+        num_attempts_to_find_valid_strike: 5,
+        pass_safe_score: 2.0,
+        can_score_score: 1.0,
+        distance_from_controller_player_score: 2.0,
 
         // NOTE: this is negative in the example source
         // so anywhere it's used, it needs to be negated

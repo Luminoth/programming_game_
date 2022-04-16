@@ -45,7 +45,10 @@ impl SoccerTeamBundle {
         let support_spots = SupportSpotCalculator::new(team, params);
 
         let mut bundle = commands.spawn_bundle(SoccerTeamBundle {
-            team: SoccerTeam { team },
+            team: SoccerTeam {
+                team,
+                ..Default::default()
+            },
             state: SoccerTeamStateMachine::default(),
             support_spots: support_spots.clone(),
             transform: Transform::default(),

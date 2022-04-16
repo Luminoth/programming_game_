@@ -1,15 +1,22 @@
 # Programming Game AI by Example
 
-* https://github.com/wangchen/Programming-Game-AI-by-Example-src
+* [Book Source](https://github.com/wangchen/Programming-Game-AI-by-Example-src)
 
 ## West World (Chapter 2)
 
-* https://hoverbear.org/blog/rust-state-machine-pattern/
-* The bevy global messaging isn't handled correctly
-* The bevy non-global messaging is sending across too many entities
+* [Alternative Rust State Machine Pattern](https://hoverbear.org/blog/rust-state-machine-pattern/)
+
+### Bevy version
+
+* Bevy Entity replace the Entity struct
+* State exit / enter is handled using Bevy events
+  * This was done to allow the systems handling those events to query as needed
+  * TODO: I'm pretty sure this is all kinds of bugged and sending events across more entities than it should
+* Messaging and regular updates run at the same 800ms as the original version
+* State enter / exit / on message run per-frame due to limitations with bevy's event system
 
 ## Autonomous (Chapter 3)
 
-* Lots of incomplete steering behaviors here
+* Lots of incomplete steering behaviors here due to time restrictions
 
 ## Soccer (Chapter 4)

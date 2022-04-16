@@ -26,7 +26,7 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     commands.insert_resource(MessageDispatcher::default());
 
     // pitch
-    PitchBundle::spawn(&mut commands, params.pitch_extents);
+    PitchBundle::spawn(&mut commands, &params);
 
     // goals
     GoalBundle::spawn(&mut commands, &params, Team::Red);

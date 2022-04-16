@@ -36,6 +36,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         pitch_extents: Vec2::new(900.0, 450.0),
         goal_extents: Vec2::new(40.0, 90.0),
 
+        num_regions_horizontal: 6,
+        num_regions_vertical: 3,
+
         // NOTE: this is negative in the example source
         // so anywhere it's used, it needs to be negated
         friction: 0.015,

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
-use crate::game::REGIONS;
+use crate::resources::SimulationParams;
 
 #[derive(Debug, Default, Inspectable)]
 pub struct Region {
@@ -23,12 +23,15 @@ pub struct Pitch {
 }
 
 impl Pitch {
-    pub fn new(extents: Vec2) -> Self {
-        let hw = extents.x * 0.5;
-        let hh = extents.y * 0.5;
+    pub fn new(params: &SimulationParams) -> Self {
+        let hw = params.pitch_extents.x * 0.5;
+        let hh = params.pitch_extents.y * 0.5;
 
-        let region_count = (REGIONS.x * REGIONS.y) as usize;
-        let region_size = Vec2::new(extents.x / REGIONS.x as f32, extents.y / REGIONS.y as f32);
+        let region_count = (params.num_regions_horizontal * params.num_regions_vertical) as usize;
+        let region_size = Vec2::new(
+            params.pitch_extents.x / params.num_regions_horizontal as f32,
+            params.pitch_extents.y / params.num_regions_vertical as f32,
+        );
 
         info!(
             "preparing {} pitch regions of size {}",
@@ -36,8 +39,8 @@ impl Pitch {
         );
 
         let mut regions = Vec::with_capacity(region_count);
-        for y in 0..REGIONS.y {
-            for x in 0..REGIONS.x {
+        for y in 0..params.num_regions_vertical {
+            for x in 0..params.num_regions_horizontal {
                 let position = Vec2::new(
                     -hw + (x as f32 * region_size.x),
                     -hh + (y as f32 * region_size.y),
@@ -49,7 +52,10 @@ impl Pitch {
             }
         }
 
-        Self { extents, regions }
+        Self {
+            extents: params.pitch_extents,
+            regions,
+        }
     }
 }
 

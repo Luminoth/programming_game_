@@ -43,77 +43,52 @@ impl MinerState {
     pub fn enter(
         self,
         entity: Entity,
-        name: impl AsRef<str>,
-        miner: &mut Miner,
+        miner: MinerQueryItem,
         wife: &MinerWife,
         message_dispatcher: &mut MessageDispatcher,
     ) {
         match self {
-            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_enter(name, miner),
-            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_enter(name, miner),
+            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_enter(miner),
+            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_enter(miner),
             Self::GoHomeAndSleepTilRested => {
-                Self::GoHomeAndSleepTilRested_enter(entity, name, miner, wife, message_dispatcher)
+                Self::GoHomeAndSleepTilRested_enter(entity, miner, wife, message_dispatcher)
             }
-            Self::QuenchThirst => Self::QuenchThirst_enter(name, miner),
-            Self::EatStew => Self::EatStew_enter(name),
+            Self::QuenchThirst => Self::QuenchThirst_enter(miner),
+            Self::EatStew => Self::EatStew_enter(miner),
         }
     }
 
     pub fn execute(
         self,
         entity: Entity,
-        name: impl AsRef<str>,
-        stats: &mut Stats,
-        state_machine: &mut MinerStateMachine,
+        miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
         match self {
-            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_execute(
-                entity,
-                name,
-                stats,
-                state_machine,
-                exit_events,
-                enter_events,
-            ),
-            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_execute(
-                entity,
-                name,
-                stats,
-                state_machine,
-                exit_events,
-                enter_events,
-            ),
-            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_execute(
-                entity,
-                name,
-                stats,
-                state_machine,
-                exit_events,
-                enter_events,
-            ),
-            Self::QuenchThirst => Self::QuenchThirst_execute(
-                entity,
-                name,
-                stats,
-                state_machine,
-                exit_events,
-                enter_events,
-            ),
-            Self::EatStew => {
-                Self::EatStew_execute(entity, name, state_machine, exit_events, enter_events)
+            Self::EnterMineAndDigForNugget => {
+                Self::EnterMineAndDigForNugget_execute(entity, miner, exit_events, enter_events)
             }
+            Self::VisitBankAndDepositGold => {
+                Self::VisitBankAndDepositGold_execute(entity, miner, exit_events, enter_events)
+            }
+            Self::GoHomeAndSleepTilRested => {
+                Self::GoHomeAndSleepTilRested_execute(entity, miner, exit_events, enter_events)
+            }
+            Self::QuenchThirst => {
+                Self::QuenchThirst_execute(entity, miner, exit_events, enter_events)
+            }
+            Self::EatStew => Self::EatStew_execute(entity, miner, exit_events, enter_events),
         }
     }
 
-    pub fn exit(self, name: impl AsRef<str>) {
+    pub fn exit(self, miner: MinerQueryItem) {
         match self {
-            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_exit(name),
-            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_exit(name),
-            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_exit(name),
-            Self::QuenchThirst => Self::QuenchThirst_exit(name),
-            Self::EatStew => Self::EatStew_exit(name),
+            Self::EnterMineAndDigForNugget => Self::EnterMineAndDigForNugget_exit(miner),
+            Self::VisitBankAndDepositGold => Self::VisitBankAndDepositGold_exit(miner),
+            Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_exit(miner),
+            Self::QuenchThirst => Self::QuenchThirst_exit(miner),
+            Self::EatStew => Self::EatStew_exit(miner),
         }
     }
 
@@ -121,8 +96,7 @@ impl MinerState {
         self,
         message: &MessageEvent,
         entity: Entity,
-        name: impl AsRef<str>,
-        state_machine: &mut MinerStateMachine,
+        miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
@@ -132,8 +106,7 @@ impl MinerState {
             Self::GoHomeAndSleepTilRested => Self::GoHomeAndSleepTilRested_on_message(
                 message,
                 entity,
-                name,
-                state_machine,
+                miner,
                 exit_events,
                 enter_events,
             ),
@@ -144,85 +117,83 @@ impl MinerState {
 }
 
 impl MinerState {
-    fn EnterMineAndDigForNugget_enter(name: impl AsRef<str>, miner: &mut Miner) {
-        if miner.location != Location::GoldMine {
-            info!("{}: Walkin' to the gold mine", name.as_ref());
+    fn EnterMineAndDigForNugget_enter(mut miner: MinerQueryItem) {
+        if miner.miner.location != Location::GoldMine {
+            info!("{}: Walkin' to the gold mine", miner.name.as_ref());
 
-            miner.location = Location::GoldMine;
+            miner.miner.location = Location::GoldMine;
         }
     }
 
     fn EnterMineAndDigForNugget_execute(
         entity: Entity,
-        name: impl AsRef<str>,
-        stats: &mut Stats,
-        state_machine: &mut MinerStateMachine,
+        mut miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
-        stats.mine_gold();
+        miner.stats.mine_gold();
 
-        info!("{}: Pickin' up a nugget", name.as_ref());
+        info!("{}: Pickin' up a nugget", miner.name.as_ref());
 
-        if stats.are_pockets_full() {
-            state_machine.change_state(
+        if miner.stats.are_pockets_full() {
+            miner.state_machine.change_state(
                 entity,
                 Self::VisitBankAndDepositGold,
                 exit_events,
                 enter_events,
             );
-        } else if stats.is_thirsty() {
-            state_machine.change_state(entity, Self::QuenchThirst, exit_events, enter_events);
+        } else if miner.stats.is_thirsty() {
+            miner
+                .state_machine
+                .change_state(entity, Self::QuenchThirst, exit_events, enter_events);
         }
     }
 
-    fn EnterMineAndDigForNugget_exit(name: impl AsRef<str>) {
+    fn EnterMineAndDigForNugget_exit(miner: MinerQueryItem) {
         info!(
             "{}: Ah'm leavin' the gold mine with mah pockets full o' sweet gold",
-            name.as_ref()
+            miner.name.as_ref()
         )
     }
 }
 
 impl MinerState {
-    fn VisitBankAndDepositGold_enter(name: impl AsRef<str>, miner: &mut Miner) {
-        if miner.location != Location::Bank {
-            info!("{}: Goin' to the bank. Yes siree", name.as_ref());
+    fn VisitBankAndDepositGold_enter(mut miner: MinerQueryItem) {
+        if miner.miner.location != Location::Bank {
+            info!("{}: Goin' to the bank. Yes siree", miner.name.as_ref());
 
-            miner.location = Location::Bank;
+            miner.miner.location = Location::Bank;
         }
     }
 
     fn VisitBankAndDepositGold_execute(
         entity: Entity,
-        name: impl AsRef<str>,
-        stats: &mut Stats,
-        state_machine: &mut MinerStateMachine,
+        mut miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
-        stats.transfer_gold_to_wealth();
+        miner.stats.transfer_gold_to_wealth();
 
         info!(
             "{}: Depositing gold. Total savings now: {}",
-            name.as_ref(),
-            stats.wealth()
+            miner.name.as_ref(),
+            miner.stats.wealth()
         );
 
-        if stats.wealth() >= COMFORT_LEVEL {
+        if miner.stats.wealth() >= COMFORT_LEVEL {
             info!(
                 "{}: WooHoo! Rich enough for now. Back home to mah li'lle lady",
-                name.as_ref()
+                miner.name.as_ref()
             );
 
-            state_machine.change_state(
+            miner.state_machine.change_state(
                 entity,
                 Self::GoHomeAndSleepTilRested,
                 exit_events,
                 enter_events,
             );
         } else {
-            state_machine.change_state(
+            miner.state_machine.change_state(
                 entity,
                 Self::EnterMineAndDigForNugget,
                 exit_events,
@@ -231,23 +202,22 @@ impl MinerState {
         }
     }
 
-    fn VisitBankAndDepositGold_exit(name: impl AsRef<str>) {
-        info!("{}: Leavin' the bank", name.as_ref());
+    fn VisitBankAndDepositGold_exit(miner: MinerQueryItem) {
+        info!("{}: Leavin' the bank", miner.name.as_ref());
     }
 }
 
 impl MinerState {
     fn GoHomeAndSleepTilRested_enter(
         entity: Entity,
-        name: impl AsRef<str>,
-        miner: &mut Miner,
+        mut miner: MinerQueryItem,
         wife: &MinerWife,
         message_dispatcher: &mut MessageDispatcher,
     ) {
-        if miner.location != Location::Shack {
-            info!("{}: Walkin' home", name.as_ref());
+        if miner.miner.location != Location::Shack {
+            info!("{}: Walkin' home", miner.name.as_ref());
 
-            miner.location = Location::Shack;
+            miner.miner.location = Location::Shack;
 
             message_dispatcher.dispatch_message(wife.wife_id, MessageEvent::HiHoneyImHome(entity));
         }
@@ -255,30 +225,28 @@ impl MinerState {
 
     fn GoHomeAndSleepTilRested_execute(
         entity: Entity,
-        name: impl AsRef<str>,
-        stats: &mut Stats,
-        state_machine: &mut MinerStateMachine,
+        mut miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
-        if !stats.is_fatigued() {
+        if !miner.stats.is_fatigued() {
             info!(
                 "{}: What a God darn fantastic nap! Time to find more gold",
-                name.as_ref()
+                miner.name.as_ref()
             );
 
-            state_machine.change_state(
+            miner.state_machine.change_state(
                 entity,
                 Self::EnterMineAndDigForNugget,
                 exit_events,
                 enter_events,
             );
         } else {
-            stats.rest();
+            miner.stats.rest();
 
-            info!("{}: ZZZZ... ", name.as_ref());
+            info!("{}: ZZZZ... ", miner.name.as_ref());
 
-            state_machine.change_state(
+            miner.state_machine.change_state(
                 entity,
                 Self::GoHomeAndSleepTilRested,
                 exit_events,
@@ -287,15 +255,14 @@ impl MinerState {
         }
     }
 
-    fn GoHomeAndSleepTilRested_exit(name: impl AsRef<str>) {
-        info!("{}: Leaving the house", name.as_ref());
+    fn GoHomeAndSleepTilRested_exit(miner: MinerQueryItem) {
+        info!("{}: Leaving the house", miner.name.as_ref());
     }
 
     fn GoHomeAndSleepTilRested_on_message(
         message: &MessageEvent,
         entity: Entity,
-        name: impl AsRef<str>,
-        state_machine: &mut MinerStateMachine,
+        mut miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
@@ -303,10 +270,16 @@ impl MinerState {
             MessageEvent::StewIsReady(_) => {
                 let now = Utc::now();
 
-                debug!("Message handled by {} at time: {}", name.as_ref(), now);
-                info!("{}: Ok hun, ahm a-comin'!", name.as_ref());
+                debug!(
+                    "Message handled by {} at time: {}",
+                    miner.name.as_ref(),
+                    now
+                );
+                info!("{}: Ok hun, ahm a-comin'!", miner.name.as_ref());
 
-                state_machine.change_state(entity, Self::EatStew, exit_events, enter_events);
+                miner
+                    .state_machine
+                    .change_state(entity, Self::EatStew, exit_events, enter_events);
             }
             _ => (),
         }
@@ -314,31 +287,29 @@ impl MinerState {
 }
 
 impl MinerState {
-    fn QuenchThirst_enter(name: impl AsRef<str>, miner: &mut Miner) {
-        if miner.location != Location::Saloon {
+    fn QuenchThirst_enter(mut miner: MinerQueryItem) {
+        if miner.miner.location != Location::Saloon {
             info!(
                 "{}: Boy, ah sure is thusty! Walking to the saloon",
-                name.as_ref()
+                miner.name.as_ref()
             );
 
-            miner.location = Location::Shack;
+            miner.miner.location = Location::Shack;
         }
     }
 
     fn QuenchThirst_execute(
         entity: Entity,
-        name: impl AsRef<str>,
-        stats: &mut Stats,
-        state_machine: &mut MinerStateMachine,
+        mut miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
-        if stats.is_thirsty() {
-            stats.buy_and_drink_a_whiskey();
+        if miner.stats.is_thirsty() {
+            miner.stats.buy_and_drink_a_whiskey();
 
-            info!("{}: That's mighty fine sippin liquer", name.as_ref());
+            info!("{}: That's mighty fine sippin liquer", miner.name.as_ref());
 
-            state_machine.change_state(
+            miner.state_machine.change_state(
                 entity,
                 Self::EnterMineAndDigForNugget,
                 exit_events,
@@ -349,32 +320,33 @@ impl MinerState {
         }
     }
 
-    fn QuenchThirst_exit(name: impl AsRef<str>) {
-        info!("{}: Leaving the saloon, feelin' good", name.as_ref());
+    fn QuenchThirst_exit(miner: MinerQueryItem) {
+        info!("{}: Leaving the saloon, feelin' good", miner.name.as_ref());
     }
 }
 
 impl MinerState {
-    fn EatStew_enter(name: impl AsRef<str>) {
-        info!("{}: Smells reaaal good Elsa!", name.as_ref());
+    fn EatStew_enter(miner: MinerQueryItem) {
+        info!("{}: Smells reaaal good Elsa!", miner.name.as_ref());
     }
 
     fn EatStew_execute(
         entity: Entity,
-        name: impl AsRef<str>,
-        state_machine: &mut MinerStateMachine,
+        mut miner: MinerQueryItem,
         exit_events: &mut EventWriter<MinerStateExitEvent>,
         enter_events: &mut EventWriter<MinerStateEnterEvent>,
     ) {
-        info!("{}: Tastes reaaal good too!", name.as_ref());
+        info!("{}: Tastes reaaal good too!", miner.name.as_ref());
 
-        state_machine.revert_to_previous_state(entity, exit_events, enter_events);
+        miner
+            .state_machine
+            .revert_to_previous_state(entity, exit_events, enter_events);
     }
 
-    fn EatStew_exit(name: impl AsRef<str>) {
+    fn EatStew_exit(miner: MinerQueryItem) {
         info!(
             "{}: Thankya li'lle lady. Ah better get back to whatever ah wuz doin'",
-            name.as_ref()
+            miner.name.as_ref()
         );
     }
 }

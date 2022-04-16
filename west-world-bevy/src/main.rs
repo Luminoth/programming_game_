@@ -15,6 +15,7 @@ use events::messaging::MessageEvent;
 use game::miner::{MinerStateEnterEvent, MinerStateExitEvent};
 use game::wife::{WifeStateEnterEvent, WifeStateExitEvent};
 use states::GameState;
+use systems::Systems;
 
 fn setup(mut _commands: Commands) {}
 
@@ -45,57 +46,59 @@ fn main() {
 
     app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
         .add_system_set(
+            // rate-limited systems
             SystemSet::on_update(GameState::Main)
                 .with_run_criteria(FixedTimestep::step(0.8))
+                // messaging systems
+                .with_system(systems::messaging::update)
                 // miner systems
                 .with_system(systems::miner::update)
-                .with_system(systems::miner::state_exit.label("state_exit"))
                 .with_system(
-                    systems::miner::state_enter
-                        .label("state_enter")
-                        .after("state_exit"),
-                )
-                .with_system(
-                    systems::miner::global_state_execute
-                        .label("global_state_execute")
-                        .after("state_enter"),
+                    systems::miner::global_state_execute.label(Systems::GlobalStateExecute),
                 )
                 .with_system(
                     systems::miner::state_execute
-                        .label("state_execute")
-                        .after("global_state_execute"),
+                        .label(Systems::StateExecute)
+                        .after(Systems::GlobalStateExecute),
                 )
-                .with_system(systems::miner::state_on_message.label("state_on_message"))
                 // wife systems
-                .with_system(systems::wife::state_exit.label("state_exit"))
-                .with_system(
-                    systems::wife::state_enter
-                        .label("state_enter")
-                        .after("state_exit"),
-                )
-                .with_system(
-                    systems::wife::global_state_execute
-                        .label("global_state_execute")
-                        .after("state_enter"),
-                )
+                .with_system(systems::wife::global_state_execute.label(Systems::GlobalStateExecute))
                 .with_system(
                     systems::wife::state_execute
-                        .label("state_execute")
-                        .after("global_state_execute"),
-                )
-                .with_system(
-                    systems::wife::global_state_on_message.label("global_state_on_message"),
-                )
-                .with_system(
-                    systems::wife::state_on_message
-                        .label("state_on_message")
-                        .after("global_state_on_message"),
+                        .label(Systems::StateExecute)
+                        .after(Systems::GlobalStateExecute),
                 ),
         )
         .add_system_set(
+            // per-frame systems
             SystemSet::on_update(GameState::Main)
-                // messaging systems
-                .with_system(systems::messaging::update),
+                // miner systems
+                .with_system(systems::miner::state_exit.label(Systems::StateExit))
+                .with_system(
+                    systems::miner::state_enter
+                        .label(Systems::StateEnter)
+                        .after(Systems::StateExit),
+                )
+                .with_system(
+                    systems::miner::state_on_message
+                        .label(Systems::StateOnMessage)
+                        .after(Systems::GlobalStateOnMessage),
+                )
+                // wife systems
+                .with_system(
+                    systems::wife::global_state_on_message.label(Systems::GlobalStateOnMessage),
+                )
+                .with_system(systems::wife::state_exit.label(Systems::StateExit))
+                .with_system(
+                    systems::wife::state_enter
+                        .label(Systems::StateEnter)
+                        .after(Systems::StateExit),
+                )
+                .with_system(
+                    systems::wife::state_on_message
+                        .label(Systems::StateOnMessage)
+                        .after(Systems::GlobalStateOnMessage),
+                ),
         );
 
     app.run();

@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 
 use crate::game::miner::*;
@@ -92,4 +93,13 @@ impl Miner {
 #[derive(Debug, Component)]
 pub struct MinerWife {
     pub wife_id: Entity,
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct MinerQuery<'w> {
+    pub miner: &'w mut Miner,
+    pub stats: &'w mut Stats,
+    pub state_machine: &'w mut MinerStateMachine,
+    pub name: &'w Name,
 }

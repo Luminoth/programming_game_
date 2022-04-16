@@ -27,6 +27,8 @@ pub fn update_support_spot(
                     continue;
                 }
 
+                info!("updating support spot for controlling team {:?}", team.team);
+
                 let controller_position = controller.1.translation.truncate();
 
                 let mut best_score = 0.0;
@@ -41,7 +43,7 @@ pub fn update_support_spot(
                         spot.position,
                         None,
                         &players,
-                        &ball_physical,
+                        ball_physical,
                         params.max_passing_force,
                     ) {
                         spot.score += params.pass_safe_score;
@@ -54,7 +56,7 @@ pub fn update_support_spot(
                                 &params,
                                 spot.position,
                                 goal,
-                                &ball_physical,
+                                ball_physical,
                                 &players,
                                 params.max_passing_force,
                             )

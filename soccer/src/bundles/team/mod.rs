@@ -50,7 +50,8 @@ impl SoccerTeamBundle {
                 ..Default::default()
             },
             state: SoccerTeamStateMachine::default(),
-            support_spots: support_spots.clone(),
+            support_spots,
+            //support_spots: support_spots.clone(),
             transform: Transform::default(),
             global_transform: GlobalTransform::default(),
         });

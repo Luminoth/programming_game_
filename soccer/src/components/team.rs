@@ -133,8 +133,8 @@ impl SoccerTeam {
             target.y = rng.gen_range(min_y..=max_y);
 
             let time = ball_physical.time_to_cover_distance(params, from, target, power);
-            if time >= 0.0 {
-                if self.is_pass_safe_from_all_opponents(
+            if time >= 0.0
+                && self.is_pass_safe_from_all_opponents(
                     params,
                     from,
                     target,
@@ -142,9 +142,9 @@ impl SoccerTeam {
                     players,
                     ball_physical,
                     power,
-                ) {
-                    return Some(target);
-                }
+                )
+            {
+                return Some(target);
             }
 
             num_attempts -= 1;

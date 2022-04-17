@@ -1,18 +1,19 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 use rand::Rng;
 
 use crate::util::point_to_world_space;
 
-use super::physics::Physical;
+use super::physics::*;
 
 pub trait SteeringBehavior: std::fmt::Debug + Component {}
 
-fn seek_force(target: Vec2, physical: &Physical, transform: &Transform) -> Vec2 {
-    let translation = transform.translation.truncate();
+fn seek_force(target: Vec2, physical: &PhysicalQueryItem) -> Vec2 {
+    let translation = physical.transform.translation.truncate();
 
-    let desired_velocity = (target - translation).normalize_or_zero() * physical.max_speed;
-    desired_velocity - physical.velocity
+    let desired_velocity = (target - translation).normalize_or_zero() * physical.physical.max_speed;
+    desired_velocity - physical.physical.velocity
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -26,21 +27,27 @@ pub struct Seek;
 impl SteeringBehavior for Seek {}
 
 impl Seek {
-    pub fn force(&self, target: &SeekTarget, physical: &Physical, transform: &Transform) -> Vec2 {
-        seek_force(target.position, physical, transform)
+    pub fn force(&self, target: &SeekTarget, physical: &PhysicalQueryItem) -> Vec2 {
+        seek_force(target.position, physical)
     }
 }
 
-fn flee_force(target: Vec2, physical: &Physical, transform: &Transform) -> Vec2 {
-    let translation = transform.translation.truncate();
+#[derive(WorldQuery)]
+pub struct SeekQuery<'w> {
+    pub steering: &'w Seek,
+    pub target: &'w SeekTarget,
+}
+
+fn flee_force(target: Vec2, physical: &PhysicalQueryItem) -> Vec2 {
+    let translation = physical.transform.translation.truncate();
 
     let panic_distance_squared = 100.0 * 100.0;
     if translation.distance_squared(target) > panic_distance_squared {
         return Vec2::ZERO;
     }
 
-    let desired_velocity = (translation - target).normalize_or_zero() * physical.max_speed;
-    desired_velocity - physical.velocity
+    let desired_velocity = (translation - target).normalize_or_zero() * physical.physical.max_speed;
+    desired_velocity - physical.physical.velocity
 }
 
 // TODO: if the agent spawns on top of the postion its fleeing
@@ -56,9 +63,15 @@ pub struct Flee;
 impl SteeringBehavior for Flee {}
 
 impl Flee {
-    pub fn force(&self, target: &FleeTarget, physical: &Physical, transform: &Transform) -> Vec2 {
-        flee_force(target.position, physical, transform)
+    pub fn force(&self, target: &FleeTarget, physical: &PhysicalQueryItem) -> Vec2 {
+        flee_force(target.position, physical)
     }
+}
+
+#[derive(WorldQuery)]
+pub struct FleeQuery<'w> {
+    pub steering: &'w Flee,
+    pub target: &'w FleeTarget,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -87,8 +100,8 @@ pub struct Arrive {
 impl SteeringBehavior for Arrive {}
 
 impl Arrive {
-    pub fn force(&self, target: &ArriveTarget, physical: &Physical, transform: &Transform) -> Vec2 {
-        let translation = transform.translation.truncate();
+    pub fn force(&self, target: &ArriveTarget, physical: &PhysicalQueryItem) -> Vec2 {
+        let translation = physical.transform.translation.truncate();
         let deceleration = self.deceleration as i32;
 
         let to_target = target.position - translation;
@@ -98,19 +111,25 @@ impl Arrive {
             // fine tweaking of deceleration
             let deceleration_tweaker = 0.3;
 
-            let speed =
-                (dist / (deceleration as f32 * deceleration_tweaker)).min(physical.max_speed);
+            let speed = (dist / (deceleration as f32 * deceleration_tweaker))
+                .min(physical.physical.max_speed);
             let desired_velocity = to_target * speed / dist;
-            return desired_velocity - physical.velocity;
+            return desired_velocity - physical.physical.velocity;
         }
 
         Vec2::ZERO
     }
 }
 
-fn turnaround_time(target: Vec2, physical: &Physical, transform: &Transform) -> f32 {
-    let to_target = (target - transform.translation.truncate()).normalize_or_zero();
-    let dot = physical.heading.dot(to_target);
+#[derive(WorldQuery)]
+pub struct ArriveQuery<'w> {
+    pub steering: &'w Arrive,
+    pub target: &'w ArriveTarget,
+}
+
+fn turnaround_time(target: Vec2, physical: &PhysicalQueryItem) -> f32 {
+    let to_target = (target - physical.transform.translation.truncate()).normalize_or_zero();
+    let dot = physical.physical.heading.dot(to_target);
 
     // adjust to get ~1 second for 180 turn
     // higher max turn means higher coefficient
@@ -134,18 +153,18 @@ impl SteeringBehavior for Pursuit {}
 impl Pursuit {
     pub fn force(
         &self,
+        pursuer: Entity,
         target: &PursuitTarget,
-        physical: &Physical,
-        transform: &Transform,
-        entities: &Query<(&mut Physical, &Transform)>,
+        entities: &mut Query<PhysicalQuery>,
     ) -> Vec2 {
-        if let Ok((evader_physical, evader_transform)) = entities.get(target.entity) {
-            let to_evader = (evader_transform.translation - transform.translation).truncate();
-            let relative_heading = physical.heading.dot(evader_physical.heading);
+        if let Ok([pursuer, evader]) = entities.get_many_mut([pursuer, target.entity]) {
+            let to_evader =
+                (evader.transform.translation - pursuer.transform.translation).truncate();
+            let relative_heading = pursuer.physical.heading.dot(evader.physical.heading);
 
             // if the evader is ahead and facing us, we can just seek it
-            if to_evader.dot(physical.heading) > 0.0 && relative_heading < -0.95 {
-                return seek_force(evader_transform.translation.truncate(), physical, transform);
+            if to_evader.dot(pursuer.physical.heading) > 0.0 && relative_heading < -0.95 {
+                return seek_force(evader.transform.translation.truncate(), &pursuer);
             }
 
             // not ahead, so predict future position and seek that
@@ -153,22 +172,26 @@ impl Pursuit {
             // and us; and is inversly proportional to the sum of our velocities
             // TODO: zero check this
             let mut look_ahead_time =
-                to_evader.length() / (physical.max_speed + evader_physical.speed());
+                to_evader.length() / (pursuer.physical.max_speed + evader.physical.speed());
 
-            look_ahead_time +=
-                turnaround_time(evader_transform.translation.truncate(), physical, transform);
+            look_ahead_time += turnaround_time(evader.transform.translation.truncate(), &pursuer);
 
             return seek_force(
-                evader_transform.translation.truncate()
-                    + evader_physical.velocity * look_ahead_time,
-                physical,
-                transform,
+                evader.transform.translation.truncate()
+                    + evader.physical.velocity * look_ahead_time,
+                &pursuer,
             );
         }
 
         warn!("pursuit has invalid target!");
         Vec2::ZERO
     }
+}
+
+#[derive(WorldQuery)]
+pub struct PursuitQuery<'w> {
+    pub steering: &'w Pursuit,
+    pub target: &'w PursuitTarget,
 }
 
 // TODO: offset pursuit
@@ -186,34 +209,39 @@ impl SteeringBehavior for Evade {}
 impl Evade {
     pub fn force(
         &self,
+        evader: Entity,
         target: &EvadeTarget,
-        physical: &Physical,
-        transform: &Transform,
-        entities: &Query<(&mut Physical, &Transform)>,
+        entities: &mut Query<PhysicalQuery>,
     ) -> Vec2 {
         // TODO: if the target the evader is evading is on top of it
         // (to_pursuer.length() == 0) then the evader won't try to evade
 
-        if let Ok((pursuer_physical, pursuer_transform)) = entities.get(target.entity) {
-            let to_pursuer = (pursuer_transform.translation - transform.translation).truncate();
+        if let Ok([evader, pursuer]) = entities.get_many_mut([evader, target.entity]) {
+            let to_pursuer =
+                (pursuer.transform.translation - evader.transform.translation).truncate();
 
             // look-ahead time is proportional to the distance between the pursuer
             // and us; and is inversly proportional to the sum of our velocities
             // TODO: zero check this
             let look_ahead_time =
-                to_pursuer.length() / (physical.max_speed + pursuer_physical.speed());
+                to_pursuer.length() / (evader.physical.max_speed + pursuer.physical.speed());
 
             return flee_force(
-                pursuer_transform.translation.truncate()
-                    + pursuer_physical.velocity * look_ahead_time,
-                physical,
-                transform,
+                pursuer.transform.translation.truncate()
+                    + pursuer.physical.velocity * look_ahead_time,
+                &evader,
             );
         }
 
         warn!("evade has invalid target!");
         Vec2::ZERO
     }
+}
+
+#[derive(WorldQuery)]
+pub struct EvadeQuery<'w> {
+    pub steering: &'w Evade,
+    pub target: &'w EvadeTarget,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -238,7 +266,7 @@ impl Wander {
         }
     }
 
-    pub fn force(&mut self, physical: &Physical, transform: &Transform) -> Vec2 {
+    pub fn force(&mut self, physical: &PhysicalQueryItem) -> Vec2 {
         let mut rng = rand::thread_rng();
 
         // add some jitter to the target
@@ -250,11 +278,16 @@ impl Wander {
         // extend out to the circle radius
         self.target = self.target.normalize_or_zero() * self.radius;
 
-        let translation = transform.translation.truncate();
+        let translation = physical.transform.translation.truncate();
 
         // project into world space
         let local = self.target + Vec2::new(self.distance, 0.0);
-        let world = point_to_world_space(local, physical.heading, physical.side, translation);
+        let world = point_to_world_space(
+            local,
+            physical.physical.heading,
+            physical.physical.side,
+            translation,
+        );
 
         // move the target out front
         world - translation

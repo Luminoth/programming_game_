@@ -53,12 +53,11 @@ impl VehicleBundle {
             vehicle: Vehicle::default(),
         });
 
-        bundle.insert(Name::new(name));
-
         bundle.insert_bundle(ActorBundle {
             actor: Actor {
                 bounding_radius: VEHICLE_RADIUS,
             },
+            name: Name::new(name),
             transform: Transform::from_translation(position.extend(0.0)),
             ..Default::default()
         });

@@ -8,7 +8,7 @@
 
 ### Bevy version
 
-* Bevy Entity replace the Entity struct
+* Bevy Entity replaces the Entity struct
 * State exit / enter is handled using Bevy events
   * This was done to allow the systems handling those events to query as needed
   * TODO: I'm pretty sure this is all kinds of bugged and sending events across more entities than it should
@@ -17,6 +17,7 @@
 
 ## Autonomous (Chapter 3)
 
+* The Actor component replaces the BaseGameEntity
 * Lots of incomplete steering behaviors here due to time restrictions
 
 ## Soccer (Chapter 4)

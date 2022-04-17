@@ -21,13 +21,12 @@ impl ObstacleBundle {
             obstacle: Obstacle::default(),
         });
 
-        bundle.insert(Name::new("Obstacle"));
-
         bundle.insert_bundle(ActorBundle {
             actor: Actor {
                 bounding_radius: radius,
             },
             transform: Transform::from_translation(position.extend(0.0)),
+            name: Name::new("Obstacle"),
             ..Default::default()
         });
 

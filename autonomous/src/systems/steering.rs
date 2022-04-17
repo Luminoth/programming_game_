@@ -9,7 +9,7 @@ use crate::components::steering::*;
 use crate::resources::*;
 use crate::util::*;
 
-pub fn update_seek(params: Res<SimulationParams>, mut query: Query<(SeekQuery, PhysicalQuery)>) {
+pub fn update_seek(params: Res<SimulationParams>, mut query: Query<(SeekQuery, PhysicalQueryMut)>) {
     for (steering, mut physical) in query.iter_mut() {
         let force = steering.steering.force(steering.target, &physical);
         physical
@@ -18,7 +18,7 @@ pub fn update_seek(params: Res<SimulationParams>, mut query: Query<(SeekQuery, P
     }
 }
 
-pub fn update_flee(params: Res<SimulationParams>, mut query: Query<(FleeQuery, PhysicalQuery)>) {
+pub fn update_flee(params: Res<SimulationParams>, mut query: Query<(FleeQuery, PhysicalQueryMut)>) {
     for (steering, mut physical) in query.iter_mut() {
         let force = steering.steering.force(steering.target, &physical);
         physical
@@ -29,7 +29,7 @@ pub fn update_flee(params: Res<SimulationParams>, mut query: Query<(FleeQuery, P
 
 pub fn update_arrive(
     params: Res<SimulationParams>,
-    mut query: Query<(ArriveQuery, PhysicalQuery)>,
+    mut query: Query<(ArriveQuery, PhysicalQueryMut)>,
 ) {
     for (steering, mut physical) in query.iter_mut() {
         let force = steering.steering.force(steering.target, &physical);
@@ -42,7 +42,7 @@ pub fn update_arrive(
 pub fn update_pursuit(
     params: Res<SimulationParams>,
     mut pursuers: Query<(Entity, PursuitQuery)>,
-    mut entities: Query<PhysicalQuery>,
+    mut entities: Query<PhysicalQueryMut>,
 ) {
     for (entity, steering) in pursuers.iter_mut() {
         let force = steering
@@ -59,7 +59,7 @@ pub fn update_pursuit(
 pub fn update_evade(
     params: Res<SimulationParams>,
     mut evaders: Query<(Entity, EvadeQuery)>,
-    mut entities: Query<PhysicalQuery>,
+    mut entities: Query<PhysicalQueryMut>,
 ) {
     for (entity, steering) in evaders.iter_mut() {
         let force = steering
@@ -75,7 +75,7 @@ pub fn update_evade(
 
 pub fn update_wander(
     params: Res<SimulationParams>,
-    mut query: Query<(&mut Wander, PhysicalQuery)>,
+    mut query: Query<(&mut Wander, PhysicalQueryMut)>,
 ) {
     for (mut steering, mut physical) in query.iter_mut() {
         let force = steering.force(&physical);

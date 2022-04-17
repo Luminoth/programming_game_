@@ -17,7 +17,7 @@ pub enum Systems {
 }
 
 // TODO: this should exclude entities that don't move
-pub fn wrap(window: Res<WindowDescriptor>, mut query: Query<PhysicalQuery>) {
+pub fn wrap(window: Res<WindowDescriptor>, mut query: Query<PhysicalQueryMut>) {
     let half_width = window.width / 2.0;
     let half_height = window.height / 2.0;
 
@@ -36,7 +36,7 @@ pub fn wrap(window: Res<WindowDescriptor>, mut query: Query<PhysicalQuery>) {
     }
 }
 
-pub fn facing(_time: Res<Time>, mut query: Query<PhysicalQuery>) {
+pub fn facing(_time: Res<Time>, mut query: Query<PhysicalQueryMut>) {
     for mut physical in query.iter_mut() {
         if physical.physical.heading.length_squared() < std::f32::EPSILON {
             continue;

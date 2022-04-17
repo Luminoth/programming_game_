@@ -9,7 +9,7 @@ use super::physics::*;
 
 pub trait SteeringBehavior: std::fmt::Debug + Component {}
 
-fn seek_force(target: Vec2, physical: &PhysicalQueryItem) -> Vec2 {
+fn seek_force(target: Vec2, physical: &PhysicalQueryMutItem) -> Vec2 {
     let translation = physical.transform.translation.truncate();
 
     let desired_velocity = (target - translation).normalize_or_zero() * physical.physical.max_speed;
@@ -27,7 +27,7 @@ pub struct Seek;
 impl SteeringBehavior for Seek {}
 
 impl Seek {
-    pub fn force(&self, target: &SeekTarget, physical: &PhysicalQueryItem) -> Vec2 {
+    pub fn force(&self, target: &SeekTarget, physical: &PhysicalQueryMutItem) -> Vec2 {
         seek_force(target.position, physical)
     }
 }
@@ -38,7 +38,7 @@ pub struct SeekQuery<'w> {
     pub target: &'w SeekTarget,
 }
 
-fn flee_force(target: Vec2, physical: &PhysicalQueryItem) -> Vec2 {
+fn flee_force(target: Vec2, physical: &PhysicalQueryMutItem) -> Vec2 {
     let translation = physical.transform.translation.truncate();
 
     let panic_distance_squared = 100.0 * 100.0;
@@ -63,7 +63,7 @@ pub struct Flee;
 impl SteeringBehavior for Flee {}
 
 impl Flee {
-    pub fn force(&self, target: &FleeTarget, physical: &PhysicalQueryItem) -> Vec2 {
+    pub fn force(&self, target: &FleeTarget, physical: &PhysicalQueryMutItem) -> Vec2 {
         flee_force(target.position, physical)
     }
 }
@@ -100,7 +100,7 @@ pub struct Arrive {
 impl SteeringBehavior for Arrive {}
 
 impl Arrive {
-    pub fn force(&self, target: &ArriveTarget, physical: &PhysicalQueryItem) -> Vec2 {
+    pub fn force(&self, target: &ArriveTarget, physical: &PhysicalQueryMutItem) -> Vec2 {
         let translation = physical.transform.translation.truncate();
         let deceleration = self.deceleration as i32;
 
@@ -127,7 +127,7 @@ pub struct ArriveQuery<'w> {
     pub target: &'w ArriveTarget,
 }
 
-fn turnaround_time(target: Vec2, physical: &PhysicalQueryItem) -> f32 {
+fn turnaround_time(target: Vec2, physical: &PhysicalQueryMutItem) -> f32 {
     let to_target = (target - physical.transform.translation.truncate()).normalize_or_zero();
     let dot = physical.physical.heading.dot(to_target);
 
@@ -155,7 +155,7 @@ impl Pursuit {
         &self,
         pursuer: Entity,
         target: &PursuitTarget,
-        entities: &mut Query<PhysicalQuery>,
+        entities: &mut Query<PhysicalQueryMut>,
     ) -> Vec2 {
         if let Ok([pursuer, evader]) = entities.get_many_mut([pursuer, target.entity]) {
             let to_evader =
@@ -211,7 +211,7 @@ impl Evade {
         &self,
         evader: Entity,
         target: &EvadeTarget,
-        entities: &mut Query<PhysicalQuery>,
+        entities: &mut Query<PhysicalQueryMut>,
     ) -> Vec2 {
         // TODO: if the target the evader is evading is on top of it
         // (to_pursuer.length() == 0) then the evader won't try to evade
@@ -266,7 +266,7 @@ impl Wander {
         }
     }
 
-    pub fn force(&mut self, physical: &PhysicalQueryItem) -> Vec2 {
+    pub fn force(&mut self, physical: &PhysicalQueryMutItem) -> Vec2 {
         let mut rng = rand::thread_rng();
 
         // add some jitter to the target

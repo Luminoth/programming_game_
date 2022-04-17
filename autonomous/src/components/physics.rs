@@ -101,7 +101,7 @@ impl Physical {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct PhysicalQuery<'w> {
+pub struct PhysicalQueryMut<'w> {
     pub transform: &'w mut Transform,
     pub physical: &'w mut Physical,
 }

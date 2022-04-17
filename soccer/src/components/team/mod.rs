@@ -1,3 +1,9 @@
+mod field_player;
+mod goalie;
+
+pub use field_player::*;
+pub use goalie::*;
+
 use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
@@ -212,36 +218,6 @@ impl SupportSpotCalculator {
 pub struct SupportSpotCalculatorQueryMut<'w> {
     pub team: &'w mut SoccerTeam,
     pub support_calculator: &'w mut SupportSpotCalculator,
-}
-
-pub type FieldPlayerStateMachine = StateMachine<FieldPlayerState>;
-
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct FieldPlayer {
-    pub team: Team,
-}
-
-#[derive(WorldQuery)]
-#[world_query(mutable, derive(Debug))]
-pub struct FieldPlayerQueryMut<'w> {
-    pub player: &'w mut FieldPlayer,
-    pub state_machine: &'w mut FieldPlayerStateMachine,
-    pub name: &'w Name,
-}
-
-pub type GoalieStateMachine = StateMachine<GoalieState>;
-
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct Goalie {
-    pub team: Team,
-}
-
-#[derive(WorldQuery)]
-#[world_query(mutable, derive(Debug))]
-pub struct GoalieQueryMut<'w> {
-    pub goalie: &'w mut Goalie,
-    pub state_machine: &'w mut GoalieStateMachine,
-    pub name: &'w Name,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]

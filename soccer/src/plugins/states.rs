@@ -3,8 +3,8 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
-use crate::events::messaging::MessageEvent;
 use crate::events::team::*;
+use crate::resources::messaging::DispatchedMessageEvent;
 use crate::states;
 use crate::states::*;
 use crate::systems;
@@ -24,7 +24,7 @@ struct MainStatePlugin;
 impl Plugin for MainStatePlugin {
     fn build(&self, app: &mut App) {
         // events
-        app.add_event::<(Entity, MessageEvent)>()
+        app.add_event::<DispatchedMessageEvent>()
             .add_event::<SoccerTeamStateEnterEvent>()
             .add_event::<SoccerTeamStateExitEvent>()
             .add_event::<FieldPlayerStateEnterEvent>()
@@ -54,17 +54,24 @@ impl Plugin for MainStatePlugin {
                 SystemSet::on_update(GameState::Main)
                     // messaging
                     .with_system(systems::messaging::update)
-                    // team states
+                    // team systems
                     .with_system(
                         systems::team::global_state_execute
                             .label(Systems::GlobalStateExecute)
                             .after(Systems::StateEnter),
                     )
                     .with_system(
+                        systems::team::state_enter
+                            .label(Systems::StateEnter)
+                            .after(Systems::StateExit),
+                    )
+                    // field player systems
+                    .with_system(
                         systems::team::field_player::global_state_execute
                             .label(Systems::GlobalStateExecute)
                             .after(Systems::StateEnter),
                     )
+                    // goalie systems
                     .with_system(
                         systems::team::goalie::global_state_execute
                             .label(Systems::GlobalStateExecute)

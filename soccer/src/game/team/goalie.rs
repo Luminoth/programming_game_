@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 

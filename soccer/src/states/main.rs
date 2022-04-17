@@ -5,6 +5,7 @@ use crate::bundles::goal::*;
 use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
+use crate::events::messaging::MessageEvent;
 use crate::game::team::Team;
 use crate::resources::messaging::*;
 use crate::resources::*;
@@ -22,9 +23,6 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     // game state
     commands.insert_resource(GameState::default());
 
-    // messaging
-    commands.insert_resource(MessageDispatcher::default());
-
     // pitch
     PitchBundle::spawn(&mut commands, &params);
 
@@ -38,6 +36,15 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     // teams
     SoccerTeamBundle::spawn(&mut commands, &params, Team::Red);
     SoccerTeamBundle::spawn(&mut commands, &params, Team::Blue);
+
+    let mut message_dispatcher = MessageDispatcher::default();
+
+    info!("prepare for kick off!");
+    message_dispatcher.dispatch_message(None, MessageEvent::GoHome(Team::Red));
+    message_dispatcher.dispatch_message(None, MessageEvent::GoHome(Team::Blue));
+
+    // messaging
+    commands.insert_resource(message_dispatcher);
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

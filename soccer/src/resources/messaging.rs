@@ -6,11 +6,18 @@ use chrono::prelude::*;
 
 use crate::events::messaging::MessageEvent;
 
+// TODO: this should live in the events module
+// also the name isn't very good
+pub struct DispatchedMessageEvent {
+    pub receiver: Option<Entity>,
+    pub message: MessageEvent,
+}
+
 #[derive(Debug)]
 struct Telegram {
     dispatch_time: i64,
 
-    pub receiver: Entity,
+    pub receiver: Option<Entity>,
 
     pub message: MessageEvent,
 }
@@ -40,7 +47,7 @@ impl Ord for Telegram {
 }
 
 impl Telegram {
-    fn new(dispatch_time: i64, receiver: Entity, message: MessageEvent) -> Self {
+    fn new(dispatch_time: i64, receiver: Option<Entity>, message: MessageEvent) -> Self {
         Self {
             dispatch_time,
             receiver,
@@ -57,7 +64,7 @@ pub struct MessageDispatcher {
 impl MessageDispatcher {
     pub fn dispatch_deferred_messages(
         &mut self,
-        message_events: &mut EventWriter<(Entity, MessageEvent)>,
+        message_events: &mut EventWriter<DispatchedMessageEvent>,
     ) {
         let now = Utc::now().timestamp_millis();
 
@@ -78,12 +85,15 @@ impl MessageDispatcher {
     fn discharge(
         &self,
         telegram: Telegram,
-        message_events: &mut EventWriter<(Entity, MessageEvent)>,
+        message_events: &mut EventWriter<DispatchedMessageEvent>,
     ) {
-        message_events.send((telegram.receiver, telegram.message));
+        message_events.send(DispatchedMessageEvent {
+            receiver: telegram.receiver,
+            message: telegram.message,
+        });
     }
 
-    pub fn dispatch_message(&mut self, receiver: Entity, message: MessageEvent) {
+    pub fn dispatch_message(&mut self, receiver: Option<Entity>, message: MessageEvent) {
         // we always defer so that entities sending messages (as events)
         // in response to events can work
         self.defer_dispatch_message(receiver, message, 0.0);
@@ -91,7 +101,7 @@ impl MessageDispatcher {
 
     pub fn defer_dispatch_message(
         &mut self,
-        receiver: Entity,
+        receiver: Option<Entity>,
         message: MessageEvent,
         delay_seconds: f64,
     ) {

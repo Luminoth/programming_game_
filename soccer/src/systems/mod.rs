@@ -16,5 +16,9 @@ pub enum Systems {
 
     // state machines
     GlobalStateExecute,
+    StateExecute,
+    GlobalStateOnMessage,
+    StateOnMessage,
     StateEnter,
+    StateExit,
 }

@@ -5,7 +5,7 @@ use crate::bundles::goal::*;
 use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
-use crate::events::messaging::MessageEvent;
+use crate::game::messaging::MessageEvent;
 use crate::game::team::Team;
 use crate::resources::messaging::*;
 use crate::resources::*;

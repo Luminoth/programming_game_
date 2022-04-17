@@ -10,9 +10,9 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
 use crate::components::team::*;
-use crate::events::messaging::MessageEvent;
 use crate::resources::messaging::MessageDispatcher;
 
+use super::messaging::MessageEvent;
 use super::state::State;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Inspectable)]

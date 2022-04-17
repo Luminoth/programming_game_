@@ -3,8 +3,8 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
+use crate::events::messaging::DispatchedMessageEvent;
 use crate::events::team::*;
-use crate::resources::messaging::DispatchedMessageEvent;
 use crate::states;
 use crate::states::*;
 use crate::systems;

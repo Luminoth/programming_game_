@@ -1,8 +1,9 @@
-use crate::game::team::Team;
+use bevy::prelude::*;
 
-// TODO: this is not a bevy event and should probably live in the game module
-// also the name isn't very good
-#[derive(Debug, PartialEq, Eq)]
-pub enum MessageEvent {
-    GoHome(Team),
+use crate::game::messaging::MessageEvent;
+
+#[derive(Debug)]
+pub struct DispatchedMessageEvent {
+    pub receiver: Option<Entity>,
+    pub message: MessageEvent,
 }

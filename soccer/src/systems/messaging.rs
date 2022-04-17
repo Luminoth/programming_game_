@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::resources::messaging::*;
+use crate::events::messaging::DispatchedMessageEvent;
+use crate::resources::messaging::MessageDispatcher;
 
 pub fn update(
     mut message_dispatcher: ResMut<MessageDispatcher>,

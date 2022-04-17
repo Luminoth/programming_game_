@@ -4,14 +4,8 @@ use std::collections::BinaryHeap;
 use bevy::prelude::*;
 use chrono::prelude::*;
 
-use crate::events::messaging::MessageEvent;
-
-// TODO: this should live in the events module
-// also the name isn't very good
-pub struct DispatchedMessageEvent {
-    pub receiver: Option<Entity>,
-    pub message: MessageEvent,
-}
+use crate::events::messaging::DispatchedMessageEvent;
+use crate::game::messaging::MessageEvent;
 
 #[derive(Debug)]
 struct Telegram {

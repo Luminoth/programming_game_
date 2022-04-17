@@ -1,3 +1,4 @@
+pub mod messaging;
 pub mod state;
 pub mod team;
 

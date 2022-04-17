@@ -122,58 +122,57 @@ pub fn update_obstacle_avoidance(
                 continue;
             }
 
-            if let Ok([(actor, transform), (obstacle_actor, obstacle_transform)]) =
-                actors.get_many([entity, obstacle])
-            {
-                // ignore anything out of range in front
-                let to = obstacle_transform.translation - transform.translation;
-                let range = avoidance.box_length + obstacle_actor.actor.bounding_radius;
-                if to.length_squared() > range * range {
-                    continue;
-                }
+            let [(actor, transform), (obstacle_actor, obstacle_transform)] =
+                actors.many([entity, obstacle]);
 
-                // convert obstacle to local space
-                let obstacle_position = obstacle_transform.translation.truncate();
-                let local_position = point_to_local_space(
+            // ignore anything out of range in front
+            let to = obstacle_transform.translation - transform.translation;
+            let range = avoidance.box_length + obstacle_actor.actor.bounding_radius;
+            if to.length_squared() > range * range {
+                continue;
+            }
+
+            // convert obstacle to local space
+            let obstacle_position = obstacle_transform.translation.truncate();
+            let local_position = point_to_local_space(
+                obstacle_position,
+                physical.heading,
+                physical.side,
+                transform.translation.truncate(),
+            );
+
+            // ignore anything behind us
+            if local_position.x < 0.0 {
+                continue;
+            }
+
+            // ignore anything out of range above or below
+            let expanded_radius =
+                obstacle_actor.actor.bounding_radius + actor.actor.bounding_radius;
+            if local_position.y > expanded_radius {
+                continue;
+            }
+
+            // line / circle intersection test (x = cX +/-sqrt(r^2-cY^2) for y=0)
+            let cx = local_position.x;
+            let cy = local_position.y;
+            let sqrt_part = (expanded_radius * expanded_radius - cy * cy).sqrt();
+            let mut ip = cx - sqrt_part;
+            if ip <= 0.0 {
+                ip = cx + sqrt_part;
+            }
+
+            // is this the closest?
+            if ip < dist_to_closest {
+                dist_to_closest = ip;
+
+                closest_obstacle = Some((
+                    obstacle_actor.name,
                     obstacle_position,
-                    physical.heading,
-                    physical.side,
-                    transform.translation.truncate(),
-                );
-
-                // ignore anything behind us
-                if local_position.x < 0.0 {
-                    continue;
-                }
-
-                // ignore anything out of range above or below
-                let expanded_radius =
-                    obstacle_actor.actor.bounding_radius + actor.actor.bounding_radius;
-                if local_position.y > expanded_radius {
-                    continue;
-                }
-
-                // line / circle intersection test (x = cX +/-sqrt(r^2-cY^2) for y=0)
-                let cx = local_position.x;
-                let cy = local_position.y;
-                let sqrt_part = (expanded_radius * expanded_radius - cy * cy).sqrt();
-                let mut ip = cx - sqrt_part;
-                if ip <= 0.0 {
-                    ip = cx + sqrt_part;
-                }
-
-                // is this the closest?
-                if ip < dist_to_closest {
-                    dist_to_closest = ip;
-
-                    closest_obstacle = Some((
-                        obstacle_actor.name,
-                        obstacle_position,
-                        obstacle_actor.actor.bounding_radius,
-                        local_position,
-                        dist_to_closest,
-                    ));
-                }
+                    obstacle_actor.actor.bounding_radius,
+                    local_position,
+                    dist_to_closest,
+                ));
             }
         }
 

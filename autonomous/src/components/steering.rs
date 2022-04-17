@@ -157,34 +157,29 @@ impl Pursuit {
         target: &PursuitTarget,
         entities: &mut Query<PhysicalQueryMut>,
     ) -> Vec2 {
-        if let Ok([pursuer, evader]) = entities.get_many_mut([pursuer, target.entity]) {
-            let to_evader =
-                (evader.transform.translation - pursuer.transform.translation).truncate();
-            let relative_heading = pursuer.physical.heading.dot(evader.physical.heading);
+        let [pursuer, evader] = entities.many_mut([pursuer, target.entity]);
 
-            // if the evader is ahead and facing us, we can just seek it
-            if to_evader.dot(pursuer.physical.heading) > 0.0 && relative_heading < -0.95 {
-                return seek_force(evader.transform.translation.truncate(), &pursuer);
-            }
+        let to_evader = (evader.transform.translation - pursuer.transform.translation).truncate();
+        let relative_heading = pursuer.physical.heading.dot(evader.physical.heading);
 
-            // not ahead, so predict future position and seek that
-            // look-ahead time is proportional to the distance between the evader
-            // and us; and is inversly proportional to the sum of our velocities
-            // TODO: zero check this
-            let mut look_ahead_time =
-                to_evader.length() / (pursuer.physical.max_speed + evader.physical.speed());
-
-            look_ahead_time += turnaround_time(evader.transform.translation.truncate(), &pursuer);
-
-            return seek_force(
-                evader.transform.translation.truncate()
-                    + evader.physical.velocity * look_ahead_time,
-                &pursuer,
-            );
+        // if the evader is ahead and facing us, we can just seek it
+        if to_evader.dot(pursuer.physical.heading) > 0.0 && relative_heading < -0.95 {
+            return seek_force(evader.transform.translation.truncate(), &pursuer);
         }
 
-        warn!("pursuit has invalid target!");
-        Vec2::ZERO
+        // not ahead, so predict future position and seek that
+        // look-ahead time is proportional to the distance between the evader
+        // and us; and is inversly proportional to the sum of our velocities
+        // TODO: zero check this
+        let mut look_ahead_time =
+            to_evader.length() / (pursuer.physical.max_speed + evader.physical.speed());
+
+        look_ahead_time += turnaround_time(evader.transform.translation.truncate(), &pursuer);
+
+        return seek_force(
+            evader.transform.translation.truncate() + evader.physical.velocity * look_ahead_time,
+            &pursuer,
+        );
     }
 }
 
@@ -216,25 +211,20 @@ impl Evade {
         // TODO: if the target the evader is evading is on top of it
         // (to_pursuer.length() == 0) then the evader won't try to evade
 
-        if let Ok([evader, pursuer]) = entities.get_many_mut([evader, target.entity]) {
-            let to_pursuer =
-                (pursuer.transform.translation - evader.transform.translation).truncate();
+        let [evader, pursuer] = entities.many_mut([evader, target.entity]);
 
-            // look-ahead time is proportional to the distance between the pursuer
-            // and us; and is inversly proportional to the sum of our velocities
-            // TODO: zero check this
-            let look_ahead_time =
-                to_pursuer.length() / (evader.physical.max_speed + pursuer.physical.speed());
+        let to_pursuer = (pursuer.transform.translation - evader.transform.translation).truncate();
 
-            return flee_force(
-                pursuer.transform.translation.truncate()
-                    + pursuer.physical.velocity * look_ahead_time,
-                &evader,
-            );
-        }
+        // look-ahead time is proportional to the distance between the pursuer
+        // and us; and is inversly proportional to the sum of our velocities
+        // TODO: zero check this
+        let look_ahead_time =
+            to_pursuer.length() / (evader.physical.max_speed + pursuer.physical.speed());
 
-        warn!("evade has invalid target!");
-        Vec2::ZERO
+        return flee_force(
+            pursuer.transform.translation.truncate() + pursuer.physical.velocity * look_ahead_time,
+            &evader,
+        );
     }
 }
 

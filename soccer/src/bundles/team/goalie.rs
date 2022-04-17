@@ -30,13 +30,12 @@ impl GoalieBundle {
             ..Default::default()
         });
 
-        bundle.insert(Name::new(format!("{:?} Goalie", team)));
-
         bundle.insert_bundle(ActorBundle {
             actor: Actor {
                 bounding_radius: PLAYER_RADIUS,
             },
             transform: Transform::from_translation(position.extend(PLAYER_SORT)),
+            name: Name::new(format!("{:?} Goalie", team)),
             ..Default::default()
         });
 

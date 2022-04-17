@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
+use crate::components::team::FieldPlayerQueryMutItem;
+
 use super::super::state::State;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
@@ -17,7 +19,7 @@ impl Default for FieldPlayerState {
 impl State for FieldPlayerState {}
 
 impl FieldPlayerState {
-    pub fn execute_global(name: impl AsRef<str>) {
-        debug!("executing global state for player {}", name.as_ref());
+    pub fn execute_global(player: FieldPlayerQueryMutItem) {
+        debug!("executing global state for player {}", player.name.as_ref());
     }
 }

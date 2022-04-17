@@ -21,3 +21,5 @@
 * Lots of incomplete steering behaviors here due to time restrictions
 
 ## Soccer (Chapter 4)
+
+* This builds on west-world-bevy and autonomous, including all the problems that show up in those projects

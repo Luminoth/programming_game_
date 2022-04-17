@@ -31,13 +31,12 @@ impl FieldPlayerBundle {
             ..Default::default()
         });
 
-        bundle.insert(Name::new(format!("{:?} Field Player", team)));
-
         bundle.insert_bundle(ActorBundle {
             actor: Actor {
                 bounding_radius: PLAYER_RADIUS,
             },
             transform: Transform::from_translation(position.extend(PLAYER_SORT)),
+            name: Name::new(format!("{:?} Field Player", team)),
             ..Default::default()
         });
 

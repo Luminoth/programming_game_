@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
@@ -31,6 +32,13 @@ impl Steering {
         physical.apply_force(self.accumulated_force);
         self.accumulated_force = Vec2::ZERO;
     }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct SteeringQueryMut<'w> {
+    pub steering: &'w mut Steering,
+    pub physical: &'w mut Physical,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]

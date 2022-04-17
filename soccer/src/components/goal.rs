@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
@@ -16,3 +17,9 @@ pub struct Goal {
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct GoalDebug;
+
+#[derive(WorldQuery)]
+pub struct GoalQuery<'w> {
+    pub goal: &'w Goal,
+    pub transform: &'w Transform,
+}

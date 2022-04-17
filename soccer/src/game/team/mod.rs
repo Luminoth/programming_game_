@@ -54,7 +54,10 @@ impl Default for SoccerTeamState {
 impl State for SoccerTeamState {}
 
 impl SoccerTeamState {
-    pub fn execute_global(soccer_team: &SoccerTeam) {
-        debug!("executing global state for team {:?}", soccer_team.team);
+    pub fn execute_global(soccer_team: SoccerTeamQueryMutItem) {
+        debug!(
+            "executing global state for team {:?}",
+            soccer_team.team.team
+        );
     }
 }

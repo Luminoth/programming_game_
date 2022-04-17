@@ -1,9 +1,10 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 use rand::Rng;
 
-use crate::components::goal::Goal;
-use crate::components::physics::Physical;
+use crate::components::goal::*;
+use crate::components::physics::*;
 use crate::game::team::*;
 use crate::game::{BALL_RADIUS, PLAYER_RADIUS};
 use crate::resources::SimulationParams;
@@ -27,7 +28,7 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<(&FieldPlayer, &Transform)>,
-        players: &Query<(&FieldPlayer, &Transform, &Physical)>,
+        players: &Query<(&FieldPlayer, PhysicalQuery)>,
         ball_physical: &Physical,
         passing_force: f32,
     ) -> bool {
@@ -54,7 +55,7 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<(&FieldPlayer, &Transform)>,
-        opponent: (&FieldPlayer, &Transform, &Physical),
+        opponent: (&FieldPlayer, PhysicalQueryItem),
         ball_physical: &Physical,
         passing_force: f32,
     ) -> bool {
@@ -63,7 +64,7 @@ impl SoccerTeam {
             return true;
         }
 
-        let opponent_position = opponent.1.translation.truncate();
+        let opponent_position = opponent.1.transform.translation.truncate();
 
         let to_target = target - from;
         let to_target_norm = to_target.normalize_or_zero();
@@ -101,7 +102,7 @@ impl SoccerTeam {
         );
 
         // can the opponent intercept the ball in flight?
-        let reach = opponent.2.max_speed * time_for_ball + BALL_RADIUS + PLAYER_RADIUS;
+        let reach = opponent.1.physical.max_speed * time_for_ball + BALL_RADIUS + PLAYER_RADIUS;
         local_pos_opp.y.abs() >= reach
     }
 
@@ -109,26 +110,26 @@ impl SoccerTeam {
         &self,
         params: &SimulationParams,
         from: Vec2,
-        goal: (&Goal, &Transform),
+        goal: &GoalQueryItem,
         ball_physical: &Physical,
-        players: &Query<(&FieldPlayer, &Transform, &Physical)>,
+        players: &Query<(&FieldPlayer, PhysicalQuery)>,
         power: f32,
     ) -> Option<Vec2> {
         // can't score in our own goal
-        if goal.0.team == self.team {
+        if goal.goal.team == self.team {
             return None;
         }
 
         let mut rng = rand::thread_rng();
 
-        let goal_position = goal.1.translation.truncate();
+        let goal_position = goal.transform.translation.truncate();
 
         let mut num_attempts = params.num_attempts_to_find_valid_strike;
         while num_attempts > 0 {
-            let mut target = goal_position + goal.0.score_center;
+            let mut target = goal_position + goal.goal.score_center;
 
-            let min_y = goal_position.y + goal.0.top.y + BALL_RADIUS;
-            let max_y = goal_position.y + goal.0.bottom.y - BALL_RADIUS;
+            let min_y = goal_position.y + goal.goal.top.y + BALL_RADIUS;
+            let max_y = goal_position.y + goal.goal.bottom.y - BALL_RADIUS;
 
             target.y = rng.gen_range(min_y..=max_y);
 
@@ -152,6 +153,13 @@ impl SoccerTeam {
 
         None
     }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct SoccerTeamQueryMut<'w> {
+    pub team: &'w mut SoccerTeam,
+    pub state_machine: &'w mut SoccerTeamStateMachine,
 }
 
 #[derive(Debug, Default, Clone, Copy, Component, Inspectable)]
@@ -199,6 +207,13 @@ impl SupportSpotCalculator {
     }
 }
 
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct SupportSpotCalculatorQueryMut<'w> {
+    pub team: &'w mut SoccerTeam,
+    pub support_calculator: &'w mut SupportSpotCalculator,
+}
+
 pub type FieldPlayerStateMachine = StateMachine<FieldPlayerState>;
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -206,11 +221,27 @@ pub struct FieldPlayer {
     pub team: Team,
 }
 
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct FieldPlayerQueryMut<'w> {
+    pub player: &'w mut FieldPlayer,
+    pub state_machine: &'w mut FieldPlayerStateMachine,
+    pub name: &'w Name,
+}
+
 pub type GoalieStateMachine = StateMachine<GoalieState>;
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Goalie {
     pub team: Team,
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct GoalieQueryMut<'w> {
+    pub goalie: &'w mut Goalie,
+    pub state_machine: &'w mut GoalieStateMachine,
+    pub name: &'w Name,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]

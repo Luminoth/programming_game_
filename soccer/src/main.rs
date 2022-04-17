@@ -13,6 +13,7 @@ mod util;
 
 use bevy::diagnostic::*;
 use bevy::prelude::*;
+use bevy::window::PresentMode;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::WorldInspectorParams;
@@ -66,7 +67,7 @@ fn main() {
         title: "Soccer".to_owned(),
         width: 1024.0,
         height: 768.0,
-        vsync: false,
+        present_mode: PresentMode::Immediate,
         resizable: false,
         ..Default::default()
     })

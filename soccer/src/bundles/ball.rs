@@ -21,12 +21,11 @@ impl BallBundle {
 
         let mut bundle = commands.spawn_bundle(BallBundle::default());
 
-        bundle.insert(Name::new("Ball"));
-
         bundle.insert_bundle(ActorBundle {
             actor: Actor {
                 bounding_radius: BALL_RADIUS,
             },
+            name: Name::new("Ball"),
             transform: Transform::from_translation(position.extend(BALL_SORT)),
             ..Default::default()
         });

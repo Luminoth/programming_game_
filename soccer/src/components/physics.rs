@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
@@ -118,4 +119,17 @@ impl Physical {
 
         self.acceleration = Vec2::ZERO;
     }
+}
+
+#[derive(WorldQuery)]
+pub struct PhysicalQuery<'w> {
+    pub transform: &'w Transform,
+    pub physical: &'w Physical,
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct PhysicalQueryMut<'w> {
+    pub transform: &'w mut Transform,
+    pub physical: &'w mut Physical,
 }

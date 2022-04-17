@@ -24,6 +24,7 @@ use crate::plugins::debug::*;
 use crate::resources::ui::*;
 use crate::resources::*;
 use crate::states::*;
+use crate::systems::Systems;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
@@ -131,26 +132,30 @@ fn main() {
                 .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
                 .with_system(
                     systems::steering::update_obstacle_avoidance
-                        .label("avoidance")
-                        .before("steering"),
+                        .label(Systems::Avoidance)
+                        .before(Systems::Steering),
                 )
-                .with_system(systems::steering::update_seek.label("steering"))
-                .with_system(systems::steering::update_flee.label("steering"))
-                .with_system(systems::steering::update_arrive.label("steering"))
+                .with_system(systems::steering::update_seek.label(Systems::Steering))
+                .with_system(systems::steering::update_flee.label(Systems::Steering))
+                .with_system(systems::steering::update_arrive.label(Systems::Steering))
                 .with_system(
                     systems::steering::update_pursuit
-                        .label("steering")
-                        .label("pursuit"),
+                        .label(Systems::Steering)
+                        .label(Systems::Pursuit),
                 )
                 .with_system(
                     systems::steering::update_evade
-                        .label("steering")
-                        .after("pursuit"),
+                        .label(Systems::Steering)
+                        .after(Systems::Pursuit),
                 )
-                .with_system(systems::steering::update_wander.label("steering"))
-                .with_system(systems::physics::update.label("physics").after("steering"))
-                .with_system(systems::wrap.after("physics"))
-                .with_system(systems::facing.after("physics")),
+                .with_system(systems::steering::update_wander.label(Systems::Steering))
+                .with_system(
+                    systems::physics::update
+                        .label(Systems::Physics)
+                        .after(Systems::Steering),
+                )
+                .with_system(systems::wrap.after(Systems::Physics))
+                .with_system(systems::facing.after(Systems::Physics)),
         )
         // TODO: non-physics systems here
         //.add_system_set(SystemSet::on_update(GameState::Main).with_system())

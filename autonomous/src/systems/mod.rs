@@ -6,6 +6,16 @@ use bevy::prelude::*;
 
 use crate::components::physics::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
+pub enum Systems {
+    Physics,
+
+    // steering
+    Avoidance,
+    Pursuit,
+    Steering,
+}
+
 // TODO: this should exclude entities that don't move
 pub fn wrap(window: Res<WindowDescriptor>, mut query: Query<PhysicalQuery>) {
     let half_width = window.width / 2.0;

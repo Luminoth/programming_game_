@@ -184,7 +184,8 @@ pub struct SupportSpotCalculator {
 
 impl SupportSpotCalculator {
     pub fn new(team: Team, params: &SimulationParams) -> Self {
-        let hw = params.pitch_extents.x * 0.5;
+        let goal_half_extents = params.goal_extents * 0.5;
+        let hw = params.pitch_extents.x * 0.5 - goal_half_extents.x;
         let hh = params.pitch_extents.y * 0.5;
 
         let half_spots_horizontal = params.num_support_spots_horizontal / 2;

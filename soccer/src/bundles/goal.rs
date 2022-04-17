@@ -4,7 +4,7 @@ use bevy_prototype_lyon::prelude::*;
 use crate::components::goal::*;
 use crate::game::{team::Team, GOAL_BAR_WIDTH};
 use crate::resources::SimulationParams;
-use crate::GOAL_SORT;
+use crate::{DEBUG_RADIUS, DEBUG_SORT, GOAL_SORT};
 
 #[derive(Debug, Default, Bundle)]
 pub struct GoalBundle {
@@ -44,49 +44,51 @@ impl GoalBundle {
 
         bundle.insert(Name::new(format!("{:?} Goal", team)));
 
-        /*bundle.with_children(|parent| {
-            parent
-                .spawn_bundle(GeometryBuilder::build_as(
-                    &shapes::Circle {
-                        radius: 10.0,
-                        ..Default::default()
-                    },
-                    DrawMode::Fill(FillMode {
-                        color: Color::PINK,
-                        options: FillOptions::default(),
-                    }),
-                    Transform::from_translation(score_center.extend(100.0)),
-                ))
-                .insert(GoalDebug);
+        if params.debug_vis {
+            bundle.with_children(|parent| {
+                parent
+                    .spawn_bundle(GeometryBuilder::build_as(
+                        &shapes::Circle {
+                            radius: DEBUG_RADIUS,
+                            ..Default::default()
+                        },
+                        DrawMode::Fill(FillMode {
+                            color: Color::PINK,
+                            options: FillOptions::default(),
+                        }),
+                        Transform::from_translation(score_center.extend(DEBUG_SORT)),
+                    ))
+                    .insert(GoalDebug);
 
-            parent
-                .spawn_bundle(GeometryBuilder::build_as(
-                    &shapes::Circle {
-                        radius: 10.0,
-                        ..Default::default()
-                    },
-                    DrawMode::Fill(FillMode {
-                        color: Color::ORANGE,
-                        options: FillOptions::default(),
-                    }),
-                    Transform::from_translation(top.extend(100.0)),
-                ))
-                .insert(GoalDebug);
+                parent
+                    .spawn_bundle(GeometryBuilder::build_as(
+                        &shapes::Circle {
+                            radius: DEBUG_RADIUS,
+                            ..Default::default()
+                        },
+                        DrawMode::Fill(FillMode {
+                            color: Color::ORANGE,
+                            options: FillOptions::default(),
+                        }),
+                        Transform::from_translation(top.extend(DEBUG_SORT)),
+                    ))
+                    .insert(GoalDebug);
 
-            parent
-                .spawn_bundle(GeometryBuilder::build_as(
-                    &shapes::Circle {
-                        radius: 10.0,
-                        ..Default::default()
-                    },
-                    DrawMode::Fill(FillMode {
-                        color: Color::OLIVE,
-                        options: FillOptions::default(),
-                    }),
-                    Transform::from_translation(bottom.extend(100.0)),
-                ))
-                .insert(GoalDebug);
-        });*/
+                parent
+                    .spawn_bundle(GeometryBuilder::build_as(
+                        &shapes::Circle {
+                            radius: DEBUG_RADIUS,
+                            ..Default::default()
+                        },
+                        DrawMode::Fill(FillMode {
+                            color: Color::OLIVE,
+                            options: FillOptions::default(),
+                        }),
+                        Transform::from_translation(bottom.extend(DEBUG_SORT)),
+                    ))
+                    .insert(GoalDebug);
+            });
+        }
 
         let color = match team {
             Team::Red => Color::SALMON,

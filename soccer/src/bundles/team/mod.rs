@@ -2,11 +2,12 @@ mod field_player;
 mod goalie;
 
 use bevy::prelude::*;
-//use bevy_prototype_lyon::prelude::*;
+use bevy_prototype_lyon::prelude::*;
 
 use crate::components::team::*;
 use crate::game::{team::Team, GOALIE_PAD, PLAYER_RADIUS, PLAYER_SPREAD, TEAM_SPREAD};
 use crate::resources::SimulationParams;
+use crate::{DEBUG_RADIUS, DEBUG_SORT};
 
 use field_player::*;
 use goalie::*;
@@ -43,6 +44,11 @@ impl SoccerTeamBundle {
         };
 
         let support_spots = SupportSpotCalculator::new(team, params);
+        let debug_support_spots = if params.debug_vis {
+            Some(support_spots.clone())
+        } else {
+            None
+        };
 
         let mut bundle = commands.spawn_bundle(SoccerTeamBundle {
             team: SoccerTeam {
@@ -51,30 +57,31 @@ impl SoccerTeamBundle {
             },
             state: SoccerTeamStateMachine::default(),
             support_spots,
-            //support_spots: support_spots.clone(),
             transform: Transform::default(),
             global_transform: GlobalTransform::default(),
         });
 
         bundle.insert(Name::new(format!("{:?} Team", team)));
 
-        /*bundle.with_children(|parent| {
-            for spot in &support_spots.spots {
-                parent
-                    .spawn_bundle(GeometryBuilder::build_as(
-                        &shapes::Circle {
-                            radius: 5.0 + spot.score,
-                            ..Default::default()
-                        },
-                        DrawMode::Fill(FillMode {
-                            color: team.color(),
-                            options: FillOptions::default(),
-                        }),
-                        Transform::from_translation(spot.position.extend(100.0)),
-                    ))
-                    .insert(SupportSpotDebug);
-            }
-        });*/
+        if params.debug_vis {
+            bundle.with_children(|parent| {
+                for spot in debug_support_spots.unwrap().spots {
+                    parent
+                        .spawn_bundle(GeometryBuilder::build_as(
+                            &shapes::Circle {
+                                radius: DEBUG_RADIUS + (spot.score * DEBUG_RADIUS),
+                                ..Default::default()
+                            },
+                            DrawMode::Fill(FillMode {
+                                color: team.color(),
+                                options: FillOptions::default(),
+                            }),
+                            Transform::from_translation(spot.position.extend(DEBUG_SORT)),
+                        ))
+                        .insert(SupportSpotDebug);
+                }
+            });
+        }
 
         // TODO: we should treat the field position as the center
         // rather than the inner-most point

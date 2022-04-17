@@ -23,6 +23,9 @@ pub struct SimulationParams {
 
     // physics
     pub friction: f32,
+
+    // debug
+    pub debug_vis: bool,
 }
 
 #[derive(Debug, Default)]

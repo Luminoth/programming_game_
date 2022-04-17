@@ -11,8 +11,7 @@ pub struct Actor {
 // this doesn't include a transform because
 // most of the time the PhysicalQuery captures that
 #[derive(WorldQuery)]
-#[world_query(mutable, derive(Debug))]
 pub struct ActorQuery<'w> {
-    pub actor: &'w mut Actor,
+    pub actor: &'w Actor,
     pub name: &'w Name,
 }

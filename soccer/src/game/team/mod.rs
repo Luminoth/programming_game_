@@ -42,12 +42,14 @@ impl Team {
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Inspectable)]
 pub enum SoccerTeamState {
-    Idle,
+    PrepareForKickOff,
+    Defending,
+    Attacking,
 }
 
 impl Default for SoccerTeamState {
     fn default() -> Self {
-        Self::Idle
+        Self::PrepareForKickOff
     }
 }
 

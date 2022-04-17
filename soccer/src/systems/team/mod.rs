@@ -33,6 +33,8 @@ pub fn update_support_spot(
                 support_calculator.team.team
             );
 
+            support_calculator.team.best_support_spot = None;
+
             let controller_position = controller.1.translation.truncate();
 
             let mut best_score = 0.0;
@@ -72,10 +74,8 @@ pub fn update_support_spot(
                 }
 
                 // how far away is our supporting player?
-                for support in support.iter() {
-                    if support.0.team != controller.0.team {
-                        continue;
-                    }
+                if let Ok(support) = support.get_single() {
+                    assert!(support.0.team == controller.0.team);
 
                     let optimal_distance = 200.0;
                     let dist = controller_position.distance(spot.position);

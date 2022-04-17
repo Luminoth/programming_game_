@@ -1,6 +1,8 @@
 # Programming Game AI by Example
 
 * [Book Source](https://github.com/wangchen/Programming-Game-AI-by-Example-src)
+* [Errata](http://www.ai-junkie.com/ai_book2/errata/)
+* [Bug Fixes](http://www.ai-junkie.com/ai_book2/bugs/)
 
 ## West World (Chapter 2)
 

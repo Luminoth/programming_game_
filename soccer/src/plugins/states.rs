@@ -86,7 +86,7 @@ impl Plugin for MainStatePlugin {
             // per-frame systems
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
-                    // team systems
+                    // team event handlers
                     .with_system(
                         systems::team::state_enter
                             .label(Systems::StateEnter)

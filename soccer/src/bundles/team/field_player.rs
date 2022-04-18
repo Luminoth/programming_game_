@@ -27,7 +27,7 @@ impl FieldPlayerBundle {
         info!("spawning field player for team {:?} at {}", team, position);
 
         let mut bundle = commands.spawn_bundle(FieldPlayerBundle {
-            player: FieldPlayer { team },
+            player: FieldPlayer { team, ready: false },
             ..Default::default()
         });
 

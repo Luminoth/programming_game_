@@ -137,3 +137,20 @@ pub fn state_enter(
         }
     }
 }
+
+pub fn state_execute(
+    mut query: Query<(Entity, SoccerTeamQueryMut)>,
+    players: Query<&FieldPlayer>,
+    mut exit_events: EventWriter<SoccerTeamStateExitEvent>,
+    mut enter_events: EventWriter<SoccerTeamStateEnterEvent>,
+) {
+    for (entity, mut team) in query.iter_mut() {
+        team.state_machine.current_state().execute(
+            entity,
+            &mut team,
+            &players,
+            &mut exit_events,
+            &mut enter_events,
+        );
+    }
+}

@@ -11,6 +11,7 @@ pub type FieldPlayerStateMachine = StateMachine<FieldPlayerState>;
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct FieldPlayer {
     pub team: Team,
+    pub ready: bool,
 }
 
 #[derive(WorldQuery)]

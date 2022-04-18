@@ -30,6 +30,7 @@ pub const PITCH_SORT: f32 = 0.0;
 pub const BORDER_SORT: f32 = 3.0;
 pub const PLAYER_SORT: f32 = 2.0;
 pub const SUPPORT_UPDATE_STEP: f64 = 1.0;
+pub const AGENT_UPDATE_STEP: f64 = 0.8;
 pub const DEBUG_SORT: f32 = 100.0;
 pub const DEBUG_RADIUS: f32 = 5.0;
 

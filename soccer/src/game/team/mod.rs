@@ -10,6 +10,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
 use crate::components::team::*;
+use crate::events::team::*;
 use crate::resources::messaging::MessageDispatcher;
 
 use super::messaging::MessageEvent;
@@ -91,6 +92,23 @@ impl SoccerTeamState {
             Self::Attacking => (),
         }
     }
+
+    pub fn execute(
+        self,
+        entity: Entity,
+        team: &mut SoccerTeamQueryMutItem,
+        players: &Query<&FieldPlayer>,
+        exit_events: &mut EventWriter<SoccerTeamStateExitEvent>,
+        enter_events: &mut EventWriter<SoccerTeamStateEnterEvent>,
+    ) {
+        match self {
+            Self::PrepareForKickOff => {
+                Self::PrepareForKickOff_execute(entity, team, players, exit_events, enter_events)
+            }
+            Self::Defending => (),
+            Self::Attacking => (),
+        }
+    }
 }
 
 impl SoccerTeamState {
@@ -103,6 +121,8 @@ impl SoccerTeamState {
         controlling: Option<Entity>,
         supporting: Option<Entity>,
     ) {
+        info!("{:?} team preparing for kick off", team.team);
+
         // reset player positions
 
         if let Some(receiving) = receiving {
@@ -123,5 +143,24 @@ impl SoccerTeamState {
 
         // send players home
         message_dispatcher.dispatch_message(None, MessageEvent::GoHome(team.team));
+    }
+
+    fn PrepareForKickOff_execute(
+        entity: Entity,
+        team: &mut SoccerTeamQueryMutItem,
+        players: &Query<&FieldPlayer>,
+        exit_events: &mut EventWriter<SoccerTeamStateExitEvent>,
+        enter_events: &mut EventWriter<SoccerTeamStateEnterEvent>,
+    ) {
+        info!("{:?} team waiting for ready ...", team.team.team);
+
+        for player in players.iter() {
+            if !player.ready {
+                return;
+            }
+        }
+
+        team.state_machine
+            .change_state(entity, Self::Defending, exit_events, enter_events);
     }
 }

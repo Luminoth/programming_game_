@@ -4,7 +4,7 @@ mod components;
 mod events;
 mod game;
 mod resources;
-pub mod states;
+mod states;
 mod systems;
 
 use bevy::core::FixedTimestep;
@@ -99,7 +99,8 @@ fn main() {
                         .label(Systems::StateOnMessage)
                         .after(Systems::GlobalStateOnMessage),
                 ),
-        );
+        )
+        .add_system_set(SystemSet::on_exit(GameState::Main).with_system(states::main::teardown));
 
     app.run();
 }

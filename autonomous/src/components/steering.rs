@@ -176,10 +176,10 @@ impl Pursuit {
 
         look_ahead_time += turnaround_time(evader.transform.translation.truncate(), &pursuer);
 
-        return seek_force(
+        seek_force(
             evader.transform.translation.truncate() + evader.physical.velocity * look_ahead_time,
             &pursuer,
-        );
+        )
     }
 }
 
@@ -221,10 +221,10 @@ impl Evade {
         let look_ahead_time =
             to_pursuer.length() / (evader.physical.max_speed + pursuer.physical.speed());
 
-        return flee_force(
+        flee_force(
             pursuer.transform.translation.truncate() + pursuer.physical.velocity * look_ahead_time,
             &evader,
-        );
+        )
     }
 }
 

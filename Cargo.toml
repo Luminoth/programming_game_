@@ -6,4 +6,5 @@ members = [
     "west-world",
     "west-world-bevy",
     "soccer",
+    "state-test",
 ]

@@ -91,7 +91,7 @@ fn main() {
     app.insert_resource(EguiSettings { scale_factor: 0.75 })
         .add_plugin(EguiPlugin);
 
-    // inspectorActor
+    // inspector
     app.insert_resource(WorldInspectorParams {
         enabled: false,
         despawnable_entities: true,

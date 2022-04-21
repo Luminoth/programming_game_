@@ -2,6 +2,12 @@ use bevy::prelude::*;
 
 use crate::components::state_test::*;
 
+pub fn state_test_idle_enter(mut query: Query<&TestStateIdleEnter>) {
+    for _ in query.iter_mut() {
+        info!("just gonna take a quick rest ...");
+    }
+}
+
 pub fn state_test_idle_execute(
     mut commands: Commands,
     mut query: Query<(Entity, &mut TestStateMachine), With<TestStateIdleExecute>>,
@@ -38,7 +44,7 @@ pub fn state_test_run_execute(
     }
 }
 
-pub fn state_test_run_exit(mut query: Query<&TestStateWalkExit>) {
+pub fn state_test_run_exit(mut query: Query<&TestStateRunExit>) {
     for _ in query.iter_mut() {
         info!("phew, I'm tired!");
     }

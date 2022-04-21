@@ -35,6 +35,9 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(GameState::Main)
                 .with_system(
+                    systems::state_test::state_test_idle_enter.label(systems::Systems::StateEnter),
+                )
+                .with_system(
                     systems::state_test::state_test_idle_execute
                         .label(systems::Systems::StateExecute),
                 )

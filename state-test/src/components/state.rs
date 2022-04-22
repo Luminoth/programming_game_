@@ -4,16 +4,30 @@ use bevy::prelude::*;
 // sparse storage because these get added and removed frequently
 pub trait StateComponent: Component<Storage = bevy::ecs::component::SparseStorage> {}
 
+// TODO: we can't use states across stages as noted here: https://bevy-cheatbook.github.io/programming/states.html
+// so for now we're stuck with a frame between every state transition step
+
+// state transitions need to happen in separate stages
+// so that component changes can be committed
+// and everything can happen in a single frame
+/*#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
+pub enum StateMachineStage {
+    Exit,
+    Enter,
+}*/
+
 macro_rules! impl_state_machine {
     ($name:ident, $($states:ident),+) => {
         paste::paste! {
+            use bevy::prelude::ParallelSystemDescriptorCoercion;
+
             // base state type component trait
             pub trait [<$name StateComponent>]: $crate::components::state::StateComponent {}
 
             // state marker components
             $(
                 // state enter
-                #[derive(Debug, Component)]
+                #[derive(Debug, bevy::prelude::Component)]
                 #[component(storage = "SparseSet")]
                 pub struct [<$name State $states Enter>];
 
@@ -22,7 +36,7 @@ macro_rules! impl_state_machine {
                 impl [<$name StateComponent>] for [<$name State $states Enter>] {}
 
                 // state exit
-                #[derive(Debug, Component)]
+                #[derive(Debug, bevy::prelude::Component)]
                 #[component(storage = "SparseSet")]
                 pub struct [<$name State $states Exit>];
 
@@ -31,7 +45,7 @@ macro_rules! impl_state_machine {
                 impl [<$name StateComponent>] for [<$name State $states Exit>] {}
 
                 // state execute
-                #[derive(Debug, Component)]
+                #[derive(Debug, bevy::prelude::Component)]
                 #[component(storage = "SparseSet")]
                 pub struct [<$name State $states Execute>];
 
@@ -86,7 +100,7 @@ macro_rules! impl_state_machine {
             }
 
             // the state machine
-            #[derive(Debug, Component)]
+            #[derive(Debug, bevy::prelude::Component)]
             pub struct [<$name StateMachine>] {
                 current_state: [<$name States>],
                 previous_state: Option<[<$name States>]>,
@@ -95,6 +109,8 @@ macro_rules! impl_state_machine {
             impl [<$name StateMachine>] {
                 // adds a state machine to the entity
                 pub fn insert(commands: &mut bevy::ecs::system::EntityCommands, starting_state: [<$name States>]) {
+                    bevy::prelude::info!("inserting state machine ...");
+
                     // TODO: is there a way to clean up any pre-existing state machine components?
 
                     // insert the state machine
@@ -109,10 +125,12 @@ macro_rules! impl_state_machine {
 
                 pub fn change_state(
                     &mut self,
-                    commands: &mut Commands,
-                    entity: Entity,
+                    commands: &mut bevy::prelude::Commands,
+                    entity: bevy::prelude::Entity,
                     new_state: [<$name States>],
                 ) {
+                    bevy::prelude::debug!("changing state ...");
+
                     let mut entity = commands.entity(entity);
 
                     // remove all of the state components
@@ -128,8 +146,8 @@ macro_rules! impl_state_machine {
                 #[allow(dead_code)]
                 pub fn revert_to_previous_state(
                     &mut self,
-                    commands: &mut Commands,
-                    entity: Entity,
+                    commands: &mut bevy::prelude::Commands,
+                    entity: bevy::prelude::Entity,
                 ) {
                     self.change_state(
                         commands,
@@ -144,9 +162,11 @@ macro_rules! impl_state_machine {
             $(
                 #[allow(non_snake_case)]
                 fn [<$name _state_ $states _enter_advance>](
-                    mut commands: Commands,
-                    query: Query<Entity, With<[<$name State $states Enter>]>>
+                    mut commands: bevy::prelude::Commands,
+                    query: bevy::prelude::Query<bevy::prelude::Entity, bevy::prelude::With<[<$name State $states Enter>]>>
                 ) {
+                    bevy::prelude::debug!("advancing enter states to execute ...");
+
                     for entity in query.iter() {
                         let mut entity = commands.entity(entity);
                         entity.remove::<[<$name State $states Enter>]>();
@@ -156,10 +176,12 @@ macro_rules! impl_state_machine {
 
                 #[allow(non_snake_case)]
                 fn [<$name _state_ $states _exit_advance>](
-                    mut commands: Commands,
-                    query: Query<(Entity, &[<$name StateMachine>]), With<[<$name State $states Exit>]>>
+                    mut commands: bevy::prelude::Commands,
+                    query: bevy::prelude::Query<(bevy::prelude::Entity, &[<$name StateMachine>]), bevy::prelude::With<[<$name State $states Exit>]>>
                 ) {
-                    for (entity,  state_machine) in query.iter() {
+                    bevy::prelude::debug!("advancing exit states to enter ...");
+
+                    for (entity, state_machine) in query.iter() {
                         let mut entity = commands.entity(entity);
                         entity.remove::<[<$name State $states Exit>]>();
                         state_machine.current_state.insert_enter(&mut entity);
@@ -170,8 +192,22 @@ macro_rules! impl_state_machine {
             // plugin
             pub struct [<$name StateMachinePlugin>];
 
-            impl Plugin for [<$name StateMachinePlugin>] {
-                fn build(&self, app: &mut App) {
+            impl bevy::prelude::Plugin for [<$name StateMachinePlugin>] {
+                fn build(&self, app: &mut bevy::prelude::App) {
+                    bevy::prelude::info!("setting up state machine plugin ...");
+
+                    // exit stage
+                    /*app.add_stage_before(bevy::prelude::CoreStage::Update, crate::components::state::StateMachineStage::Exit, bevy::prelude::SystemStage::parallel())
+                    $(
+                        .add_system([<$name _state_ $states _exit_advance>])
+                    )*;*/
+
+                    // enter stage
+                    /*app.add_stage_after(crate::components::state::StateMachineStage::Exit, crate::components::state::StateMachineStage::Enter, bevy::prelude::SystemStage::parallel())
+                    $(
+                        .add_system([<$name _state_ $states _enter_advance>])
+                    )*;*/
+
                     // state advancement
                     $(
                         app.add_system([<$name _state_ $states _enter_advance>])

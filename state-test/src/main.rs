@@ -31,7 +31,27 @@ fn main() {
     // main setup
     app.add_startup_system(setup);
 
+    // add game states to state machine stages
+    /*app.add_state_to_stage(components::state::StateMachineStage::Enter, GameState::Main)
+    .add_state_to_stage(components::state::StateMachineStage::Exit, GameState::Main);*/
+
     app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
+        /*.add_system_set_to_stage(
+            components::state::StateMachineStage::Enter,
+            SystemSet::on_update(GameState::Main)
+                .with_system(
+                    systems::state_test::state_test_idle_enter.label(systems::Systems::StateEnter),
+                )
+                .with_system(
+                    systems::state_test::state_test_walk_enter.label(systems::Systems::StateEnter),
+                ),
+        )
+        .add_system_set_to_stage(
+            components::state::StateMachineStage::Exit,
+            SystemSet::on_update(GameState::Main).with_system(
+                systems::state_test::state_test_run_exit.label(systems::Systems::StateExit),
+            ),
+        )*/
         .add_system_set(
             SystemSet::on_update(GameState::Main)
                 .with_system(

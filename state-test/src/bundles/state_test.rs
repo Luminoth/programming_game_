@@ -9,6 +9,8 @@ pub struct StateTestBundle {
 
 impl StateTestBundle {
     pub fn spawn(commands: &mut Commands) {
+        info!("spawning test bundle ...");
+
         let mut bundle = commands.spawn_bundle(StateTestBundle {
             owner: StateMachineOwner::default(),
         });

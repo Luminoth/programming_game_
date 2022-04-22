@@ -2,6 +2,8 @@ pub mod state_test;
 
 use bevy::prelude::*;
 
+use crate::states::GameState;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
 pub enum Systems {
     StateEnter,
@@ -11,6 +13,6 @@ pub enum Systems {
     EndOfFrame,
 }
 
-pub fn end_of_frame() {
-    info!("end of frame!");
+pub fn end_of_frame(state: Res<State<GameState>>) {
+    info!("{:?}: **mark**", state.current());
 }

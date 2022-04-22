@@ -1,102 +1,141 @@
+#![allow(non_snake_case)]
+
 use bevy::prelude::*;
+use chrono::prelude::*;
+use rand::Rng;
 
 use crate::components::wife::*;
 use crate::events::messaging::MessageEvent;
 use crate::game::wife::*;
 use crate::resources::messaging::MessageDispatcher;
 
-pub fn global_state_execute(
-    mut enter_events: EventWriter<WifeStateEnterEvent>,
-    mut exit_events: EventWriter<WifeStateExitEvent>,
-    mut query: Query<(Entity, WifeQuery)>,
-) {
-    for (entity, wife) in query.iter_mut() {
-        debug!("executing wife global state for {}", wife.name.as_str());
+pub fn GlobalState_execute(mut commands: Commands, mut query: Query<(Entity, WifeQuery)>) {
+    let mut rng = rand::thread_rng();
 
-        WifeState::execute_global(entity, wife, &mut exit_events, &mut enter_events);
+    for (entity, mut wife) in query.iter_mut() {
+        debug!("executing wife global state for {}", wife.name.as_ref());
+
+        if rng.gen::<f32>() < BATHROOM_CHANCE {
+            wife.state_machine
+                .change_state(&mut commands, entity, WifeState::VisitBathroom);
+        }
     }
 }
 
-pub fn global_state_on_message(
+pub fn GlobalState_on_message(
+    mut commands: Commands,
     mut message_events: EventReader<(Entity, MessageEvent)>,
-    mut exit_events: EventWriter<WifeStateExitEvent>,
-    mut enter_events: EventWriter<WifeStateEnterEvent>,
     mut query: Query<(Entity, WifeQuery)>,
 ) {
     for (receiver, event) in message_events.iter() {
-        if let Ok((entity, wife)) = query.get_mut(*receiver) {
-            debug!("global message for wife {}", wife.name.as_str());
+        if let Ok((entity, mut wife)) = query.get_mut(*receiver) {
+            match event {
+                MessageEvent::HiHoneyImHome(_) => {
+                    let now = Utc::now();
 
-            WifeState::on_message_global(event, entity, wife, &mut exit_events, &mut enter_events);
+                    debug!("Message handled by {} at time: {}", wife.name.as_ref(), now);
+                    info!(
+                        "{}: Hi honey. Let me make you some of mah fine country stew",
+                        wife.name.as_ref()
+                    );
+
+                    wife.state_machine
+                        .change_state(&mut commands, entity, WifeState::CookStew);
+                }
+                _ => (),
+            }
         }
     }
 }
 
-pub fn state_enter(
-    mut events: EventReader<WifeStateEnterEvent>,
-    mut message_dispatcher: ResMut<MessageDispatcher>,
-    mut query: Query<(Entity, WifeQuery)>,
-) {
-    for event in events.iter() {
-        if let Ok((entity, wife)) = query.get_mut(event.entity()) {
-            debug!(
-                "entering wife state {:?} for {}",
-                event.state(),
-                wife.name.as_str()
-            );
+pub fn DoHouseWork_execute(query: Query<WifeQuery, With<WifeStateDoHouseWorkExecute>>) {
+    let mut rng = rand::thread_rng();
 
-            event.state().enter(entity, wife, &mut message_dispatcher);
+    for wife in query.iter() {
+        match rng.gen_range(0..=2) {
+            0 => info!("{}: Moppin' the floor", wife.name.as_ref()),
+            1 => info!("{}: Washin' the dishes", wife.name.as_ref()),
+            2 => info!("{}: Makin' the bed", wife.name.as_ref()),
+            _ => unreachable!(),
         }
     }
 }
 
-pub fn state_execute(
-    mut exit_events: EventWriter<WifeStateExitEvent>,
-    mut enter_events: EventWriter<WifeStateEnterEvent>,
-    mut query: Query<(Entity, WifeQuery)>,
-) {
-    for (entity, wife) in query.iter_mut() {
-        debug!("executing wife state for {}", wife.name.as_str());
-
-        wife.state_machine.current_state().execute(
-            entity,
-            wife,
-            &mut exit_events,
-            &mut enter_events,
+pub fn VisitBathroom_enter(query: Query<WifeQuery, With<WifeStateVisitBathroomEnter>>) {
+    for wife in query.iter() {
+        info!(
+            "{}: Walkin' to the can. Need to powda mah pretty li'lle nose",
+            wife.name.as_ref()
         );
     }
 }
 
-pub fn state_exit(mut events: EventReader<WifeStateExitEvent>, mut query: Query<WifeQuery>) {
-    for event in events.iter() {
-        if let Ok(wife) = query.get_mut(event.entity()) {
-            debug!("exiting wife state for {}", wife.name.as_str());
+pub fn VisitBathroom_execute(
+    mut commands: Commands,
+    mut query: Query<(Entity, WifeQuery), With<WifeStateVisitBathroomExecute>>,
+) {
+    for (entity, mut wife) in query.iter_mut() {
+        info!("{}: Ahhhhhh! Sweet relief!", wife.name.as_ref());
 
-            event.state().exit(wife);
-        }
+        wife.state_machine
+            .revert_to_previous_state(&mut commands, entity);
     }
 }
 
-pub fn state_on_message(
-    mut message_events: EventReader<(Entity, MessageEvent)>,
-    mut exit_events: EventWriter<WifeStateExitEvent>,
-    mut enter_events: EventWriter<WifeStateEnterEvent>,
+pub fn VisitBathroom_exit(query: Query<WifeQuery, With<WifeStateVisitBathroomExit>>) {
+    for wife in query.iter() {
+        info!("{}: Leavin' the Jon", wife.name.as_ref());
+    }
+}
+
+pub fn CookStew_enter(
     mut message_dispatcher: ResMut<MessageDispatcher>,
-    mut query: Query<(Entity, WifeQuery, &WifeMiner)>,
+    mut query: Query<(Entity, WifeQuery), With<WifeStateCookStewEnter>>,
+) {
+    for (entity, mut wife) in query.iter_mut() {
+        if wife.wife.cooking {
+            continue;
+        }
+
+        info!("{}: Puttin' the stew in the oven", wife.name.as_ref());
+
+        message_dispatcher.defer_dispatch_message(entity, MessageEvent::StewIsReady(entity), 1.5);
+
+        wife.wife.cooking = true;
+    }
+}
+
+pub fn CookStew_on_message(
+    mut commands: Commands,
+    mut message_events: EventReader<(Entity, MessageEvent)>,
+    mut message_dispatcher: ResMut<MessageDispatcher>,
+    mut query: Query<(Entity, WifeQuery, Option<&WifeMiner>), With<WifeStateCookStewExecute>>,
 ) {
     for (receiver, event) in message_events.iter() {
-        if let Ok((entity, wife, miner)) = query.get_mut(*receiver) {
-            debug!("message for wife {}", wife.name.as_str());
+        if let Ok((entity, mut wife, miner)) = query.get_mut(*receiver) {
+            match event {
+                MessageEvent::StewIsReady(_) => {
+                    let now = Utc::now();
 
-            wife.state_machine.current_state().on_message(
-                event,
-                entity,
-                wife,
-                miner,
-                &mut exit_events,
-                &mut enter_events,
-                &mut message_dispatcher,
-            );
+                    debug!(
+                        "Message received by {} at time: {}",
+                        wife.name.as_ref(),
+                        now
+                    );
+                    info!("{}: Stew ready! Let's eat", wife.name.as_ref());
+
+                    message_dispatcher.dispatch_message(
+                        miner.unwrap().miner_id,
+                        MessageEvent::StewIsReady(entity),
+                    );
+
+                    wife.wife.cooking = false;
+
+                    wife.state_machine
+                        .change_state(&mut commands, entity, WifeState::DoHouseWork);
+                }
+                _ => (),
+            }
         }
     }
 }

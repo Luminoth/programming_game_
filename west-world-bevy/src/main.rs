@@ -12,8 +12,6 @@ use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
 use events::messaging::MessageEvent;
-use game::miner::{MinerStateEnterEvent, MinerStateExitEvent};
-use game::wife::{WifeStateEnterEvent, WifeStateExitEvent};
 use states::GameState;
 use systems::Systems;
 
@@ -31,6 +29,10 @@ fn main() {
     .add_plugins(MinimalPlugins)
     .add_plugin(LogPlugin);
 
+    // plugins
+    app.add_plugin(components::miner::MinerStateMachinePlugin)
+        .add_plugin(components::wife::WifeStateMachinePlugin);
+
     // initial game state
     app.add_state(GameState::Main);
 
@@ -38,11 +40,7 @@ fn main() {
     app.add_startup_system(setup);
 
     // events
-    app.add_event::<(Entity, MessageEvent)>()
-        .add_event::<MinerStateEnterEvent>()
-        .add_event::<MinerStateExitEvent>()
-        .add_event::<WifeStateEnterEvent>()
-        .add_event::<WifeStateExitEvent>();
+    app.add_event::<(Entity, MessageEvent)>();
 
     app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
         .add_system_set(
@@ -54,17 +52,39 @@ fn main() {
                 // miner systems
                 .with_system(systems::miner::update)
                 .with_system(
-                    systems::miner::global_state_execute.label(Systems::GlobalStateExecute),
+                    systems::miner::EnterMineAndDigForNugget_execute
+                        .label(Systems::StateExecute)
+                        .after(Systems::GlobalStateExecute),
                 )
                 .with_system(
-                    systems::miner::state_execute
+                    systems::miner::VisitBankAndDepositGold_execute
+                        .label(Systems::StateExecute)
+                        .after(Systems::GlobalStateExecute),
+                )
+                .with_system(
+                    systems::miner::GoHomeAndSleepTilRested_execute
+                        .label(Systems::StateExecute)
+                        .after(Systems::GlobalStateExecute),
+                )
+                .with_system(
+                    systems::miner::QuenchThirst_execute
+                        .label(Systems::StateExecute)
+                        .after(Systems::GlobalStateExecute),
+                )
+                .with_system(
+                    systems::miner::EatStew_execute
                         .label(Systems::StateExecute)
                         .after(Systems::GlobalStateExecute),
                 )
                 // wife systems
-                .with_system(systems::wife::global_state_execute.label(Systems::GlobalStateExecute))
+                .with_system(systems::wife::GlobalState_execute.label(Systems::GlobalStateExecute))
                 .with_system(
-                    systems::wife::state_execute
+                    systems::wife::DoHouseWork_execute
+                        .label(Systems::StateExecute)
+                        .after(Systems::GlobalStateExecute),
+                )
+                .with_system(
+                    systems::wife::VisitBathroom_execute
                         .label(Systems::StateExecute)
                         .after(Systems::GlobalStateExecute),
                 ),
@@ -73,29 +93,38 @@ fn main() {
             // per-frame systems
             SystemSet::on_update(GameState::Main)
                 // miner systems
-                .with_system(systems::miner::state_exit.label(Systems::StateExit))
                 .with_system(
-                    systems::miner::state_enter
-                        .label(Systems::StateEnter)
-                        .after(Systems::StateExit),
+                    systems::miner::EnterMineAndDigForNugget_enter.label(Systems::StateEnter),
                 )
                 .with_system(
-                    systems::miner::state_on_message
+                    systems::miner::EnterMineAndDigForNugget_exit.label(Systems::StateExit),
+                )
+                .with_system(
+                    systems::miner::VisitBankAndDepositGold_enter.label(Systems::StateEnter),
+                )
+                .with_system(systems::miner::VisitBankAndDepositGold_exit.label(Systems::StateExit))
+                .with_system(
+                    systems::miner::GoHomeAndSleepTilRested_enter.label(Systems::StateEnter),
+                )
+                .with_system(systems::miner::GoHomeAndSleepTilRested_exit.label(Systems::StateExit))
+                .with_system(
+                    systems::miner::GoHomeAndSleepTilRested_on_message
                         .label(Systems::StateOnMessage)
                         .after(Systems::GlobalStateOnMessage),
                 )
+                .with_system(systems::miner::QuenchThirst_enter.label(Systems::StateEnter))
+                .with_system(systems::miner::QuenchThirst_exit.label(Systems::StateExit))
+                .with_system(systems::miner::EatStew_enter.label(Systems::StateEnter))
+                .with_system(systems::miner::EatStew_exit.label(Systems::StateExit))
                 // wife systems
                 .with_system(
-                    systems::wife::global_state_on_message.label(Systems::GlobalStateOnMessage),
+                    systems::wife::GlobalState_on_message.label(Systems::GlobalStateOnMessage),
                 )
-                .with_system(systems::wife::state_exit.label(Systems::StateExit))
+                .with_system(systems::wife::VisitBathroom_enter.label(Systems::StateEnter))
+                .with_system(systems::wife::VisitBathroom_exit.label(Systems::StateExit))
+                .with_system(systems::wife::CookStew_enter.label(Systems::StateEnter))
                 .with_system(
-                    systems::wife::state_enter
-                        .label(Systems::StateEnter)
-                        .after(Systems::StateExit),
-                )
-                .with_system(
-                    systems::wife::state_on_message
+                    systems::wife::CookStew_on_message
                         .label(Systems::StateOnMessage)
                         .after(Systems::GlobalStateOnMessage),
                 ),

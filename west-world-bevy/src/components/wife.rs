@@ -1,11 +1,9 @@
 use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 
-use crate::game::wife::*;
+use super::state::impl_state_machine;
 
-use super::state::StateMachine;
-
-pub type WifeStateMachine = StateMachine<WifeState>;
+impl_state_machine!(Wife, DoHouseWork, VisitBathroom, CookStew);
 
 #[derive(Debug, Default, Component)]
 pub struct Wife {
@@ -17,12 +15,12 @@ impl Wife {
         let name = name.into();
         info!("spawning wife {}", name);
 
-        commands
-            .spawn()
-            .insert(Wife::default())
-            .insert(WifeStateMachine::default())
-            .insert(Name::new(name))
-            .id()
+        let mut entity = commands.spawn();
+        entity.insert(Wife::default()).insert(Name::new(name));
+
+        WifeStateMachine::insert(&mut entity, WifeState::DoHouseWork);
+
+        entity.id()
     }
 }
 

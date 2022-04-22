@@ -2995,6 +2995,7 @@ dependencies = [
  "bevy_egui",
  "bevy_prototype_lyon",
  "chrono",
+ "paste",
  "rand",
 ]
 
@@ -3494,6 +3495,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "chrono",
+ "paste",
  "rand",
 ]
 

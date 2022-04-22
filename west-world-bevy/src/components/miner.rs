@@ -4,9 +4,16 @@ use bevy::prelude::*;
 use crate::game::miner::*;
 use crate::game::Location;
 
-use super::state::StateMachine;
+use super::state::impl_state_machine;
 
-pub type MinerStateMachine = StateMachine<MinerState>;
+impl_state_machine!(
+    Miner,
+    EnterMineAndDigForNugget,
+    VisitBankAndDepositGold,
+    GoHomeAndSleepTilRested,
+    QuenchThirst,
+    EatStew
+);
 
 #[derive(Debug, Default, Component)]
 pub struct Stats {
@@ -79,13 +86,15 @@ impl Miner {
         let name = name.into();
         info!("spawning miner {}", name);
 
-        commands
-            .spawn()
+        let mut entity = commands.spawn();
+        entity
             .insert(Miner::default())
             .insert(Stats::default())
-            .insert(MinerStateMachine::default())
-            .insert(Name::new(name))
-            .id()
+            .insert(Name::new(name));
+
+        MinerStateMachine::insert(&mut entity, MinerState::GoHomeAndSleepTilRested);
+
+        entity.id()
     }
 }
 

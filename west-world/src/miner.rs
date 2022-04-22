@@ -243,8 +243,6 @@ impl MinerState {
             miner.rest();
 
             info!("{}: ZZZZ... ", entity.name());
-
-            state_machine.change_state(entity, Self::GoHomeAndSleepTilRested, miner);
         }
     }
 

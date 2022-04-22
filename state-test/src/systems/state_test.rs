@@ -14,7 +14,7 @@ pub fn state_test_idle_execute(
 ) {
     for (entity, mut machine) in query.iter_mut() {
         info!("standing around ...");
-        machine.change_state(&mut commands, entity, TestStates::Walk);
+        machine.change_state(&mut commands, entity, TestState::Walk);
     }
 }
 
@@ -30,7 +30,7 @@ pub fn state_test_walk_execute(
 ) {
     for (entity, mut machine) in query.iter_mut() {
         info!("what a nice day!");
-        machine.change_state(&mut commands, entity, TestStates::Run);
+        machine.change_state(&mut commands, entity, TestState::Run);
     }
 }
 
@@ -40,7 +40,7 @@ pub fn state_test_run_execute(
 ) {
     for (entity, mut machine) in query.iter_mut() {
         info!("moving fast now!");
-        machine.change_state(&mut commands, entity, TestStates::Idle);
+        machine.change_state(&mut commands, entity, TestState::Idle);
     }
 }
 

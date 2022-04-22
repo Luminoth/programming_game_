@@ -56,13 +56,13 @@ macro_rules! impl_state_machine {
 
             // enum for working with states outside of component management
             #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-            pub enum [<$name States>] {
+            pub enum [<$name State>] {
                 $(
                     $states,
                 )*
             }
 
-            impl [<$name States>] {
+            impl [<$name State>] {
                 // remove all of the state markers from an entity
                 fn clear(commands: &mut bevy::ecs::system::EntityCommands) {
                     $(
@@ -102,13 +102,13 @@ macro_rules! impl_state_machine {
             // the state machine
             #[derive(Debug, bevy::prelude::Component)]
             pub struct [<$name StateMachine>] {
-                current_state: [<$name States>],
-                previous_state: Option<[<$name States>]>,
+                current_state: [<$name State>],
+                previous_state: Option<[<$name State>]>,
             }
 
             impl [<$name StateMachine>] {
                 // adds a state machine to the entity
-                pub fn insert(commands: &mut bevy::ecs::system::EntityCommands, starting_state: [<$name States>]) {
+                pub fn insert(commands: &mut bevy::ecs::system::EntityCommands, starting_state: [<$name State>]) {
                     bevy::prelude::info!("inserting state machine ...");
 
                     // TODO: is there a way to clean up any pre-existing state machine components?
@@ -127,14 +127,14 @@ macro_rules! impl_state_machine {
                     &mut self,
                     commands: &mut bevy::prelude::Commands,
                     entity: bevy::prelude::Entity,
-                    new_state: [<$name States>],
+                    new_state: [<$name State>],
                 ) {
                     bevy::prelude::debug!("changing state ...");
 
                     let mut entity = commands.entity(entity);
 
                     // remove all of the state components
-                    [<$name States>]::clear(&mut entity);
+                    [<$name State>]::clear(&mut entity);
 
                     // insert the state exit component
                     self.current_state.insert_exit(&mut entity);

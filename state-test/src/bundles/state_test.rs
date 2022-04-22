@@ -15,6 +15,6 @@ impl StateTestBundle {
             owner: StateMachineOwner::default(),
         });
 
-        TestStateMachine::insert(&mut bundle, TestStates::Idle);
+        TestStateMachine::insert(&mut bundle, TestState::Idle);
     }
 }

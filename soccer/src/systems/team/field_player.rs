@@ -1,10 +1,11 @@
+#![allow(non_snake_case)]
+
 use bevy::prelude::*;
 
-use crate::components::team::FieldPlayerQueryMut;
-use crate::game::team::FieldPlayerState;
+use crate::components::team::FieldPlayerQuery;
 
-pub fn global_state_execute(mut query: Query<FieldPlayerQueryMut>) {
-    for player in query.iter_mut() {
-        FieldPlayerState::execute_global(player);
+pub fn GlobalState_execute(query: Query<FieldPlayerQuery>) {
+    for player in query.iter() {
+        debug!("executing global state for player {}", player.name.as_ref());
     }
 }

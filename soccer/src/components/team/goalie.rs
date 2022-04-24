@@ -4,13 +4,20 @@ use bevy_inspector_egui::*;
 
 use crate::game::team::*;
 
-use super::super::state::StateMachine;
+use super::super::state::impl_state_machine;
 
-pub type GoalieStateMachine = StateMachine<GoalieState>;
+impl_state_machine!(Goalie, Idle);
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Goalie {
     pub team: Team,
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct GoalieQuery<'w> {
+    pub goalie: &'w Goalie,
+    pub name: &'w Name,
 }
 
 #[derive(WorldQuery)]

@@ -15,7 +15,6 @@ use super::super::actor::*;
 pub struct GoalieBundle {
     pub goalie: Goalie,
     pub physical: Physical,
-    pub state: GoalieStateMachine,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
@@ -38,6 +37,8 @@ impl GoalieBundle {
             name: Name::new(format!("{:?} Goalie", team)),
             ..Default::default()
         });
+
+        GoalieStateMachine::insert(&mut bundle, GoalieState::Idle);
 
         bundle.with_children(|parent| {
             parent

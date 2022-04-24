@@ -4,7 +4,6 @@ use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
 use crate::events::messaging::DispatchedMessageEvent;
-use crate::events::team::*;
 use crate::states;
 use crate::states::*;
 use crate::systems;
@@ -23,14 +22,13 @@ struct MainStatePlugin;
 
 impl Plugin for MainStatePlugin {
     fn build(&self, app: &mut App) {
+        // plugins
+        app.add_plugin(crate::components::team::SoccerTeamStateMachinePlugin)
+            .add_plugin(crate::components::team::FieldPlayerStateMachinePlugin)
+            .add_plugin(crate::components::team::GoalieStateMachinePlugin);
+
         // events
-        app.add_event::<DispatchedMessageEvent>()
-            .add_event::<SoccerTeamStateEnterEvent>()
-            .add_event::<SoccerTeamStateExitEvent>()
-            .add_event::<FieldPlayerStateEnterEvent>()
-            .add_event::<FieldPlayerStateExitEvent>()
-            .add_event::<GoalieStateEnterEvent>()
-            .add_event::<GoalieStateExitEvent>();
+        app.add_event::<DispatchedMessageEvent>();
 
         // systems
         app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
@@ -65,21 +63,21 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::messaging::update)
                     // team systems
                     .with_system(
-                        systems::team::global_state_execute.label(Systems::GlobalStateExecute),
+                        systems::team::GlobalState_execute.label(Systems::GlobalStateExecute),
                     )
                     .with_system(
-                        systems::team::state_execute
+                        systems::team::PrepareForKickOff_execute
                             .label(Systems::StateExecute)
                             .after(Systems::GlobalStateExecute),
                     )
                     // field player systems
                     .with_system(
-                        systems::team::field_player::global_state_execute
+                        systems::team::field_player::GlobalState_execute
                             .label(Systems::GlobalStateExecute),
                     )
                     // goalie systems
                     .with_system(
-                        systems::team::goalie::global_state_execute
+                        systems::team::goalie::GlobalState_execute
                             .label(Systems::GlobalStateExecute),
                     ),
             )
@@ -87,11 +85,7 @@ impl Plugin for MainStatePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
                     // team event handlers
-                    .with_system(
-                        systems::team::state_enter
-                            .label(Systems::StateEnter)
-                            .after(Systems::StateExit),
-                    ),
+                    .with_system(systems::team::PrepareForKickOff_enter.label(Systems::StateEnter)),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

@@ -16,9 +16,9 @@ use crate::game::{BALL_RADIUS, PLAYER_RADIUS};
 use crate::resources::SimulationParams;
 use crate::util::point_to_world_space;
 
-use super::state::StateMachine;
+use super::state::impl_state_machine;
 
-pub type SoccerTeamStateMachine = StateMachine<SoccerTeamState>;
+impl_state_machine!(SoccerTeam, PrepareForKickOff, Defending, Attacking);
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct SoccerTeam {
@@ -159,6 +159,12 @@ impl SoccerTeam {
 
         None
     }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct SoccerTeamQuery<'w> {
+    pub team: &'w SoccerTeam,
 }
 
 #[derive(WorldQuery)]

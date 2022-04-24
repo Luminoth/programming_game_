@@ -1,10 +1,11 @@
+#![allow(non_snake_case)]
+
 use bevy::prelude::*;
 
-use crate::components::team::GoalieQueryMut;
-use crate::game::team::GoalieState;
+use crate::components::team::GoalieQuery;
 
-pub fn global_state_execute(mut query: Query<GoalieQueryMut>) {
-    for goalie in query.iter_mut() {
-        GoalieState::execute_global(goalie);
+pub fn GlobalState_execute(query: Query<GoalieQuery>) {
+    for goalie in query.iter() {
+        debug!("executing global state for goalie {}", goalie.name.as_ref());
     }
 }

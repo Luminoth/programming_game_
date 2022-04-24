@@ -1,5 +1,4 @@
 pub mod messaging;
-pub mod state;
 pub mod team;
 
 use bevy::math::const_vec2;

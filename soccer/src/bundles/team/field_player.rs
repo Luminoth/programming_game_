@@ -16,7 +16,6 @@ pub struct FieldPlayerBundle {
     pub player: FieldPlayer,
     pub physical: Physical,
     pub steering: Steering,
-    pub state: FieldPlayerStateMachine,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
@@ -39,6 +38,8 @@ impl FieldPlayerBundle {
             name: Name::new(format!("{:?} Field Player", team)),
             ..Default::default()
         });
+
+        FieldPlayerStateMachine::insert(&mut bundle, FieldPlayerState::Idle);
 
         bundle.with_children(|parent| {
             parent

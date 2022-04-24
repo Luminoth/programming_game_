@@ -15,7 +15,6 @@ use goalie::*;
 #[derive(Debug, Bundle)]
 pub struct SoccerTeamBundle {
     pub team: SoccerTeam,
-    pub state: SoccerTeamStateMachine,
     pub support_spots: SupportSpotCalculator,
 
     pub transform: Transform,
@@ -55,11 +54,12 @@ impl SoccerTeamBundle {
                 team,
                 ..Default::default()
             },
-            state: SoccerTeamStateMachine::default(),
             support_spots,
             transform: Transform::default(),
             global_transform: GlobalTransform::default(),
         });
+
+        SoccerTeamStateMachine::insert(&mut bundle, SoccerTeamState::PrepareForKickOff);
 
         bundle.insert(Name::new(format!("{:?} Team", team)));
 

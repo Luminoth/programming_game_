@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 pub mod field_player;
 pub mod goalie;
 
@@ -7,8 +9,7 @@ use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::team::*;
-use crate::events::team::*;
-use crate::game::team::SoccerTeamState;
+use crate::game::messaging::MessageEvent;
 use crate::resources::messaging::MessageDispatcher;
 use crate::resources::SimulationParams;
 
@@ -101,56 +102,65 @@ pub fn update_support_spot(
     }
 }
 
-pub fn global_state_execute(mut query: Query<SoccerTeamQueryMut>) {
-    for soccer_team in query.iter_mut() {
-        SoccerTeamState::execute_global(soccer_team);
+pub fn GlobalState_execute(query: Query<SoccerTeamQuery>) {
+    for soccer_team in query.iter() {
+        debug!(
+            "executing global state for team {:?}",
+            soccer_team.team.team
+        );
     }
 }
 
-pub fn state_enter(
+pub fn PrepareForKickOff_enter(
     mut commands: Commands,
-    mut events: EventReader<SoccerTeamStateEnterEvent>,
     mut message_dispatcher: ResMut<MessageDispatcher>,
-    mut query: Query<SoccerTeamQueryMut>,
+    query: Query<SoccerTeamQuery, With<SoccerTeamStatePrepareForKickOffEnter>>,
     receiving: Query<Entity, With<ReceivingPlayer>>,
     closest: Query<Entity, With<ClosestPlayer>>,
     controlling: Query<Entity, With<ControllingPlayer>>,
     supporting: Query<Entity, With<SupportingPlayer>>,
 ) {
-    for event in events.iter() {
-        if let Ok(team) = query.get_mut(event.entity()) {
-            debug!(
-                "entering soccer team state {:?} for team {:?}",
-                event.state(),
-                team.team.team
-            );
+    for team in query.iter() {
+        info!("{:?} team preparing for kick off", team.team.team);
 
-            event.state().enter(
-                &mut commands,
-                &mut message_dispatcher,
-                &team.team,
-                receiving.get_single().ok(),
-                closest.get_single().ok(),
-                controlling.get_single().ok(),
-                supporting.get_single().ok(),
-            );
+        // reset player positions
+
+        if let Ok(receiving) = receiving.get_single() {
+            commands.entity(receiving).remove::<ReceivingPlayer>();
         }
+
+        if let Ok(closest) = closest.get_single() {
+            commands.entity(closest).remove::<ClosestPlayer>();
+        }
+
+        if let Ok(controlling) = controlling.get_single() {
+            commands.entity(controlling).remove::<ControllingPlayer>();
+        }
+
+        if let Ok(supporting) = supporting.get_single() {
+            commands.entity(supporting).remove::<SupportingPlayer>();
+        }
+
+        // send players home
+        message_dispatcher.dispatch_message(None, MessageEvent::GoHome(team.team.team));
     }
 }
 
-pub fn state_execute(
+pub fn PrepareForKickOff_execute(
+    mut commands: Commands,
     mut query: Query<(Entity, SoccerTeamQueryMut)>,
     players: Query<&FieldPlayer>,
-    mut exit_events: EventWriter<SoccerTeamStateExitEvent>,
-    mut enter_events: EventWriter<SoccerTeamStateEnterEvent>,
 ) {
     for (entity, mut team) in query.iter_mut() {
-        team.state_machine.current_state().execute(
-            entity,
-            &mut team,
-            &players,
-            &mut exit_events,
-            &mut enter_events,
-        );
+        info!("{:?} team waiting for ready ...", team.team.team);
+
+        for player in players.iter() {
+            if !player.ready {
+                break;
+            }
+        }
+
+        team.state_machine
+            .change_state(&mut commands, entity, SoccerTeamState::Defending);
     }
 }

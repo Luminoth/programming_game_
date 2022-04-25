@@ -183,7 +183,7 @@ pub struct SupportSpot {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct SupportSpotDebug;
 
-#[derive(Debug, Clone, Component, Inspectable)]
+#[derive(Debug, Component, Inspectable)]
 pub struct SupportSpotCalculator {
     pub spots: Vec<SupportSpot>,
 }

@@ -148,7 +148,7 @@ pub fn PrepareForKickOff_enter(
 
 pub fn PrepareForKickOff_execute(
     mut commands: Commands,
-    mut query: Query<(Entity, SoccerTeamQueryMut)>,
+    mut query: Query<(Entity, SoccerTeamQueryMut), With<SoccerTeamStatePrepareForKickOffExecute>>,
     players: Query<&FieldPlayer>,
 ) {
     for (entity, mut team) in query.iter_mut() {

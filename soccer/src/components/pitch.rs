@@ -3,17 +3,19 @@ use bevy_inspector_egui::*;
 
 use crate::resources::SimulationParams;
 
-#[derive(Debug, Default, Inspectable)]
-pub struct Region {
-    // NOTE: region origin is top left
+#[derive(Debug, Default, Clone, Copy, Inspectable)]
+pub struct PitchRegion {
     pub position: Vec2,
     pub extents: Vec2,
 }
 
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct PitchRegionDebug;
+
 #[derive(Debug, Component, Inspectable)]
 pub struct Pitch {
     pub extents: Vec2,
-    pub regions: Vec<Region>,
+    pub regions: Vec<PitchRegion>,
 }
 
 impl Pitch {
@@ -32,14 +34,16 @@ impl Pitch {
             region_count, region_size
         );
 
+        let hs = region_size * 0.5;
+
         let mut regions = Vec::with_capacity(region_count);
         for y in 0..params.num_regions_vertical {
             for x in 0..params.num_regions_horizontal {
                 let position = Vec2::new(
-                    -hw + (x as f32 * region_size.x),
-                    -hh + (y as f32 * region_size.y),
+                    -hw + (x as f32 * region_size.x) + hs.x,
+                    -hh + (y as f32 * region_size.y) + hs.y,
                 );
-                regions.push(Region {
+                regions.push(PitchRegion {
                     position,
                     extents: Vec2::new(region_size.x, region_size.y),
                 });

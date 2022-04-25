@@ -44,7 +44,7 @@ impl SoccerTeamBundle {
 
         let support_spots = SupportSpotCalculator::new(team, params);
         let debug_support_spots = if params.debug_vis {
-            Some(support_spots.clone())
+            Some(support_spots.spots.clone())
         } else {
             None
         };
@@ -65,7 +65,7 @@ impl SoccerTeamBundle {
 
         if params.debug_vis {
             bundle.with_children(|parent| {
-                for spot in debug_support_spots.unwrap().spots {
+                for spot in debug_support_spots.unwrap() {
                     parent
                         .spawn_bundle(GeometryBuilder::build_as(
                             &shapes::Circle {

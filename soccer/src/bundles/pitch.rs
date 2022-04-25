@@ -5,7 +5,7 @@ use crate::components::obstacle::Wall;
 use crate::components::pitch::*;
 use crate::game::BORDER_WIDTH;
 use crate::resources::SimulationParams;
-use crate::{BORDER_SORT, PITCH_SORT};
+use crate::{BORDER_SORT, DEBUG_RADIUS, DEBUG_SORT, PITCH_SORT};
 
 #[derive(Debug, Default, Bundle)]
 struct PitchBorderBundle {
@@ -62,8 +62,15 @@ impl PitchBundle {
     pub fn spawn(commands: &mut Commands, params: &SimulationParams) -> Entity {
         info!("spawning pitch");
 
+        let pitch = Pitch::new(params);
+        let debug_pitch_regions = if params.debug_vis {
+            Some(pitch.regions.clone())
+        } else {
+            None
+        };
+
         let mut bundle = commands.spawn_bundle(PitchBundle {
-            pitch: Pitch::new(params),
+            pitch,
             transform: Transform::from_translation(Vec2::ZERO.extend(PITCH_SORT)),
             global_transform: GlobalTransform::default(),
         });
@@ -85,6 +92,26 @@ impl PitchBundle {
                 ))
                 .insert(Name::new("Model"));
         });
+
+        if params.debug_vis {
+            bundle.with_children(|parent| {
+                for region in debug_pitch_regions.unwrap() {
+                    parent
+                        .spawn_bundle(GeometryBuilder::build_as(
+                            &shapes::Circle {
+                                radius: DEBUG_RADIUS * 3.0,
+                                ..Default::default()
+                            },
+                            DrawMode::Fill(FillMode {
+                                color: Color::BLACK,
+                                options: FillOptions::default(),
+                            }),
+                            Transform::from_translation(region.position.extend(DEBUG_SORT)),
+                        ))
+                        .insert(PitchRegionDebug);
+                }
+            });
+        }
 
         let hh = params.pitch_extents.y * 0.5;
         let hw = params.pitch_extents.x * 0.5;

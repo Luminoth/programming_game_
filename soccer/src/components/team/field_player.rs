@@ -2,12 +2,13 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
+use crate::components::steering::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
 
 use super::super::state::impl_state_machine;
 
-impl_state_machine!(FieldPlayer, Idle);
+impl_state_machine!(FieldPlayer, Wait, ReturnToHomeRegion);
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct FieldPlayer {
@@ -30,6 +31,7 @@ impl FieldPlayer {
 #[world_query(mutable, derive(Debug))]
 pub struct FieldPlayerQuery<'w> {
     pub player: &'w FieldPlayer,
+    pub steering: &'w Steering,
     pub name: &'w Name,
 }
 
@@ -37,6 +39,7 @@ pub struct FieldPlayerQuery<'w> {
 #[world_query(mutable, derive(Debug))]
 pub struct FieldPlayerQueryMut<'w> {
     pub player: &'w mut FieldPlayer,
+    pub steering: &'w mut Steering,
     pub state_machine: &'w mut FieldPlayerStateMachine,
     pub name: &'w Name,
 }

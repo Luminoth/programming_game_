@@ -49,7 +49,7 @@ impl FieldPlayerBundle {
             ..Default::default()
         });
 
-        FieldPlayerStateMachine::insert(&mut bundle, FieldPlayerState::Idle);
+        FieldPlayerStateMachine::insert(&mut bundle, FieldPlayerState::Wait);
 
         bundle.with_children(|parent| {
             parent

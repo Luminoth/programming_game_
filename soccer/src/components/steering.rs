@@ -6,6 +6,7 @@ use super::physics::Physical;
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Steering {
+    pub target: Vec2,
     pub accumulated_force: Vec2,
 }
 

@@ -178,10 +178,19 @@ pub fn PrepareForKickOff_execute(
     }
 }
 
-pub fn Defending_enter(query: Query<SoccerTeamQuery, With<SoccerTeamStateDefendingEnter>>) {
+pub fn Defending_enter(
+    query: Query<SoccerTeamQuery, With<SoccerTeamStateDefendingEnter>>,
+    pitch: Res<Pitch>,
+    mut players: Query<FieldPlayerQueryMut>,
+    mut goal_keepers: Query<&mut GoalKeeper>,
+) {
     for team in query.iter() {
         info!("{:?} team preparing for kick off", team.team.team);
 
-        // TODO:
+        team.team
+            .reset_player_home_regions(&mut players, &mut goal_keepers);
+
+        team.team
+            .update_targets_of_waiting_players(&pitch, &mut players);
     }
 }

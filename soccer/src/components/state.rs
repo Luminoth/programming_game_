@@ -123,6 +123,10 @@ macro_rules! impl_state_machine {
                     starting_state.insert_execute(commands);
                 }
 
+                pub fn is_in_state(&self, state: [<$name State>]) -> bool {
+                    state == self.current_state
+                }
+
                 pub fn change_state(
                     &mut self,
                     commands: &mut bevy::prelude::Commands,

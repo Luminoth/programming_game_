@@ -13,6 +13,7 @@ use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::game::team::*;
 use crate::game::{BALL_RADIUS, PLAYER_RADIUS};
+use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
 use crate::util::point_to_world_space;
 
@@ -28,6 +29,59 @@ pub struct SoccerTeam {
 }
 
 impl SoccerTeam {
+    pub fn reset_player_home_regions(
+        &self,
+        players: &mut Query<FieldPlayerQueryMut>,
+        goal_keepers: &mut Query<&mut GoalKeeper>,
+    ) {
+        let home_regions = match self.team {
+            Team::Red => RED_TEAM_HOME_REGIONS,
+            Team::Blue => BLUE_TEAM_HOME_REGIONS,
+        };
+
+        let mut idx = 0;
+        for mut goal_keeper in goal_keepers.iter_mut() {
+            if goal_keeper.team != self.team {
+                continue;
+            }
+
+            goal_keeper.home_region = home_regions[idx];
+
+            idx += 1;
+        }
+
+        for mut player in players.iter_mut() {
+            if player.player.team != self.team {
+                continue;
+            }
+
+            player.player.home_region = home_regions[idx];
+
+            idx += 1;
+        }
+    }
+
+    pub fn update_targets_of_waiting_players(
+        &self,
+        pitch: &Pitch,
+        players: &mut Query<FieldPlayerQueryMut>,
+    ) {
+        for mut player in players.iter_mut() {
+            if player.state_machine.is_in_state(FieldPlayerState::Wait)
+                || player
+                    .state_machine
+                    .is_in_state(FieldPlayerState::ReturnToHomeRegion)
+            {
+                let target = pitch
+                    .regions
+                    .get(player.player.home_region)
+                    .unwrap()
+                    .position;
+                player.steering.target = target;
+            }
+        }
+    }
+
     pub fn is_pass_safe_from_all_opponents(
         &self,
         params: &SimulationParams,

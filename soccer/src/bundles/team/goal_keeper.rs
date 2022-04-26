@@ -16,6 +16,7 @@ use super::super::actor::*;
 pub struct GoalKeeperBundle {
     pub goal_keeper: GoalKeeper,
     pub physical: Physical,
+    pub steering: Steering,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
@@ -48,7 +49,7 @@ impl GoalKeeperBundle {
             ..Default::default()
         });
 
-        GoalKeeperStateMachine::insert(&mut bundle, GoalKeeperState::Idle);
+        GoalKeeperStateMachine::insert(&mut bundle, GoalKeeperState::TendGoal);
 
         bundle.with_children(|parent| {
             parent

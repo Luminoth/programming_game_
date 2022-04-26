@@ -8,7 +8,7 @@ use crate::states;
 use crate::states::*;
 use crate::systems;
 use crate::systems::Systems;
-use crate::{AGENT_UPDATE_STEP, SUPPORT_UPDATE_STEP};
+use crate::AGENT_UPDATE_STEP;
 
 pub struct StatesPlugins;
 
@@ -49,12 +49,6 @@ impl Plugin for MainStatePlugin {
                             .after(Systems::SteeringUpdatePhysics),
                     ),
             )
-            // supporting player update (fixed timestep)
-            .add_system_set(
-                SystemSet::on_update(GameState::Main)
-                    .with_run_criteria(FixedTimestep::step(SUPPORT_UPDATE_STEP))
-                    .with_system(systems::team::update_support_spot),
-            )
             // agents (fixed timestep)
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
@@ -75,6 +69,11 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateExecute)
                             .after(Systems::GlobalStateExecute),
                     )
+                    .with_system(
+                        systems::team::Attacking_execute
+                            .label(Systems::StateExecute)
+                            .after(Systems::GlobalStateExecute),
+                    )
                     // field player systems
                     .with_system(
                         systems::team::field_player::GlobalState_execute
@@ -91,7 +90,8 @@ impl Plugin for MainStatePlugin {
                 SystemSet::on_update(GameState::Main)
                     // team event handlers
                     .with_system(systems::team::PrepareForKickOff_enter.label(Systems::StateEnter))
-                    .with_system(systems::team::Defending_enter.label(Systems::StateEnter)),
+                    .with_system(systems::team::Defending_enter.label(Systems::StateEnter))
+                    .with_system(systems::team::Attacking_enter.label(Systems::StateEnter)),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

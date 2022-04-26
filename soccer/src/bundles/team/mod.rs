@@ -68,16 +68,16 @@ impl SoccerTeamBundle {
         }
 
         let home_regions = match team {
-            Team::Red => RED_TEAM_HOME_REGIONS,
-            Team::Blue => BLUE_TEAM_HOME_REGIONS,
+            Team::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
+            Team::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
         };
 
         // goal keeper
         GoalKeeperBundle::spawn(commands, home_regions[0], team, pitch);
 
         // players
-        for i in 0..TEAM_SIZE {
-            FieldPlayerBundle::spawn(commands, home_regions[i + 1], team, pitch);
+        for i in 1..TEAM_SIZE {
+            FieldPlayerBundle::spawn(commands, home_regions[i], team, pitch);
         }
     }
 }

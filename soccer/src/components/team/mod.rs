@@ -9,6 +9,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 use rand::Rng;
 
+use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::game::team::*;
@@ -34,12 +35,8 @@ impl SoccerTeam {
         &self,
         players: &mut Query<FieldPlayerQueryMut>,
         goal_keepers: &mut Query<&mut GoalKeeper>,
+        home_regions: [usize; TEAM_SIZE],
     ) {
-        let home_regions = match self.team {
-            Team::Red => RED_TEAM_HOME_REGIONS,
-            Team::Blue => BLUE_TEAM_HOME_REGIONS,
-        };
-
         let mut idx = 0;
         for mut goal_keeper in goal_keepers.iter_mut() {
             if goal_keeper.team != self.team {
@@ -83,7 +80,82 @@ impl SoccerTeam {
         }
     }
 
-    pub fn is_pass_safe_from_all_opponents(
+    pub fn determine_best_supporting_position(
+        &mut self,
+        params: &SimulationParams,
+        support_calculator: &mut SupportSpotCalculator,
+        players: &Query<(&FieldPlayer, PhysicalQuery)>,
+        controller: (&FieldPlayer, &Transform),
+        support: &Query<(&FieldPlayer, &Transform), With<SupportingPlayer>>,
+        ball: BallQueryItem,
+        goals: &Query<GoalQuery>,
+    ) {
+        info!("updating support spot for controlling team {:?}", self.team);
+
+        self.best_support_spot = None;
+
+        let controller_position = controller.1.translation.truncate();
+
+        let mut best_score = 0.0;
+        let mut best_support_spot = None;
+        for spot in &mut support_calculator.spots {
+            spot.score = 1.0;
+
+            // is it safe to pass to this spot?
+            if self.is_pass_safe_from_all_opponents(
+                &params,
+                controller_position,
+                spot.position,
+                None,
+                &players,
+                ball.physical,
+                params.max_passing_force,
+            ) {
+                spot.score += params.pass_safe_score;
+            }
+
+            // can we score a goal from this spot?
+            for goal in goals.iter() {
+                if self
+                    .can_shoot(
+                        &params,
+                        spot.position,
+                        &goal,
+                        ball.physical,
+                        &players,
+                        params.max_passing_force,
+                    )
+                    .is_some()
+                {
+                    spot.score += params.can_score_score;
+                }
+            }
+
+            // how far away is our supporting player?
+            if let Ok(support) = support.get_single() {
+                assert!(support.0.team == controller.0.team);
+
+                let optimal_distance = 200.0;
+                let dist = controller_position.distance(spot.position);
+                let temp = (optimal_distance - dist).abs();
+                if temp < optimal_distance {
+                    spot.score += params.distance_from_controller_player_score
+                        * (optimal_distance - temp)
+                        / optimal_distance;
+                }
+            }
+
+            // is this the best score?
+            if spot.score > best_score {
+                best_score = spot.score;
+                best_support_spot = Some(spot.position);
+            }
+        }
+
+        self.best_support_spot = best_support_spot;
+    }
+
+    fn is_pass_safe_from_all_opponents(
         &self,
         params: &SimulationParams,
         from: Vec2,
@@ -110,7 +182,7 @@ impl SoccerTeam {
         true
     }
 
-    pub fn is_pass_safe_from_opponent(
+    fn is_pass_safe_from_opponent(
         &self,
         params: &SimulationParams,
         from: Vec2,
@@ -167,7 +239,7 @@ impl SoccerTeam {
         local_pos_opp.y.abs() >= reach
     }
 
-    pub fn can_shoot(
+    fn can_shoot(
         &self,
         params: &SimulationParams,
         from: Vec2,
@@ -273,13 +345,6 @@ impl SupportSpotCalculator {
 
         Self { spots }
     }
-}
-
-#[derive(WorldQuery)]
-#[world_query(mutable, derive(Debug))]
-pub struct SupportSpotCalculatorQueryMut<'w> {
-    pub team: &'w mut SoccerTeam,
-    pub support_calculator: &'w mut SupportSpotCalculator,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]

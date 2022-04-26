@@ -10,105 +10,17 @@ use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::team::*;
 use crate::game::messaging::MessageEvent;
+use crate::game::team::*;
 use crate::resources::messaging::MessageDispatcher;
 use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
 
-pub fn update_support_spot(
-    params: Res<SimulationParams>,
-    mut query: Query<SupportSpotCalculatorQueryMut>,
-    players: Query<(&FieldPlayer, PhysicalQuery)>,
-    controller: Query<(&FieldPlayer, &Transform), With<ControllingPlayer>>,
-    support: Query<(&FieldPlayer, &Transform), With<SupportingPlayer>>,
-    ball: Query<BallQuery>,
-    goals: Query<GoalQuery>,
-) {
-    if let Ok(controller) = controller.get_single() {
-        let ball = ball.single();
-
-        for mut support_calculator in query.iter_mut() {
-            // only update support spots for the controlling player's team
-            if controller.0.team != support_calculator.team.team {
-                continue;
-            }
-
-            info!(
-                "updating support spot for controlling team {:?}",
-                support_calculator.team.team
-            );
-
-            support_calculator.team.best_support_spot = None;
-
-            let controller_position = controller.1.translation.truncate();
-
-            let mut best_score = 0.0;
-            let mut best_support_spot = None;
-            for spot in &mut support_calculator.support_calculator.spots {
-                spot.score = 1.0;
-
-                // is it safe to pass to this spot?
-                if support_calculator.team.is_pass_safe_from_all_opponents(
-                    &params,
-                    controller_position,
-                    spot.position,
-                    None,
-                    &players,
-                    ball.physical,
-                    params.max_passing_force,
-                ) {
-                    spot.score += params.pass_safe_score;
-                }
-
-                // can we score a goal from this spot?
-                for goal in goals.iter() {
-                    if support_calculator
-                        .team
-                        .can_shoot(
-                            &params,
-                            spot.position,
-                            &goal,
-                            ball.physical,
-                            &players,
-                            params.max_passing_force,
-                        )
-                        .is_some()
-                    {
-                        spot.score += params.can_score_score;
-                    }
-                }
-
-                // how far away is our supporting player?
-                if let Ok(support) = support.get_single() {
-                    assert!(support.0.team == controller.0.team);
-
-                    let optimal_distance = 200.0;
-                    let dist = controller_position.distance(spot.position);
-                    let temp = (optimal_distance - dist).abs();
-                    if temp < optimal_distance {
-                        spot.score += params.distance_from_controller_player_score
-                            * (optimal_distance - temp)
-                            / optimal_distance;
-                    }
-                }
-
-                // is this the best score?
-                if spot.score > best_score {
-                    best_score = spot.score;
-                    best_support_spot = Some(spot.position);
-                }
-            }
-
-            support_calculator.team.best_support_spot = best_support_spot;
-        }
-    }
-}
-
 pub fn GlobalState_execute(query: Query<SoccerTeamQuery>) {
-    for soccer_team in query.iter() {
-        debug!(
+    for _team in query.iter() {
+        /*debug!(
             "executing global state for team {:?}",
-            soccer_team.team.team
-        );
+            _team.team.team
+        );*/
     }
 }
 
@@ -185,10 +97,15 @@ pub fn Defending_enter(
     mut goal_keepers: Query<&mut GoalKeeper>,
 ) {
     for team in query.iter() {
-        info!("{:?} team preparing for kick off", team.team.team);
+        info!("{:?} team defending", team.team.team);
+
+        let home_regions = match team.team.team {
+            Team::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
+            Team::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
+        };
 
         team.team
-            .reset_player_home_regions(&mut players, &mut goal_keepers);
+            .reset_player_home_regions(&mut players, &mut goal_keepers, home_regions);
 
         team.team
             .update_targets_of_waiting_players(&pitch, &mut players);
@@ -199,13 +116,75 @@ pub fn Defending_execute(
     mut commands: Commands,
     mut query: Query<(Entity, SoccerTeamQueryMut), With<SoccerTeamStateDefendingExecute>>,
 ) {
-    // TODO: why not use a message / event for this rather than polling?
     for (entity, mut team) in query.iter_mut() {
-        //debug!("{:?} team checking for control", team.team.team);
+        //debug!("{:?} defender checking for control", team.team.team);
 
+        // TODO: why not use a message / event for this rather than polling?
         if team.team.in_control {
             team.state_machine
                 .change_state(&mut commands, entity, SoccerTeamState::Attacking);
         }
+    }
+}
+
+pub fn Attacking_enter(
+    query: Query<SoccerTeamQuery, With<SoccerTeamStateAttackingEnter>>,
+    pitch: Res<Pitch>,
+    mut players: Query<FieldPlayerQueryMut>,
+    mut goal_keepers: Query<&mut GoalKeeper>,
+) {
+    for team in query.iter() {
+        info!("{:?} team attacking", team.team.team);
+
+        let home_regions = match team.team.team {
+            Team::Red => RED_TEAM_ATTACKING_HOME_REGIONS,
+            Team::Blue => BLUE_TEAM_ATTACKING_HOME_REGIONS,
+        };
+
+        team.team
+            .reset_player_home_regions(&mut players, &mut goal_keepers, home_regions);
+
+        team.team
+            .update_targets_of_waiting_players(&pitch, &mut players);
+    }
+}
+
+pub fn Attacking_execute(
+    mut commands: Commands,
+    params: Res<SimulationParams>,
+    mut query: Query<
+        (Entity, SoccerTeamQueryMut, &mut SupportSpotCalculator),
+        With<SoccerTeamStateAttackingExecute>,
+    >,
+    players: Query<(&FieldPlayer, PhysicalQuery)>,
+    controller: Query<(&FieldPlayer, &Transform), With<ControllingPlayer>>,
+    support: Query<(&FieldPlayer, &Transform), With<SupportingPlayer>>,
+    ball: Query<BallQuery>,
+    goals: Query<GoalQuery>,
+) {
+    for (entity, mut team, mut support_calculator) in query.iter_mut() {
+        //debug!("{:?} attacker checking for control", team.team.team);
+
+        // TODO: why not use a message / event for this rather than polling?
+        if !team.team.in_control {
+            team.state_machine
+                .change_state(&mut commands, entity, SoccerTeamState::Defending);
+            continue;
+        }
+
+        let controller = controller.single();
+        if controller.0.team != team.team.team {
+            continue;
+        }
+
+        team.team.determine_best_supporting_position(
+            &params,
+            &mut support_calculator,
+            &players,
+            controller,
+            &support,
+            ball.single(),
+            &goals,
+        );
     }
 }

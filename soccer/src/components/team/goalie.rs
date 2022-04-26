@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
 use crate::game::team::*;
+use crate::resources::pitch::*;
 
 use super::super::state::impl_state_machine;
 
@@ -11,6 +12,18 @@ impl_state_machine!(Goalie, Idle);
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Goalie {
     pub team: Team,
+    pub home_region: usize,
+    pub default_region: usize,
+}
+
+impl Goalie {
+    pub fn is_in_home_region(&self, transform: &Transform, pitch: &Pitch) -> bool {
+        pitch
+            .regions
+            .get(self.home_region)
+            .unwrap()
+            .is_inside(transform.translation.truncate())
+    }
 }
 
 #[derive(WorldQuery)]

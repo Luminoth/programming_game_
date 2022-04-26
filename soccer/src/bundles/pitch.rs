@@ -4,6 +4,7 @@ use bevy_prototype_lyon::prelude::*;
 use crate::components::obstacle::Wall;
 use crate::components::pitch::*;
 use crate::game::BORDER_WIDTH;
+use crate::resources::pitch::Pitch;
 use crate::resources::SimulationParams;
 use crate::{BORDER_SORT, DEBUG_RADIUS, DEBUG_SORT, PITCH_SORT};
 
@@ -52,17 +53,14 @@ impl PitchBorderBundle {
 
 #[derive(Debug, Bundle)]
 pub struct PitchBundle {
-    pub pitch: Pitch,
-
     pub transform: Transform,
     pub global_transform: GlobalTransform,
 }
 
 impl PitchBundle {
-    pub fn spawn(commands: &mut Commands, params: &SimulationParams) -> Entity {
+    pub fn spawn(commands: &mut Commands, params: &SimulationParams, pitch: &Pitch) -> Entity {
         info!("spawning pitch");
 
-        let pitch = Pitch::new(params);
         let debug_pitch_regions = if params.debug_vis {
             Some(pitch.regions.clone())
         } else {
@@ -70,7 +68,6 @@ impl PitchBundle {
         };
 
         let mut bundle = commands.spawn_bundle(PitchBundle {
-            pitch,
             transform: Transform::from_translation(Vec2::ZERO.extend(PITCH_SORT)),
             global_transform: GlobalTransform::default(),
         });
@@ -81,7 +78,7 @@ impl PitchBundle {
             parent
                 .spawn_bundle(GeometryBuilder::build_as(
                     &shapes::Rectangle {
-                        extents: params.pitch_extents,
+                        extents: pitch.extents,
                         ..Default::default()
                     },
                     DrawMode::Fill(FillMode {
@@ -113,35 +110,33 @@ impl PitchBundle {
             });
         }
 
-        let hh = params.pitch_extents.y * 0.5;
-        let hw = params.pitch_extents.x * 0.5;
-
+        let hs = pitch.extents * 0.5;
         bundle.with_children(|parent| {
             PitchBorderBundle::spawn(
                 parent,
-                Vec2::new(-hw, 0.0),
-                Vec2::new(BORDER_WIDTH, params.pitch_extents.y),
+                Vec2::new(-hs.x, 0.0),
+                Vec2::new(BORDER_WIDTH, pitch.extents.y),
                 Vec2::X,
                 "West",
             );
             PitchBorderBundle::spawn(
                 parent,
-                Vec2::new(0.0, hh),
-                Vec2::new(params.pitch_extents.x, BORDER_WIDTH),
+                Vec2::new(0.0, hs.y),
+                Vec2::new(pitch.extents.x, BORDER_WIDTH),
                 -Vec2::Y,
                 "North",
             );
             PitchBorderBundle::spawn(
                 parent,
-                Vec2::new(hw, 0.0),
-                Vec2::new(BORDER_WIDTH, params.pitch_extents.y),
+                Vec2::new(hs.x, 0.0),
+                Vec2::new(BORDER_WIDTH, pitch.extents.y),
                 -Vec2::X,
                 "East",
             );
             PitchBorderBundle::spawn(
                 parent,
-                Vec2::new(0.0, -hh),
-                Vec2::new(params.pitch_extents.x, BORDER_WIDTH),
+                Vec2::new(0.0, -hs.y),
+                Vec2::new(pitch.extents.x, BORDER_WIDTH),
                 Vec2::Y,
                 "South",
             );

@@ -11,6 +11,7 @@ use crate::components::physics::*;
 use crate::components::team::*;
 use crate::game::messaging::MessageEvent;
 use crate::resources::messaging::MessageDispatcher;
+use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
 
 pub fn update_support_spot(
@@ -148,19 +149,35 @@ pub fn PrepareForKickOff_enter(
 
 pub fn PrepareForKickOff_execute(
     mut commands: Commands,
+    pitch: Res<Pitch>,
     mut query: Query<(Entity, SoccerTeamQueryMut), With<SoccerTeamStatePrepareForKickOffExecute>>,
-    players: Query<&FieldPlayer>,
+    players: Query<(&FieldPlayer, &Transform)>,
+    goalies: Query<(&Goalie, &Transform)>,
 ) {
-    for (entity, mut team) in query.iter_mut() {
-        info!("{:?} team waiting for ready ...", team.team.team);
+    info!("Waiting for teams ready ...");
 
-        for player in players.iter() {
-            if !player.ready {
-                break;
-            }
+    for (player, transform) in players.iter() {
+        if !player.is_in_home_region(transform, &pitch) {
+            return;
         }
+    }
 
+    for (goalie, transform) in goalies.iter() {
+        if !goalie.is_in_home_region(transform, &pitch) {
+            return;
+        }
+    }
+
+    for (entity, mut team) in query.iter_mut() {
         team.state_machine
             .change_state(&mut commands, entity, SoccerTeamState::Defending);
+    }
+}
+
+pub fn Defending_enter(query: Query<SoccerTeamQuery, With<SoccerTeamStateDefendingEnter>>) {
+    for team in query.iter() {
+        info!("{:?} team preparing for kick off", team.team.team);
+
+        // TODO:
     }
 }

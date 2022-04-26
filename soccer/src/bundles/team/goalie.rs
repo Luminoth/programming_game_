@@ -7,6 +7,7 @@ use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
 use crate::game::{team::Team, PLAYER_RADIUS};
+use crate::resources::pitch::*;
 use crate::PLAYER_SORT;
 
 use super::super::actor::*;
@@ -21,11 +22,20 @@ pub struct GoalieBundle {
 }
 
 impl GoalieBundle {
-    pub fn spawn(commands: &mut Commands, position: Vec2, team: Team) -> Entity {
-        info!("spawning goalie for team {:?} at {}", team, position);
+    pub fn spawn(commands: &mut Commands, home_region: usize, team: Team, pitch: &Pitch) -> Entity {
+        let position = pitch.regions.get(home_region).unwrap().position;
+
+        info!(
+            "spawning goalie for team {:?} at {} (home region: {})",
+            team, position, home_region
+        );
 
         let mut bundle = commands.spawn_bundle(GoalieBundle {
-            goalie: Goalie { team },
+            goalie: Goalie {
+                team,
+                home_region,
+                default_region: home_region,
+            },
             ..Default::default()
         });
 

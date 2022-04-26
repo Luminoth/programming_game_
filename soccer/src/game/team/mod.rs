@@ -3,6 +3,12 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
+pub const TEAM_SIZE: usize = 4;
+
+// first region is the goalie home
+pub const BLUE_TEAM_HOME_REGIONS: [usize; TEAM_SIZE + 1] = [1, 6, 8, 3, 5];
+pub const RED_TEAM_HOME_REGIONS: [usize; TEAM_SIZE + 1] = [16, 9, 11, 12, 14];
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Inspectable)]
 pub enum Team {
     Red,

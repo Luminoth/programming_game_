@@ -85,7 +85,8 @@ impl Plugin for MainStatePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
                     // team event handlers
-                    .with_system(systems::team::PrepareForKickOff_enter.label(Systems::StateEnter)),
+                    .with_system(systems::team::PrepareForKickOff_enter.label(Systems::StateEnter))
+                    .with_system(systems::team::Defending_enter.label(Systems::StateEnter)),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

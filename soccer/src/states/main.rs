@@ -8,6 +8,7 @@ use crate::components::camera::*;
 use crate::game::messaging::MessageEvent;
 use crate::game::team::Team;
 use crate::resources::messaging::*;
+use crate::resources::pitch::*;
 use crate::resources::*;
 
 pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
@@ -23,19 +24,23 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     // game state
     commands.insert_resource(GameState::default());
 
+    let pitch = Pitch::new(&params);
+
     // pitch
-    PitchBundle::spawn(&mut commands, &params);
+    PitchBundle::spawn(&mut commands, &params, &pitch);
 
     // goals
-    GoalBundle::spawn(&mut commands, &params, Team::Red);
-    GoalBundle::spawn(&mut commands, &params, Team::Blue);
+    GoalBundle::spawn(&mut commands, &params, Team::Red, &pitch);
+    GoalBundle::spawn(&mut commands, &params, Team::Blue, &pitch);
 
     // ball
     BallBundle::spawn(&mut commands, Vec2::ZERO);
 
     // teams
-    SoccerTeamBundle::spawn(&mut commands, &params, Team::Red);
-    SoccerTeamBundle::spawn(&mut commands, &params, Team::Blue);
+    SoccerTeamBundle::spawn(&mut commands, &params, Team::Red, &pitch);
+    SoccerTeamBundle::spawn(&mut commands, &params, Team::Blue, &pitch);
+
+    commands.insert_resource(pitch);
 
     let mut message_dispatcher = MessageDispatcher::default();
 

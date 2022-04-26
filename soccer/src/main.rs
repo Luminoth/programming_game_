@@ -108,7 +108,6 @@ fn main() {
     .register_inspectable::<components::steering::ObstacleAvoidance>()
     .register_inspectable::<components::ball::Ball>()
     .register_inspectable::<components::goal::Goal>()
-    .register_inspectable::<components::pitch::Pitch>()
     .register_inspectable::<components::pitch::PitchBorder>()
     .register_inspectable::<components::team::SoccerTeam>()
     .register_inspectable::<components::team::SoccerTeamState>()

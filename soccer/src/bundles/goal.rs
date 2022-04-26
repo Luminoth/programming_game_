@@ -3,6 +3,7 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::components::goal::*;
 use crate::game::{team::Team, GOAL_BAR_WIDTH};
+use crate::resources::pitch::Pitch;
 use crate::resources::SimulationParams;
 use crate::{DEBUG_RADIUS, DEBUG_SORT, GOAL_SORT};
 
@@ -15,15 +16,20 @@ pub struct GoalBundle {
 }
 
 impl GoalBundle {
-    pub fn spawn(commands: &mut Commands, params: &SimulationParams, team: Team) -> Entity {
-        info!("spawning goal for team {:?}", team);
-
+    pub fn spawn(
+        commands: &mut Commands,
+        params: &SimulationParams,
+        team: Team,
+        pitch: &Pitch,
+    ) -> Entity {
         let goal_half_extents = params.goal_extents * 0.5;
-        let hw = params.pitch_extents.x * 0.5 - goal_half_extents.x;
+        let hw = pitch.extents.x * 0.5 - goal_half_extents.x;
         let (position, sign) = match team {
             Team::Red => (Vec2::new(-hw, 0.0), 1.0),
             Team::Blue => (Vec2::new(hw, 0.0), -1.0),
         };
+
+        info!("spawning goal for team {:?} at {}", team, position);
 
         let score_center = Vec2::new(sign * goal_half_extents.x, 0.0);
         let top = Vec2::new(score_center.x, score_center.y + goal_half_extents.y);

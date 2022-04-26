@@ -194,3 +194,18 @@ pub fn Defending_enter(
             .update_targets_of_waiting_players(&pitch, &mut players);
     }
 }
+
+pub fn Defending_execute(
+    mut commands: Commands,
+    mut query: Query<(Entity, SoccerTeamQueryMut), With<SoccerTeamStateDefendingExecute>>,
+) {
+    // TODO: why not use a message / event for this rather than polling?
+    for (entity, mut team) in query.iter_mut() {
+        //debug!("{:?} team checking for control", team.team.team);
+
+        if team.team.in_control {
+            team.state_machine
+                .change_state(&mut commands, entity, SoccerTeamState::Attacking);
+        }
+    }
+}

@@ -24,6 +24,7 @@ impl_state_machine!(SoccerTeam, PrepareForKickOff, Defending, Attacking);
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct SoccerTeam {
     pub team: Team,
+    pub in_control: bool,
 
     pub best_support_spot: Option<Vec2>,
 }

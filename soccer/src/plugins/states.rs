@@ -70,6 +70,11 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateExecute)
                             .after(Systems::GlobalStateExecute),
                     )
+                    .with_system(
+                        systems::team::Defending_execute
+                            .label(Systems::StateExecute)
+                            .after(Systems::GlobalStateExecute),
+                    )
                     // field player systems
                     .with_system(
                         systems::team::field_player::GlobalState_execute

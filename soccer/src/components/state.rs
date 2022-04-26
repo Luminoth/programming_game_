@@ -123,6 +123,7 @@ macro_rules! impl_state_machine {
                     starting_state.insert_execute(commands);
                 }
 
+                #[allow(dead_code)]
                 pub fn is_in_state(&self, state: [<$name State>]) -> bool {
                     state == self.current_state
                 }

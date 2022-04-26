@@ -106,11 +106,11 @@ impl SoccerTeam {
 
             // is it safe to pass to this spot?
             if self.is_pass_safe_from_all_opponents(
-                &params,
+                params,
                 controller_position,
                 spot.position,
                 None,
-                &players,
+                players,
                 ball.physical,
                 params.max_passing_force,
             ) {
@@ -120,11 +120,11 @@ impl SoccerTeam {
             // can we score a goal from this spot?
             if self
                 .can_shoot(
-                    &params,
+                    params,
                     spot.position,
-                    &goal,
+                    goal,
                     ball.physical,
-                    &players,
+                    players,
                     params.max_passing_force,
                 )
                 .is_some()

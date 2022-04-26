@@ -21,4 +21,7 @@ pub enum Systems {
     StateOnMessage,
     StateEnter,
     StateExit,
+
+    TeamStates,
+    PlayerStates,
 }

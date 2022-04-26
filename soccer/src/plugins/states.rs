@@ -62,16 +62,19 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::team::PrepareForKickOff_execute
                             .label(Systems::StateExecute)
+                            .label(Systems::TeamStates)
                             .after(Systems::GlobalStateExecute),
                     )
                     .with_system(
                         systems::team::Defending_execute
                             .label(Systems::StateExecute)
+                            .label(Systems::TeamStates)
                             .after(Systems::GlobalStateExecute),
                     )
                     .with_system(
                         systems::team::Attacking_execute
                             .label(Systems::StateExecute)
+                            .label(Systems::TeamStates)
                             .after(Systems::GlobalStateExecute),
                     )
                     // field player systems

@@ -76,8 +76,8 @@ impl SoccerTeamBundle {
         GoalKeeperBundle::spawn(commands, home_regions[0], team, pitch);
 
         // players
-        for i in 1..TEAM_SIZE {
-            FieldPlayerBundle::spawn(commands, home_regions[i], team, pitch);
+        for home_region in home_regions.iter().take(TEAM_SIZE).skip(1) {
+            FieldPlayerBundle::spawn(commands, *home_region, team, pitch);
         }
     }
 }

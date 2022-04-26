@@ -7,16 +7,16 @@ use crate::resources::pitch::*;
 
 use super::super::state::impl_state_machine;
 
-impl_state_machine!(Goalie, Idle);
+impl_state_machine!(GoalKeeper, Idle);
 
 #[derive(Debug, Default, Component, Inspectable)]
-pub struct Goalie {
+pub struct GoalKeeper {
     pub team: Team,
     pub home_region: usize,
     pub default_region: usize,
 }
 
-impl Goalie {
+impl GoalKeeper {
     pub fn is_in_home_region(&self, transform: &Transform, pitch: &Pitch) -> bool {
         pitch
             .regions
@@ -28,15 +28,15 @@ impl Goalie {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct GoalieQuery<'w> {
-    pub goalie: &'w Goalie,
+pub struct GoalKeeperQuery<'w> {
+    pub goal_keeper: &'w GoalKeeper,
     pub name: &'w Name,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct GoalieQueryMut<'w> {
-    pub goalie: &'w mut Goalie,
-    pub state_machine: &'w mut GoalieStateMachine,
+pub struct GGoalKeeperQueryMut<'w> {
+    pub goal_keeper: &'w mut GoalKeeper,
+    pub state_machine: &'w mut GoalKeeperStateMachine,
     pub name: &'w Name,
 }

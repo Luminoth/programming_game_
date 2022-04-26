@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 pub mod field_player;
-pub mod goalie;
+pub mod goal_keeper;
 
 use bevy::prelude::*;
 
@@ -152,7 +152,7 @@ pub fn PrepareForKickOff_execute(
     pitch: Res<Pitch>,
     mut query: Query<(Entity, SoccerTeamQueryMut), With<SoccerTeamStatePrepareForKickOffExecute>>,
     players: Query<(&FieldPlayer, &Transform)>,
-    goalies: Query<(&Goalie, &Transform)>,
+    goal_keepers: Query<(&GoalKeeper, &Transform)>,
 ) {
     if query.is_empty() {
         return;
@@ -166,8 +166,8 @@ pub fn PrepareForKickOff_execute(
         }
     }
 
-    for (goalie, transform) in goalies.iter() {
-        if !goalie.is_in_home_region(transform, &pitch) {
+    for (goal_keeper, transform) in goal_keepers.iter() {
+        if !goal_keeper.is_in_home_region(transform, &pitch) {
             return;
         }
     }

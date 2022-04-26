@@ -113,7 +113,7 @@ fn main() {
     .register_inspectable::<components::team::SupportSpot>()
     .register_inspectable::<components::team::SupportSpotCalculator>()
     .register_inspectable::<components::team::FieldPlayer>()
-    .register_inspectable::<components::team::Goalie>()
+    .register_inspectable::<components::team::GoalKeeper>()
     .register_inspectable::<components::team::ReceivingPlayer>()
     .register_inspectable::<components::team::ClosestPlayer>()
     .register_inspectable::<components::team::ControllingPlayer>()

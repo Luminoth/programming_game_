@@ -25,7 +25,7 @@ impl Plugin for MainStatePlugin {
         // plugins
         app.add_plugin(crate::components::team::SoccerTeamStateMachinePlugin)
             .add_plugin(crate::components::team::FieldPlayerStateMachinePlugin)
-            .add_plugin(crate::components::team::GoalieStateMachinePlugin);
+            .add_plugin(crate::components::team::GoalKeeperStateMachinePlugin);
 
         // events
         app.add_event::<DispatchedMessageEvent>();
@@ -75,9 +75,9 @@ impl Plugin for MainStatePlugin {
                         systems::team::field_player::GlobalState_execute
                             .label(Systems::GlobalStateExecute),
                     )
-                    // goalie systems
+                    // goal keeper systems
                     .with_system(
-                        systems::team::goalie::GlobalState_execute
+                        systems::team::goal_keeper::GlobalState_execute
                             .label(Systems::GlobalStateExecute),
                     ),
             )

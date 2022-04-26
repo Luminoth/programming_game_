@@ -13,25 +13,25 @@ use crate::PLAYER_SORT;
 use super::super::actor::*;
 
 #[derive(Debug, Default, Bundle)]
-pub struct GoalieBundle {
-    pub goalie: Goalie,
+pub struct GoalKeeperBundle {
+    pub goal_keeper: GoalKeeper,
     pub physical: Physical,
 
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
 }
 
-impl GoalieBundle {
+impl GoalKeeperBundle {
     pub fn spawn(commands: &mut Commands, home_region: usize, team: Team, pitch: &Pitch) -> Entity {
         let position = pitch.regions.get(home_region).unwrap().position;
 
         info!(
-            "spawning goalie for team {:?} at {} (home region: {})",
+            "spawning goal keeper for team {:?} at {} (home region: {})",
             team, position, home_region
         );
 
-        let mut bundle = commands.spawn_bundle(GoalieBundle {
-            goalie: Goalie {
+        let mut bundle = commands.spawn_bundle(GoalKeeperBundle {
+            goal_keeper: GoalKeeper {
                 team,
                 home_region,
                 default_region: home_region,
@@ -44,11 +44,11 @@ impl GoalieBundle {
                 bounding_radius: PLAYER_RADIUS,
             },
             transform: Transform::from_translation(position.extend(PLAYER_SORT)),
-            name: Name::new(format!("{:?} Goalie", team)),
+            name: Name::new(format!("{:?} Goal Keeper", team)),
             ..Default::default()
         });
 
-        GoalieStateMachine::insert(&mut bundle, GoalieState::Idle);
+        GoalKeeperStateMachine::insert(&mut bundle, GoalKeeperState::Idle);
 
         bundle.with_children(|parent| {
             parent

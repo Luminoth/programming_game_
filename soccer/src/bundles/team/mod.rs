@@ -1,5 +1,5 @@
 mod field_player;
-mod goalie;
+mod goal_keeper;
 
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
@@ -11,7 +11,7 @@ use crate::resources::SimulationParams;
 use crate::{DEBUG_RADIUS, DEBUG_SORT};
 
 use field_player::*;
-use goalie::*;
+use goal_keeper::*;
 
 #[derive(Debug, Bundle)]
 pub struct SoccerTeamBundle {
@@ -72,8 +72,8 @@ impl SoccerTeamBundle {
             Team::Blue => BLUE_TEAM_HOME_REGIONS,
         };
 
-        // goalie
-        GoalieBundle::spawn(commands, home_regions[0], team, pitch);
+        // goal keeper
+        GoalKeeperBundle::spawn(commands, home_regions[0], team, pitch);
 
         // players
         for i in 0..TEAM_SIZE {

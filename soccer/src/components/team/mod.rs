@@ -1,8 +1,8 @@
 mod field_player;
-mod goalie;
+mod goal_keeper;
 
 pub use field_player::*;
-pub use goalie::*;
+pub use goal_keeper::*;
 
 use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;

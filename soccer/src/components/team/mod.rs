@@ -86,10 +86,13 @@ impl SoccerTeam {
         support_calculator: &mut SupportSpotCalculator,
         players: &Query<(&FieldPlayer, PhysicalQuery)>,
         controller: (&FieldPlayer, &Transform),
-        support: &Query<(&FieldPlayer, &Transform), With<SupportingPlayer>>,
-        ball: BallQueryItem,
-        goals: &Query<GoalQuery>,
+        support: Option<(&FieldPlayer, &Transform)>,
+        ball: &BallQueryItem,
+        goal: &GoalQueryItem,
     ) {
+        assert!(controller.0.team == self.team);
+        assert!(goal.goal.team != self.team);
+
         info!("updating support spot for controlling team {:?}", self.team);
 
         self.best_support_spot = None;
@@ -115,24 +118,22 @@ impl SoccerTeam {
             }
 
             // can we score a goal from this spot?
-            for goal in goals.iter() {
-                if self
-                    .can_shoot(
-                        &params,
-                        spot.position,
-                        &goal,
-                        ball.physical,
-                        &players,
-                        params.max_passing_force,
-                    )
-                    .is_some()
-                {
-                    spot.score += params.can_score_score;
-                }
+            if self
+                .can_shoot(
+                    &params,
+                    spot.position,
+                    &goal,
+                    ball.physical,
+                    &players,
+                    params.max_passing_force,
+                )
+                .is_some()
+            {
+                spot.score += params.can_score_score;
             }
 
             // how far away is our supporting player?
-            if let Ok(support) = support.get_single() {
+            if let Some(support) = support {
                 assert!(support.0.team == controller.0.team);
 
                 let optimal_distance = 200.0;
@@ -248,10 +249,7 @@ impl SoccerTeam {
         players: &Query<(&FieldPlayer, PhysicalQuery)>,
         power: f32,
     ) -> Option<Vec2> {
-        // can't score in our own goal
-        if goal.goal.team == self.team {
-            return None;
-        }
+        assert!(goal.goal.team != self.team);
 
         let mut rng = rand::thread_rng();
 

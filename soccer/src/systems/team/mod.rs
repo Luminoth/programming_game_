@@ -173,18 +173,22 @@ pub fn Attacking_execute(
         }
 
         let controller = controller.single();
-        if controller.0.team != team.team.team {
-            continue;
-        }
+        let ball = ball.single();
 
-        team.team.determine_best_supporting_position(
-            &params,
-            &mut support_calculator,
-            &players,
-            controller,
-            &support,
-            ball.single(),
-            &goals,
-        );
+        for goal in goals.iter() {
+            if goal.goal.team == team.team.team {
+                continue;
+            }
+
+            team.team.determine_best_supporting_position(
+                &params,
+                &mut support_calculator,
+                &players,
+                controller,
+                support.get_single().ok(),
+                &ball,
+                &goal,
+            );
+        }
     }
 }

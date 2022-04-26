@@ -9,15 +9,13 @@ use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::team::*;
-use crate::game::messaging::MessageEvent;
 use crate::game::team::*;
-use crate::resources::messaging::MessageDispatcher;
 use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
 
 pub fn PrepareForKickOff_enter(
     mut commands: Commands,
-    mut message_dispatcher: ResMut<MessageDispatcher>,
+    mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     query: Query<SoccerTeamQuery, With<SoccerTeamStatePrepareForKickOffEnter>>,
     receiving: Query<Entity, With<ReceivingPlayer>>,
     closest: Query<Entity, With<ClosestPlayer>>,
@@ -46,7 +44,7 @@ pub fn PrepareForKickOff_enter(
         }
 
         // send players home
-        message_dispatcher.dispatch_message(None, MessageEvent::GoHome(team.team.team));
+        message_dispatcher.dispatch_message(None, FieldPlayerMessage::GoHome(team.team.team));
     }
 }
 

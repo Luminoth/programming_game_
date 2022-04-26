@@ -1,4 +1,3 @@
-pub mod messaging;
 pub mod team;
 
 pub const BALL_RADIUS: f32 = 7.0;

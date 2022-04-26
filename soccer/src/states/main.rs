@@ -5,9 +5,7 @@ use crate::bundles::goal::*;
 use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
-use crate::game::messaging::MessageEvent;
-use crate::game::team::Team;
-use crate::resources::messaging::*;
+use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
 
@@ -42,11 +40,11 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
 
     commands.insert_resource(pitch);
 
-    let mut message_dispatcher = MessageDispatcher::default();
+    let mut message_dispatcher = FieldPlayerMessageDispatcher::default();
 
     info!("prepare for kick off!");
-    message_dispatcher.dispatch_message(None, MessageEvent::GoHome(Team::Red));
-    message_dispatcher.dispatch_message(None, MessageEvent::GoHome(Team::Blue));
+    message_dispatcher.dispatch_message(None, FieldPlayerMessage::GoHome(Team::Red));
+    message_dispatcher.dispatch_message(None, FieldPlayerMessage::GoHome(Team::Blue));
 
     // messaging
     commands.insert_resource(message_dispatcher);

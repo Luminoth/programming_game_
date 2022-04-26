@@ -3,7 +3,7 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
-use crate::events::messaging::DispatchedMessageEvent;
+use crate::game::team::*;
 use crate::states;
 use crate::states::*;
 use crate::systems;
@@ -28,7 +28,7 @@ impl Plugin for MainStatePlugin {
             .add_plugin(crate::components::team::GoalKeeperStateMachinePlugin);
 
         // events
-        app.add_event::<DispatchedMessageEvent>();
+        app.add_event::<FieldPlayerDispatchedMessageEvent>();
 
         // systems
         app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
@@ -54,7 +54,7 @@ impl Plugin for MainStatePlugin {
                 SystemSet::on_update(GameState::Main)
                     .with_run_criteria(FixedTimestep::step(AGENT_UPDATE_STEP))
                     // messaging
-                    .with_system(systems::messaging::update)
+                    .with_system(systems::messaging::update::<FieldPlayerMessage>)
                     // team systems
                     .with_system(
                         systems::team::PrepareForKickOff_execute

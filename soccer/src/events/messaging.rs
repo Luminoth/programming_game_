@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 
-use crate::game::messaging::MessageEvent;
+use crate::resources::messaging::MessageEvent;
 
 #[derive(Debug)]
-pub struct DispatchedMessageEvent {
+pub struct DispatchedMessageEvent<T>
+where
+    T: MessageEvent,
+{
     pub receiver: Option<Entity>,
-    pub message: MessageEvent,
+    pub message: T,
 }

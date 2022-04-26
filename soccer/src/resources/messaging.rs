@@ -5,20 +5,27 @@ use bevy::prelude::*;
 use chrono::prelude::*;
 
 use crate::events::messaging::DispatchedMessageEvent;
-use crate::game::messaging::MessageEvent;
+
+pub trait MessageEvent: Eq {}
 
 #[derive(Debug)]
-struct Telegram {
+struct Telegram<T>
+where
+    T: MessageEvent,
+{
     dispatch_time: i64,
 
     pub receiver: Option<Entity>,
 
-    pub message: MessageEvent,
+    pub message: T,
 }
 
-impl Eq for Telegram {}
+impl<T> Eq for Telegram<T> where T: MessageEvent {}
 
-impl PartialEq for Telegram {
+impl<T> PartialEq for Telegram<T>
+where
+    T: MessageEvent,
+{
     fn eq(&self, other: &Self) -> bool {
         self.dispatch_time == other.dispatch_time
             && self.receiver == other.receiver
@@ -26,13 +33,19 @@ impl PartialEq for Telegram {
     }
 }
 
-impl PartialOrd for Telegram {
+impl<T> PartialOrd for Telegram<T>
+where
+    T: MessageEvent,
+{
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for Telegram {
+impl<T> Ord for Telegram<T>
+where
+    T: MessageEvent,
+{
     fn cmp(&self, other: &Self) -> Ordering {
         // TODO: this may need to be reversed
         // so that we get a time-ordered min-heap?
@@ -40,8 +53,11 @@ impl Ord for Telegram {
     }
 }
 
-impl Telegram {
-    fn new(dispatch_time: i64, receiver: Option<Entity>, message: MessageEvent) -> Self {
+impl<T> Telegram<T>
+where
+    T: MessageEvent,
+{
+    fn new(dispatch_time: i64, receiver: Option<Entity>, message: T) -> Self {
         Self {
             dispatch_time,
             receiver,
@@ -50,15 +66,31 @@ impl Telegram {
     }
 }
 
-#[derive(Default)]
-pub struct MessageDispatcher {
-    queue: BinaryHeap<Telegram>,
+pub struct MessageDispatcher<T>
+where
+    T: MessageEvent,
+{
+    queue: BinaryHeap<Telegram<T>>,
 }
 
-impl MessageDispatcher {
+impl<T> Default for MessageDispatcher<T>
+where
+    T: MessageEvent,
+{
+    fn default() -> Self {
+        Self {
+            queue: BinaryHeap::default(),
+        }
+    }
+}
+
+impl<T> MessageDispatcher<T>
+where
+    T: MessageEvent + Send + Sync + 'static,
+{
     pub fn dispatch_deferred_messages(
         &mut self,
-        message_events: &mut EventWriter<DispatchedMessageEvent>,
+        message_events: &mut EventWriter<DispatchedMessageEvent<T>>,
     ) {
         let now = Utc::now().timestamp_millis();
 
@@ -78,8 +110,8 @@ impl MessageDispatcher {
 
     fn discharge(
         &self,
-        telegram: Telegram,
-        message_events: &mut EventWriter<DispatchedMessageEvent>,
+        telegram: Telegram<T>,
+        message_events: &mut EventWriter<DispatchedMessageEvent<T>>,
     ) {
         message_events.send(DispatchedMessageEvent {
             receiver: telegram.receiver,
@@ -87,7 +119,7 @@ impl MessageDispatcher {
         });
     }
 
-    pub fn dispatch_message(&mut self, receiver: Option<Entity>, message: MessageEvent) {
+    pub fn dispatch_message(&mut self, receiver: Option<Entity>, message: T) {
         // we always defer so that entities sending messages (as events)
         // in response to events can work
         self.defer_dispatch_message(receiver, message, 0.0);
@@ -96,7 +128,7 @@ impl MessageDispatcher {
     pub fn defer_dispatch_message(
         &mut self,
         receiver: Option<Entity>,
-        message: MessageEvent,
+        message: T,
         delay_seconds: f64,
     ) {
         let now = Utc::now().timestamp_millis();

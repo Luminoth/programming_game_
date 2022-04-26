@@ -1,5 +1,9 @@
 #![allow(non_snake_case)]
 
+mod field_player;
+
+pub use field_player::*;
+
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 

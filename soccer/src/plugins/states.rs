@@ -57,9 +57,6 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::messaging::update)
                     // team systems
                     .with_system(
-                        systems::team::GlobalState_execute.label(Systems::GlobalStateExecute),
-                    )
-                    .with_system(
                         systems::team::PrepareForKickOff_execute
                             .label(Systems::StateExecute)
                             .label(Systems::TeamStates)

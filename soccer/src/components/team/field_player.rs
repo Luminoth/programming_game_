@@ -8,7 +8,16 @@ use crate::resources::pitch::*;
 
 use super::super::state::impl_state_machine;
 
-impl_state_machine!(FieldPlayer, Wait, ReturnToHomeRegion);
+impl_state_machine!(
+    FieldPlayer,
+    Wait,
+    ReceiveBall,
+    KickBall,
+    Dribble,
+    ChaseBall,
+    ReturnToHomeRegion,
+    SupportAttacker
+);
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct FieldPlayer {

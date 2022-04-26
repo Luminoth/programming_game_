@@ -15,15 +15,6 @@ use crate::resources::messaging::MessageDispatcher;
 use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
 
-pub fn GlobalState_execute(query: Query<SoccerTeamQuery>) {
-    for _team in query.iter() {
-        /*debug!(
-            "executing global state for team {:?}",
-            _team.team.team
-        );*/
-    }
-}
-
 pub fn PrepareForKickOff_enter(
     mut commands: Commands,
     mut message_dispatcher: ResMut<MessageDispatcher>,

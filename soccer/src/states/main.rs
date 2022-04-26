@@ -40,14 +40,21 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
 
     commands.insert_resource(pitch);
 
-    let mut message_dispatcher = FieldPlayerMessageDispatcher::default();
+    //info!("prepare for kick off!");
 
-    info!("prepare for kick off!");
-    message_dispatcher.dispatch_message(None, FieldPlayerMessage::GoHome(Team::Red));
-    message_dispatcher.dispatch_message(None, FieldPlayerMessage::GoHome(Team::Blue));
+    let /*mut*/ player_message_dispatcher = FieldPlayerMessageDispatcher::default();
+
+    /*player_message_dispatcher.dispatch_message(red, FieldPlayerMessage::GoHome);
+    player_message_dispatcher.dispatch_message(blue, FieldPlayerMessage::GoHome);*/
+
+    let /*mut*/ goal_keeper_message_dispatcher = GoalKeeperMessageDispatcher::default();
+
+    /*goal_keeper_message_dispatcher.dispatch_message(red, GoalKeeperMessage::GoHome);
+    goal_keeper_message_dispatcher.dispatch_message(blue, GoalKeeperMessage::GoHome);*/
 
     // messaging
-    commands.insert_resource(message_dispatcher);
+    commands.insert_resource(player_message_dispatcher);
+    commands.insert_resource(goal_keeper_message_dispatcher);
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

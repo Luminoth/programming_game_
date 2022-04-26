@@ -33,17 +33,17 @@ pub struct SoccerTeam {
 impl SoccerTeam {
     pub fn reset_player_home_regions(
         &self,
-        players: &mut Query<FieldPlayerQueryMut>,
-        goal_keepers: &mut Query<&mut GoalKeeper>,
+        players: &mut Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
+        goal_keepers: &mut Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
         home_regions: [usize; TEAM_SIZE],
     ) {
         let mut idx = 0;
         for mut goal_keeper in goal_keepers.iter_mut() {
-            if goal_keeper.team != self.team {
+            if goal_keeper.goal_keeper.team != self.team {
                 continue;
             }
 
-            goal_keeper.home_region = home_regions[idx];
+            goal_keeper.goal_keeper.home_region = home_regions[idx];
 
             idx += 1;
         }
@@ -62,7 +62,8 @@ impl SoccerTeam {
     pub fn update_targets_of_waiting_players(
         &self,
         pitch: &Pitch,
-        players: &mut Query<FieldPlayerQueryMut>,
+        players: &mut Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
+        goal_keepers: &mut Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
     ) {
         for mut player in players.iter_mut() {
             if player.state_machine.is_in_state(FieldPlayerState::Wait)
@@ -76,6 +77,20 @@ impl SoccerTeam {
                     .unwrap()
                     .position;
                 player.steering.target = target;
+            }
+        }
+
+        for mut goal_keeper in goal_keepers.iter_mut() {
+            if goal_keeper
+                .state_machine
+                .is_in_state(GoalKeeperState::ReturnHome)
+            {
+                let target = pitch
+                    .regions
+                    .get(goal_keeper.goal_keeper.home_region)
+                    .unwrap()
+                    .position;
+                goal_keeper.steering.target = target;
             }
         }
     }

@@ -8,7 +8,13 @@ use crate::resources::pitch::*;
 
 use super::super::state::impl_state_machine;
 
-impl_state_machine!(GoalKeeper, TendGoal);
+impl_state_machine!(
+    GoalKeeper,
+    TendGoal,
+    ReturnHome,
+    PutBallBackInPlay,
+    InterceptBall
+);
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct GoalKeeper {
@@ -37,7 +43,7 @@ pub struct GoalKeeperQuery<'w> {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct GGoalKeeperQueryMut<'w> {
+pub struct GoalKeeperQueryMut<'w> {
     pub goal_keeper: &'w mut GoalKeeper,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut GoalKeeperStateMachine,

@@ -15,12 +15,15 @@ use crate::resources::SimulationParams;
 
 pub fn PrepareForKickOff_enter(
     mut commands: Commands,
-    mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut goal_keeper_message_dispatcher: ResMut<GoalKeeperMessageDispatcher>,
     query: Query<SoccerTeamQuery, With<SoccerTeamStatePrepareForKickOffEnter>>,
     receiving: Query<Entity, With<ReceivingPlayer>>,
     closest: Query<Entity, With<ClosestPlayer>>,
     controlling: Query<Entity, With<ControllingPlayer>>,
     supporting: Query<Entity, With<SupportingPlayer>>,
+    players: Query<(Entity, &FieldPlayer)>,
+    goal_keepers: Query<(Entity, &GoalKeeper)>,
 ) {
     for team in query.iter() {
         info!("{:?} team preparing for kick off", team.team.team);
@@ -44,7 +47,22 @@ pub fn PrepareForKickOff_enter(
         }
 
         // send players home
-        message_dispatcher.dispatch_message(None, FieldPlayerMessage::GoHome(team.team.team));
+        for (entity, player) in players.iter() {
+            if player.team != team.team.team {
+                continue;
+            }
+
+            player_message_dispatcher.dispatch_message(Some(entity), FieldPlayerMessage::GoHome);
+        }
+
+        for (entity, goal_keeper) in goal_keepers.iter() {
+            if goal_keeper.team != team.team.team {
+                continue;
+            }
+
+            goal_keeper_message_dispatcher
+                .dispatch_message(Some(entity), GoalKeeperMessage::GoHome);
+        }
     }
 }
 
@@ -82,8 +100,8 @@ pub fn PrepareForKickOff_execute(
 pub fn Defending_enter(
     query: Query<SoccerTeamQuery, With<SoccerTeamStateDefendingEnter>>,
     pitch: Res<Pitch>,
-    mut players: Query<FieldPlayerQueryMut>,
-    mut goal_keepers: Query<&mut GoalKeeper>,
+    mut players: Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
+    mut goal_keepers: Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
 ) {
     for team in query.iter() {
         info!("{:?} team defending", team.team.team);
@@ -97,7 +115,7 @@ pub fn Defending_enter(
             .reset_player_home_regions(&mut players, &mut goal_keepers, home_regions);
 
         team.team
-            .update_targets_of_waiting_players(&pitch, &mut players);
+            .update_targets_of_waiting_players(&pitch, &mut players, &mut goal_keepers);
     }
 }
 
@@ -119,8 +137,8 @@ pub fn Defending_execute(
 pub fn Attacking_enter(
     query: Query<SoccerTeamQuery, With<SoccerTeamStateAttackingEnter>>,
     pitch: Res<Pitch>,
-    mut players: Query<FieldPlayerQueryMut>,
-    mut goal_keepers: Query<&mut GoalKeeper>,
+    mut players: Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
+    mut goal_keepers: Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
 ) {
     for team in query.iter() {
         info!("{:?} team attacking", team.team.team);
@@ -134,7 +152,7 @@ pub fn Attacking_enter(
             .reset_player_home_regions(&mut players, &mut goal_keepers, home_regions);
 
         team.team
-            .update_targets_of_waiting_players(&pitch, &mut players);
+            .update_targets_of_waiting_players(&pitch, &mut players, &mut goal_keepers);
     }
 }
 

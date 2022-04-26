@@ -1,8 +1,10 @@
 #![allow(non_snake_case)]
 
 mod field_player;
+mod goal_keeper;
 
 pub use field_player::*;
+pub use goal_keeper::*;
 
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;

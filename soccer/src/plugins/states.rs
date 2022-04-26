@@ -28,7 +28,8 @@ impl Plugin for MainStatePlugin {
             .add_plugin(crate::components::team::GoalKeeperStateMachinePlugin);
 
         // events
-        app.add_event::<FieldPlayerDispatchedMessageEvent>();
+        app.add_event::<FieldPlayerDispatchedMessageEvent>()
+            .add_event::<GoalKeeperDispatchedMessageEvent>();
 
         // systems
         app.add_system_set(SystemSet::on_enter(GameState::Main).with_system(states::main::setup))
@@ -55,6 +56,7 @@ impl Plugin for MainStatePlugin {
                     .with_run_criteria(FixedTimestep::step(AGENT_UPDATE_STEP))
                     // messaging
                     .with_system(systems::messaging::update::<FieldPlayerMessage>)
+                    .with_system(systems::messaging::update::<GoalKeeperMessage>)
                     // team systems
                     .with_system(
                         systems::team::PrepareForKickOff_execute

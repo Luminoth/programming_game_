@@ -154,6 +154,10 @@ pub fn PrepareForKickOff_execute(
     players: Query<(&FieldPlayer, &Transform)>,
     goalies: Query<(&Goalie, &Transform)>,
 ) {
+    if query.is_empty() {
+        return;
+    }
+
     info!("Waiting for teams ready ...");
 
     for (player, transform) in players.iter() {

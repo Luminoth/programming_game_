@@ -196,6 +196,15 @@ macro_rules! impl_state_machine {
                 fn build(&self, app: &mut bevy::prelude::App) {
                     bevy::prelude::debug!("setting up state machine plugin ...");
 
+                    // register inspectable components
+                    $(
+                        app.register_inspectable::<[<$name State $states Enter>]>()
+                            .register_inspectable::<[<$name State $states Exit>]>()
+                            .register_inspectable::<[<$name State $states Execute>]>()
+                            .register_inspectable::<[<$name State>]>()
+                            .register_inspectable::<[<$name StateMachine>]>();
+                    )*
+
                     // exit stage
                     /*app.add_stage_before(bevy::prelude::CoreStage::Update, crate::components::state::StateMachineStage::Exit, bevy::prelude::SystemStage::parallel())
                     $(

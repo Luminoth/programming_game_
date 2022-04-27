@@ -62,6 +62,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         player_kicking_distance_squared: 10.0 * 10.0,
         keeper_in_ball_range_squared: 6.0 * 6.0,
 
+        seek_weight: 1.0,
+
         // NOTE: this is negative in the example source
         // so anywhere it's used, it needs to be negated
         friction: 0.015,

@@ -40,7 +40,7 @@ pub fn GlobalState_on_message(
     mut message_events: EventReader<FieldPlayerDispatchedMessageEvent>,
     mut players: Query<(Entity, FieldPlayerQueryMut, &Transform), Without<Ball>>,
     teams: Query<SoccerTeamQuery>,
-    mut ball: Query<(BallQuery, PhysicalQueryMut), With<Ball>>,
+    mut ball: Query<(&Ball, PhysicalQueryMut)>,
 ) {
     for event in message_events.iter() {
         if let Ok((entity, mut player, transform)) = players.get_mut(event.receiver.unwrap()) {
@@ -96,7 +96,7 @@ pub fn GlobalState_on_message(
                         return;
                     }
 
-                    ball.ball.kick(
+                    ball.kick(
                         &mut ball_physical.physical,
                         receiver_position - ball_position,
                         params.max_passing_force,
@@ -109,5 +109,14 @@ pub fn GlobalState_on_message(
                 }
             }
         }
+    }
+}
+
+pub fn ChaseBall_enter(
+    mut commands: Commands,
+    query: Query<(Entity, FieldPlayerQuery), With<FieldPlayerStateChaseBallEnter>>,
+) {
+    for (entity, player) in query.iter() {
+        player.agent.seek_on(&mut commands, entity);
     }
 }

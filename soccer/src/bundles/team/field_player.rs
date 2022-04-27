@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::components::actor::*;
+use crate::components::agent::*;
 use crate::components::obstacle::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
@@ -15,6 +16,7 @@ use super::super::actor::*;
 #[derive(Debug, Default, Bundle)]
 pub struct FieldPlayerBundle {
     pub player: FieldPlayer,
+    pub agent: Agent,
     pub physical: Physical,
     pub steering: Steering,
 

@@ -34,6 +34,9 @@ pub struct SimulationParams {
     pub player_kicking_distance_squared: f32,
     pub keeper_in_ball_range_squared: f32,
 
+    // steering
+    pub seek_weight: f32,
+
     // physics
     pub friction: f32,
 

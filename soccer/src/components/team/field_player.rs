@@ -2,6 +2,7 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
+use crate::components::agent::*;
 use crate::components::steering::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
@@ -63,6 +64,7 @@ impl FieldPlayer {
 #[world_query(derive(Debug))]
 pub struct FieldPlayerQuery<'w> {
     pub player: &'w FieldPlayer,
+    pub agent: &'w Agent,
     pub steering: &'w Steering,
     pub name: &'w Name,
 }
@@ -71,6 +73,7 @@ pub struct FieldPlayerQuery<'w> {
 #[world_query(mutable, derive(Debug))]
 pub struct FieldPlayerQueryMut<'w> {
     pub player: &'w mut FieldPlayer,
+    pub agent: &'w mut Agent,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut FieldPlayerStateMachine,
     pub name: &'w Name,

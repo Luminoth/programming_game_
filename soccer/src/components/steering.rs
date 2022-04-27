@@ -2,7 +2,9 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
-use super::physics::Physical;
+use super::physics::*;
+
+pub trait SteeringBehavior: std::fmt::Debug + Component {}
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Steering {
@@ -40,6 +42,31 @@ impl Steering {
 pub struct SteeringQueryMut<'w> {
     pub steering: &'w mut Steering,
     pub physical: &'w mut Physical,
+}
+
+fn seek_force(target: Vec2, physical: &PhysicalQueryItem) -> Vec2 {
+    let translation = physical.transform.translation.truncate();
+
+    let desired_velocity = (target - translation).normalize_or_zero() * physical.physical.max_speed;
+    desired_velocity - physical.physical.velocity
+}
+
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct Seek;
+
+impl SteeringBehavior for Seek {}
+
+impl Seek {
+    pub fn force(&self, steering: &Steering, physical: &PhysicalQueryItem) -> Vec2 {
+        seek_force(steering.target, physical)
+    }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct SeekQueryMut<'w> {
+    pub seek: &'w Seek,
+    pub steering: &'w mut Steering,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]

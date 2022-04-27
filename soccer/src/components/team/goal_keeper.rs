@@ -2,6 +2,7 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
+use crate::components::agent::*;
 use crate::components::steering::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
@@ -49,6 +50,7 @@ impl GoalKeeper {
 #[world_query(derive(Debug))]
 pub struct GoalKeeperQuery<'w> {
     pub goal_keeper: &'w GoalKeeper,
+    pub agent: &'w Agent,
     pub steering: &'w Steering,
     pub name: &'w Name,
 }
@@ -57,6 +59,7 @@ pub struct GoalKeeperQuery<'w> {
 #[world_query(mutable, derive(Debug))]
 pub struct GoalKeeperQueryMut<'w> {
     pub goal_keeper: &'w mut GoalKeeper,
+    pub agent: &'w mut Agent,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut GoalKeeperStateMachine,
     pub name: &'w Name,

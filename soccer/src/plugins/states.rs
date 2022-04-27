@@ -38,6 +38,7 @@ impl Plugin for MainStatePlugin {
                 SystemSet::on_update(GameState::Main)
                     .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
                     // steering
+                    .with_system(systems::steering::update_seek.label(Systems::Steering))
                     .with_system(
                         systems::steering::update
                             .label(Systems::SteeringUpdatePhysics)
@@ -91,13 +92,31 @@ impl Plugin for MainStatePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
                     // team event handlers
-                    .with_system(systems::team::PrepareForKickOff_enter.label(Systems::StateEnter))
-                    .with_system(systems::team::Defending_enter.label(Systems::StateEnter))
-                    .with_system(systems::team::Attacking_enter.label(Systems::StateEnter))
+                    .with_system(
+                        systems::team::PrepareForKickOff_enter
+                            .label(Systems::StateEnter)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::Defending_enter
+                            .label(Systems::StateEnter)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::Attacking_enter
+                            .label(Systems::StateEnter)
+                            .label(Systems::TeamStates),
+                    )
                     // field player systems
                     .with_system(
                         systems::team::field_player::GlobalState_on_message
                             .label(Systems::GlobalStateOnMessage),
+                    )
+                    .with_system(
+                        systems::team::field_player::ChaseBall_enter
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
                     ),
             )
             .add_system_set(

@@ -1,4 +1,5 @@
 pub mod actor;
+pub mod agent;
 pub mod ball;
 pub mod camera;
 pub mod goal;

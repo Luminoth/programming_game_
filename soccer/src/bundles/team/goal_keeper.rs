@@ -49,7 +49,7 @@ impl GoalKeeperBundle {
             ..Default::default()
         });
 
-        GoalKeeperStateMachine::insert(&mut bundle, GoalKeeperState::TendGoal);
+        GoalKeeperStateMachine::insert(&mut bundle, GoalKeeperState::TendGoal, false);
 
         bundle.with_children(|parent| {
             parent

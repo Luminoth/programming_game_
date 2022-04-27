@@ -5,6 +5,7 @@ use bevy_inspector_egui::*;
 use crate::components::steering::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
+use crate::resources::*;
 
 use super::super::state::impl_state_machine;
 
@@ -34,10 +35,32 @@ impl FieldPlayer {
             .unwrap()
             .is_inside_half(transform.translation.truncate())
     }
+
+    pub fn is_ball_within_receiving_range(
+        &self,
+        params: &SimulationParams,
+        transform: &Transform,
+        ball_transform: &Transform,
+    ) -> bool {
+        let position = transform.translation.truncate();
+        let ball_position = ball_transform.translation.truncate();
+        position.distance_squared(ball_position) < params.ball_within_receiving_range_squared
+    }
+
+    pub fn is_ball_within_kicking_range(
+        &self,
+        params: &SimulationParams,
+        transform: &Transform,
+        ball_transform: &Transform,
+    ) -> bool {
+        let position = transform.translation.truncate();
+        let ball_position = ball_transform.translation.truncate();
+        position.distance_squared(ball_position) < params.player_kicking_distance_squared
+    }
 }
 
 #[derive(WorldQuery)]
-#[world_query(mutable, derive(Debug))]
+#[world_query(derive(Debug))]
 pub struct FieldPlayerQuery<'w> {
     pub player: &'w FieldPlayer,
     pub steering: &'w Steering,

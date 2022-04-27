@@ -5,6 +5,7 @@ use bevy_inspector_egui::*;
 use crate::components::steering::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
+use crate::resources::*;
 
 use super::super::state::impl_state_machine;
 
@@ -31,10 +32,21 @@ impl GoalKeeper {
             .unwrap()
             .is_inside(transform.translation.truncate())
     }
+
+    pub fn is_ball_within_keeper_range(
+        &self,
+        params: &SimulationParams,
+        transform: &Transform,
+        ball_transform: &Transform,
+    ) -> bool {
+        let position = transform.translation.truncate();
+        let ball_position = ball_transform.translation.truncate();
+        position.distance_squared(ball_position) < params.keeper_in_ball_range_squared
+    }
 }
 
 #[derive(WorldQuery)]
-#[world_query(mutable, derive(Debug))]
+#[world_query(derive(Debug))]
 pub struct GoalKeeperQuery<'w> {
     pub goal_keeper: &'w GoalKeeper,
     pub steering: &'w Steering,

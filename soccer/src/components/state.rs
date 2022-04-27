@@ -104,11 +104,16 @@ macro_rules! impl_state_machine {
             pub struct [<$name StateMachine>] {
                 current_state: [<$name State>],
                 previous_state: Option<[<$name State>]>,
+
+                // if this is set to true, calling change_state() with a new state
+                // that is the same as the current state will cause the state machine
+                // to fully re-enter that state. otherwise the state change is ignored.
+                pub reenter_state: bool,
             }
 
             impl [<$name StateMachine>] {
                 // adds a state machine to the entity
-                pub fn insert(commands: &mut bevy::ecs::system::EntityCommands, starting_state: [<$name State>]) {
+                pub fn insert(commands: &mut bevy::ecs::system::EntityCommands, starting_state: [<$name State>], reenter_state: bool) {
                     bevy::prelude::debug!("inserting state machine ...");
 
                     // TODO: is there a way to clean up any pre-existing state machine components?
@@ -117,6 +122,7 @@ macro_rules! impl_state_machine {
                     commands.insert(Self {
                         current_state: starting_state,
                         previous_state: None,
+                        reenter_state
                     });
 
                     // insert the starting state component
@@ -134,6 +140,10 @@ macro_rules! impl_state_machine {
                     entity: bevy::prelude::Entity,
                     new_state: [<$name State>],
                 ) {
+                    if !self.reenter_state && new_state == self.current_state {
+                        return;
+                    }
+
                     bevy::prelude::debug!("changing state ...");
 
                     let mut entity = commands.entity(entity);

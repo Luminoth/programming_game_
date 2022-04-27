@@ -34,16 +34,13 @@ impl SoccerTeamBundle {
         };
 
         let mut bundle = commands.spawn_bundle(SoccerTeamBundle {
-            team: SoccerTeam {
-                team,
-                ..Default::default()
-            },
+            team: SoccerTeam::new(team),
             support_spots,
             transform: Transform::default(),
             global_transform: GlobalTransform::default(),
         });
 
-        SoccerTeamStateMachine::insert(&mut bundle, SoccerTeamState::PrepareForKickOff);
+        SoccerTeamStateMachine::insert(&mut bundle, SoccerTeamState::PrepareForKickOff, false);
 
         bundle.insert(Name::new(format!("{:?} Team", team)));
 

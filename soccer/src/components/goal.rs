@@ -19,6 +19,7 @@ pub struct Goal {
 pub struct GoalDebug;
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub struct GoalQuery<'w> {
     pub goal: &'w Goal,
     pub transform: &'w Transform,

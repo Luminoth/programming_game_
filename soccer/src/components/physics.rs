@@ -122,6 +122,7 @@ impl Physical {
 }
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub struct PhysicalQuery<'w> {
     pub transform: &'w Transform,
     pub physical: &'w Physical,

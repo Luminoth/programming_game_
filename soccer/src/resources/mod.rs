@@ -22,6 +22,10 @@ pub struct SimulationParams {
     pub can_score_score: f32,
     pub distance_from_controller_player_score: f32,
 
+    pub ball_within_receiving_range_squared: f32,
+    pub player_kicking_distance_squared: f32,
+    pub keeper_in_ball_range_squared: f32,
+
     // physics
     pub friction: f32,
 

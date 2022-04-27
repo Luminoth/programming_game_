@@ -54,6 +54,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         can_score_score: 1.0,
         distance_from_controller_player_score: 2.0,
 
+        ball_within_receiving_range_squared: 10.0 * 10.0,
+        player_kicking_distance_squared: 10.0 * 10.0,
+        keeper_in_ball_range_squared: 6.0 * 6.0,
+
         // NOTE: this is negative in the example source
         // so anywhere it's used, it needs to be negated
         friction: 0.015,

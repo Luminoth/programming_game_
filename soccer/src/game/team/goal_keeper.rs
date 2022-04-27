@@ -1,11 +1,13 @@
 use crate::events::messaging::*;
 use crate::resources::messaging::*;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum GoalKeeperMessage {
     GoHome,
     ReceiveBall,
 }
+
+impl Eq for GoalKeeperMessage {}
 
 impl MessageEvent for GoalKeeperMessage {}
 

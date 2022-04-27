@@ -93,7 +93,12 @@ impl Plugin for MainStatePlugin {
                     // team event handlers
                     .with_system(systems::team::PrepareForKickOff_enter.label(Systems::StateEnter))
                     .with_system(systems::team::Defending_enter.label(Systems::StateEnter))
-                    .with_system(systems::team::Attacking_enter.label(Systems::StateEnter)),
+                    .with_system(systems::team::Attacking_enter.label(Systems::StateEnter))
+                    // field player systems
+                    .with_system(
+                        systems::team::field_player::GlobalState_on_message
+                            .label(Systems::GlobalStateOnMessage),
+                    ),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

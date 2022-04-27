@@ -1,14 +1,18 @@
+use bevy::prelude::*;
+
 use crate::events::messaging::*;
 use crate::resources::messaging::*;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum FieldPlayerMessage {
     SupportAttacker,
     GoHome,
-    ReceiveBall,
-    PassToMe,
+    ReceiveBall(Vec2),
+    PassToMe(Entity, Vec2),
     Wait,
 }
+
+impl Eq for FieldPlayerMessage {}
 
 impl MessageEvent for FieldPlayerMessage {}
 

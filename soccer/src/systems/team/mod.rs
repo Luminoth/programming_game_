@@ -166,7 +166,7 @@ pub fn Attacking_execute(
     players: Query<(&FieldPlayer, PhysicalQuery)>,
     controller: Query<(&FieldPlayer, &Transform), With<ControllingPlayer>>,
     support: Query<(&FieldPlayer, &Transform), With<SupportingPlayer>>,
-    ball: Query<BallQuery>,
+    ball: Query<PhysicalQuery, With<Ball>>,
     goals: Query<GoalQuery>,
 ) {
     for (entity, mut team, mut support_calculator) in query.iter_mut() {
@@ -193,7 +193,7 @@ pub fn Attacking_execute(
                 &players,
                 controller,
                 support.get_single().ok(),
-                &ball,
+                &ball.physical,
                 &goal,
             );
         }

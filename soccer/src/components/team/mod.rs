@@ -22,15 +22,30 @@ use super::state::impl_state_machine;
 
 impl_state_machine!(SoccerTeam, PrepareForKickOff, Defending, Attacking);
 
-#[derive(Debug, Default, Component, Inspectable)]
+#[derive(Debug, Component, Inspectable)]
 pub struct SoccerTeam {
     pub team: Team,
     pub in_control: bool,
 
-    pub best_support_spot: Option<Vec2>,
+    best_support_spot: Option<Vec2>,
 }
 
 impl SoccerTeam {
+    pub fn new(team: Team) -> Self {
+        Self {
+            team,
+            in_control: false,
+            best_support_spot: None,
+        }
+    }
+
+    pub fn get_best_support_spot(&self) -> Vec2 {
+        // TODO: if self.best_support_spot is None we should
+        // calculate the best supporting spot
+        // ... except we don't have the data available here
+        self.best_support_spot.unwrap()
+    }
+
     pub fn reset_player_home_regions(
         &self,
         players: &mut Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
@@ -102,7 +117,7 @@ impl SoccerTeam {
         players: &Query<(&FieldPlayer, PhysicalQuery)>,
         controller: (&FieldPlayer, &Transform),
         support: Option<(&FieldPlayer, &Transform)>,
-        ball: &BallQueryItem,
+        ball_physical: &Physical,
         goal: &GoalQueryItem,
     ) {
         assert!(controller.0.team == self.team);
@@ -126,7 +141,7 @@ impl SoccerTeam {
                 spot.position,
                 None,
                 players,
-                ball.physical,
+                ball_physical,
                 params.max_passing_force,
             ) {
                 spot.score += params.pass_safe_score;
@@ -138,7 +153,7 @@ impl SoccerTeam {
                     params,
                     spot.position,
                     goal,
-                    ball.physical,
+                    ball_physical,
                     players,
                     params.max_passing_force,
                 )
@@ -302,7 +317,7 @@ impl SoccerTeam {
 }
 
 #[derive(WorldQuery)]
-#[world_query(mutable, derive(Debug))]
+#[world_query(derive(Debug))]
 pub struct SoccerTeamQuery<'w> {
     pub team: &'w SoccerTeam,
 }

@@ -9,7 +9,6 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 use rand::Rng;
 
-use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::game::team::*;

@@ -8,9 +8,28 @@ use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::*;
 
-pub fn GlobalState_execute(query: Query<FieldPlayerQuery>) {
-    for _player in query.iter() {
-        //debug!("executing global state for player {}", player.name.as_ref());
+pub fn GlobalState_execute(
+    params: Res<SimulationParams>,
+    mut query: Query<(Entity, FieldPlayerQuery, PhysicalQueryMut), Without<Ball>>,
+    ball: Query<&Transform, With<Ball>>,
+    controlling: Query<Entity, With<ControllingPlayer>>,
+) {
+    for (entity, player, mut physical) in query.iter_mut() {
+        let ball = ball.single();
+        let mut max_speed = params.player_max_speed_without_ball;
+
+        // reduce max speed when near the ball and in possession of it
+        if let Ok(controlling) = controlling.get_single() {
+            if controlling == entity
+                && player
+                    .player
+                    .is_ball_within_receiving_range(&params, &physical.transform, &ball)
+            {
+                max_speed = params.player_max_speed_with_ball;
+            }
+        }
+
+        physical.physical.max_speed = max_speed;
     }
 }
 
@@ -46,7 +65,6 @@ pub fn GlobalState_on_message(
                     for team in teams.iter() {
                         if team.team.team == player.player.team {
                             player.steering.target = team.team.get_best_support_spot();
-                            break;
                         }
                     }
                 }

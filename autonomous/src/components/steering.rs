@@ -33,6 +33,7 @@ impl Seek {
 }
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub struct SeekQuery<'w> {
     pub steering: &'w Seek,
     pub target: &'w SeekTarget,
@@ -69,6 +70,7 @@ impl Flee {
 }
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub struct FleeQuery<'w> {
     pub steering: &'w Flee,
     pub target: &'w FleeTarget,
@@ -122,6 +124,7 @@ impl Arrive {
 }
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub struct ArriveQuery<'w> {
     pub steering: &'w Arrive,
     pub target: &'w ArriveTarget,
@@ -184,6 +187,7 @@ impl Pursuit {
 }
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub struct PursuitQuery<'w> {
     pub steering: &'w Pursuit,
     pub target: &'w PursuitTarget,
@@ -229,6 +233,7 @@ impl Evade {
 }
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub struct EvadeQuery<'w> {
     pub steering: &'w Evade,
     pub target: &'w EvadeTarget,

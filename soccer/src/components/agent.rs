@@ -9,4 +9,8 @@ impl Agent {
     pub fn seek_on(&self, commands: &mut Commands, entity: Entity) {
         commands.entity(entity).insert(Seek);
     }
+
+    pub fn seek_off(&self, commands: &mut Commands, entity: Entity) {
+        commands.entity(entity).remove::<Seek>();
+    }
 }

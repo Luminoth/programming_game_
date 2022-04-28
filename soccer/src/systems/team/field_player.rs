@@ -124,3 +124,57 @@ pub fn ChaseBall_enter<T>(
         player.agent.seek_on(&mut commands, entity);
     }
 }
+
+pub fn ChaseBall_execute<T>(
+    mut commands: Commands,
+    params: Res<SimulationParams>,
+    mut query: Query<
+        (Entity, FieldPlayerQueryMut<T>, &Transform),
+        With<FieldPlayerStateChaseBallEnter>,
+    >,
+    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    ball_physical: Query<PhysicalQuery, With<Ball>>,
+) where
+    T: TeamColorMarker,
+{
+    for (entity, mut player, transform) in query.iter_mut() {
+        let ball_physical = ball_physical.single();
+
+        // kick the ball if it's in range
+        if player
+            .player
+            .is_ball_within_kicking_range(&params, &transform, &ball_physical.transform)
+        {
+            player
+                .state_machine
+                .change_state(&mut commands, entity, FieldPlayerState::KickBall);
+            continue;
+        }
+
+        // keep chasing the ball if we're the closest to it
+        if let Ok(closest) = closest.get_single() {
+            if entity == closest {
+                player.steering.target = ball_physical.transform.translation.truncate();
+                continue;
+            }
+        }
+
+        // not closest, so go home
+        player.state_machine.change_state(
+            &mut commands,
+            entity,
+            FieldPlayerState::ReturnToHomeRegion,
+        );
+    }
+}
+
+pub fn ChaseBall_exit<T>(
+    mut commands: Commands,
+    query: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateChaseBallExit>>,
+) where
+    T: TeamColorMarker,
+{
+    for (entity, player) in query.iter() {
+        player.agent.seek_off(&mut commands, entity);
+    }
+}

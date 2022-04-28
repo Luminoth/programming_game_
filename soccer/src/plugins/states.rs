@@ -105,6 +105,18 @@ impl Plugin for MainStatePlugin {
                         systems::team::field_player::GlobalState_execute::<BlueTeam>
                             .label(Systems::GlobalStateExecute),
                     )
+                    .with_system(
+                        systems::team::field_player::ChaseBall_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ChaseBall_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
                     // goal keeper systems
                     .with_system(
                         systems::team::goal_keeper::GlobalState_execute::<RedTeam>
@@ -167,6 +179,18 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::team::field_player::ChaseBall_enter::<BlueTeam>
                             .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ChaseBall_exit::<RedTeam>
+                            .label(Systems::StateExit)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ChaseBall_exit::<BlueTeam>
+                            .label(Systems::StateExit)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),
                     ),

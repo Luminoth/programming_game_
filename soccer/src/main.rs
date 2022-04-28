@@ -114,6 +114,7 @@ fn main() {
     .register_inspectable::<components::obstacle::Obstacle>()
     .register_inspectable::<components::obstacle::Wall>()
     .register_inspectable::<components::steering::Steering>()
+    .register_inspectable::<components::steering::Seek>()
     .register_inspectable::<components::steering::ObstacleAvoidance>()
     .register_inspectable::<components::ball::Ball>()
     .register_inspectable::<components::goal::Goal>()

@@ -130,7 +130,7 @@ pub fn ChaseBall_execute<T>(
     params: Res<SimulationParams>,
     mut query: Query<
         (Entity, FieldPlayerQueryMut<T>, &Transform),
-        With<FieldPlayerStateChaseBallEnter>,
+        With<FieldPlayerStateChaseBallExecute>,
     >,
     closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
     ball_physical: Query<PhysicalQuery, With<Ball>>,

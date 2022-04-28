@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
 #[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
 pub struct Obstacle;
 
 #[derive(Debug, Default, Component)]

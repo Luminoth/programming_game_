@@ -7,6 +7,7 @@ use super::physics::*;
 pub trait SteeringBehavior: std::fmt::Debug + Component {}
 
 #[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
 pub struct Steering {
     pub target: Vec2,
     pub accumulated_force: Vec2,
@@ -52,6 +53,7 @@ fn seek_force(target: Vec2, physical: &PhysicalQueryItem) -> Vec2 {
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
 pub struct Seek;
 
 impl SteeringBehavior for Seek {}
@@ -70,6 +72,7 @@ pub struct SeekQueryMut<'w> {
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
 pub struct ObstacleAvoidance {
     pub box_length: f32,
 }

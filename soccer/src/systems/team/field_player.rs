@@ -8,14 +8,17 @@ use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::*;
 
-pub fn GlobalState_execute(
+pub fn GlobalState_execute<T>(
     params: Res<SimulationParams>,
-    mut query: Query<(Entity, FieldPlayerQuery, PhysicalQueryMut), Without<Ball>>,
+    mut query: Query<(Entity, FieldPlayerQuery<T>, PhysicalQueryMut), Without<Ball>>,
     ball: Query<&Transform, With<Ball>>,
-    controlling: Query<Entity, With<ControllingPlayer>>,
-) {
+    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+) where
+    T: TeamColorMarker,
+{
     for (entity, player, mut physical) in query.iter_mut() {
         let ball = ball.single();
+
         let mut max_speed = params.player_max_speed_without_ball;
 
         // reduce max speed when near the ball and in possession of it
@@ -33,15 +36,17 @@ pub fn GlobalState_execute(
     }
 }
 
-pub fn GlobalState_on_message(
+pub fn GlobalState_on_message<T>(
     mut commands: Commands,
     params: Res<SimulationParams>,
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut message_events: EventReader<FieldPlayerDispatchedMessageEvent>,
-    mut players: Query<(Entity, FieldPlayerQueryMut, &Transform), Without<Ball>>,
-    teams: Query<SoccerTeamQuery>,
+    mut players: Query<(Entity, FieldPlayerQueryMut<T>, &Transform), Without<Ball>>,
+    team: Query<SoccerTeamQuery<T>>,
     mut ball: Query<(&Ball, PhysicalQueryMut)>,
-) {
+) where
+    T: TeamColorMarker,
+{
     for event in message_events.iter() {
         if let Ok((entity, mut player, transform)) = players.get_mut(event.receiver.unwrap()) {
             match event.message {
@@ -62,11 +67,8 @@ pub fn GlobalState_on_message(
                         return;
                     }
 
-                    for team in teams.iter() {
-                        if team.team.team == player.player.team {
-                            player.steering.target = team.team.get_best_support_spot();
-                        }
-                    }
+                    let team = team.single();
+                    player.steering.target = team.team.get_best_support_spot();
                 }
                 FieldPlayerMessage::GoHome => {
                     player.player.home_region = player.player.default_region;
@@ -112,10 +114,12 @@ pub fn GlobalState_on_message(
     }
 }
 
-pub fn ChaseBall_enter(
+pub fn ChaseBall_enter<T>(
     mut commands: Commands,
-    query: Query<(Entity, FieldPlayerQuery), With<FieldPlayerStateChaseBallEnter>>,
-) {
+    query: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateChaseBallEnter>>,
+) where
+    T: TeamColorMarker,
+{
     for (entity, player) in query.iter() {
         player.agent.seek_on(&mut commands, entity);
     }

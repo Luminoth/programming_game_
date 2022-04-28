@@ -5,6 +5,7 @@ use crate::bundles::goal::*;
 use crate::bundles::pitch::*;
 use crate::bundles::team::*;
 use crate::components::camera::*;
+use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
@@ -28,15 +29,15 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     PitchBundle::spawn(&mut commands, &params, &pitch);
 
     // goals
-    GoalBundle::spawn(&mut commands, &params, Team::Red, &pitch);
-    GoalBundle::spawn(&mut commands, &params, Team::Blue, &pitch);
+    GoalBundle::spawn(&mut commands, &params, RedTeam, &pitch);
+    GoalBundle::spawn(&mut commands, &params, BlueTeam, &pitch);
 
     // ball
     BallBundle::spawn(&mut commands, Vec2::ZERO);
 
     // teams
-    SoccerTeamBundle::spawn(&mut commands, &params, Team::Red, &pitch);
-    SoccerTeamBundle::spawn(&mut commands, &params, Team::Blue, &pitch);
+    SoccerTeamBundle::<RedTeam>::spawn(&mut commands, &params, &pitch);
+    SoccerTeamBundle::<BlueTeam>::spawn(&mut commands, &params, &pitch);
 
     commands.insert_resource(pitch);
 

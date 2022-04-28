@@ -108,7 +108,7 @@ fn main() {
     })
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
-    .register_inspectable::<game::team::Team>()
+    .register_inspectable::<game::team::TeamColor>()
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::actor::Actor>()
     .register_inspectable::<components::obstacle::Obstacle>()
@@ -119,6 +119,8 @@ fn main() {
     .register_inspectable::<components::goal::Goal>()
     .register_inspectable::<components::pitch::PitchBorder>()
     .register_inspectable::<components::team::SoccerTeam>()
+    .register_inspectable::<components::team::RedTeam>()
+    .register_inspectable::<components::team::BlueTeam>()
     .register_inspectable::<components::team::SupportSpot>()
     .register_inspectable::<components::team::SupportSpotCalculator>()
     .register_inspectable::<components::team::FieldPlayer>()

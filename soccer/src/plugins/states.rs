@@ -3,6 +3,7 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
+use crate::components::team::*;
 use crate::game::team::*;
 use crate::states;
 use crate::states::*;
@@ -60,31 +61,57 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::messaging::update::<GoalKeeperMessage>)
                     // team systems
                     .with_system(
-                        systems::team::PrepareForKickOff_execute
+                        systems::team::PrepareForKickOff_execute::<RedTeam>
                             .label(Systems::StateExecute)
                             .label(Systems::TeamStates)
                             .after(Systems::GlobalStateExecute),
                     )
                     .with_system(
-                        systems::team::Defending_execute
+                        systems::team::PrepareForKickOff_execute::<BlueTeam>
                             .label(Systems::StateExecute)
                             .label(Systems::TeamStates)
                             .after(Systems::GlobalStateExecute),
                     )
                     .with_system(
-                        systems::team::Attacking_execute
+                        systems::team::Defending_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::TeamStates)
+                            .after(Systems::GlobalStateExecute),
+                    )
+                    .with_system(
+                        systems::team::Defending_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::TeamStates)
+                            .after(Systems::GlobalStateExecute),
+                    )
+                    .with_system(
+                        systems::team::Attacking_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::TeamStates)
+                            .after(Systems::GlobalStateExecute),
+                    )
+                    .with_system(
+                        systems::team::Attacking_execute::<BlueTeam>
                             .label(Systems::StateExecute)
                             .label(Systems::TeamStates)
                             .after(Systems::GlobalStateExecute),
                     )
                     // field player systems
                     .with_system(
-                        systems::team::field_player::GlobalState_execute
+                        systems::team::field_player::GlobalState_execute::<RedTeam>
+                            .label(Systems::GlobalStateExecute),
+                    )
+                    .with_system(
+                        systems::team::field_player::GlobalState_execute::<BlueTeam>
                             .label(Systems::GlobalStateExecute),
                     )
                     // goal keeper systems
                     .with_system(
-                        systems::team::goal_keeper::GlobalState_execute
+                        systems::team::goal_keeper::GlobalState_execute::<RedTeam>
+                            .label(Systems::GlobalStateExecute),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::GlobalState_execute::<BlueTeam>
                             .label(Systems::GlobalStateExecute),
                     ),
             )
@@ -93,27 +120,52 @@ impl Plugin for MainStatePlugin {
                 SystemSet::on_update(GameState::Main)
                     // team event handlers
                     .with_system(
-                        systems::team::PrepareForKickOff_enter
+                        systems::team::PrepareForKickOff_enter::<RedTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::TeamStates),
                     )
                     .with_system(
-                        systems::team::Defending_enter
+                        systems::team::PrepareForKickOff_enter::<BlueTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::TeamStates),
                     )
                     .with_system(
-                        systems::team::Attacking_enter
+                        systems::team::Defending_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::Defending_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::Attacking_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::Attacking_enter::<BlueTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::TeamStates),
                     )
                     // field player systems
                     .with_system(
-                        systems::team::field_player::GlobalState_on_message
+                        systems::team::field_player::GlobalState_on_message::<RedTeam>
                             .label(Systems::GlobalStateOnMessage),
                     )
                     .with_system(
-                        systems::team::field_player::ChaseBall_enter
+                        systems::team::field_player::GlobalState_on_message::<BlueTeam>
+                            .label(Systems::GlobalStateOnMessage),
+                    )
+                    .with_system(
+                        systems::team::field_player::ChaseBall_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ChaseBall_enter::<BlueTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),

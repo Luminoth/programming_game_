@@ -2,34 +2,45 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::components::goal::*;
-use crate::game::{team::Team, GOAL_BAR_WIDTH};
+use crate::components::team::*;
+use crate::game::team::TeamColor;
+use crate::game::GOAL_BAR_WIDTH;
 use crate::resources::pitch::Pitch;
 use crate::resources::SimulationParams;
 use crate::{DEBUG_RADIUS, DEBUG_SORT, GOAL_SORT};
 
 #[derive(Debug, Default, Bundle)]
-pub struct GoalBundle {
+pub struct GoalBundle<T>
+where
+    T: TeamColorMarker,
+{
     pub goal: Goal,
+    pub team: T,
 
     pub transform: Transform,
     pub global_transform: GlobalTransform,
 }
 
-impl GoalBundle {
+impl<T> GoalBundle<T>
+where
+    T: TeamColorMarker,
+{
     pub fn spawn(
         commands: &mut Commands,
         params: &SimulationParams,
-        team: Team,
+        team: T,
         pitch: &Pitch,
     ) -> Entity {
+        let team_color = team.team_color();
+
         let goal_half_extents = params.goal_extents * 0.5;
         let hw = pitch.extents.x * 0.5 - goal_half_extents.x;
-        let (position, sign) = match team {
-            Team::Red => (Vec2::new(-hw, 0.0), 1.0),
-            Team::Blue => (Vec2::new(hw, 0.0), -1.0),
+        let (position, sign) = match team_color {
+            TeamColor::Red => (Vec2::new(-hw, 0.0), 1.0),
+            TeamColor::Blue => (Vec2::new(hw, 0.0), -1.0),
         };
 
-        info!("spawning goal for team {:?} at {}", team, position);
+        info!("spawning goal for team {:?} at {}", team_color, position);
 
         let score_center = Vec2::new(sign * goal_half_extents.x, 0.0);
         let top = Vec2::new(score_center.x, score_center.y + goal_half_extents.y);
@@ -37,18 +48,18 @@ impl GoalBundle {
 
         let mut bundle = commands.spawn_bundle(GoalBundle {
             goal: Goal {
-                team,
                 facing: sign * Vec2::X,
 
                 top,
                 bottom,
                 score_center,
             },
+            team,
             transform: Transform::from_translation(position.extend(GOAL_SORT)),
             ..Default::default()
         });
 
-        bundle.insert(Name::new(format!("{:?} Goal", team)));
+        bundle.insert(Name::new(format!("{:?} Goal", team_color)));
 
         if params.debug_vis {
             bundle.with_children(|parent| {
@@ -96,9 +107,9 @@ impl GoalBundle {
             });
         }
 
-        let color = match team {
-            Team::Red => Color::SALMON,
-            Team::Blue => Color::TURQUOISE,
+        let color = match team_color {
+            TeamColor::Red => Color::SALMON,
+            TeamColor::Blue => Color::TURQUOISE,
         };
 
         bundle.with_children(|parent| {

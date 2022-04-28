@@ -13,20 +13,22 @@ use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
 
-pub fn PrepareForKickOff_enter(
+pub fn PrepareForKickOff_enter<T>(
     mut commands: Commands,
     mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut goal_keeper_message_dispatcher: ResMut<GoalKeeperMessageDispatcher>,
-    query: Query<SoccerTeamQuery, With<SoccerTeamStatePrepareForKickOffEnter>>,
-    receiving: Query<Entity, With<ReceivingPlayer>>,
-    closest: Query<Entity, With<ClosestPlayer>>,
-    controlling: Query<Entity, With<ControllingPlayer>>,
-    supporting: Query<Entity, With<SupportingPlayer>>,
-    players: Query<(Entity, &FieldPlayer)>,
-    goal_keepers: Query<(Entity, &GoalKeeper)>,
-) {
-    for team in query.iter() {
-        info!("{:?} team preparing for kick off", team.team.team);
+    query: Query<SoccerTeamQuery<T>, With<SoccerTeamStatePrepareForKickOffEnter>>,
+    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    supporting: Query<Entity, (With<T>, With<SupportingPlayer>)>,
+    players: Query<Entity, (With<FieldPlayer>, With<T>)>,
+    goal_keepers: Query<Entity, (With<GoalKeeper>, With<T>)>,
+) where
+    T: TeamColorMarker,
+{
+    if let Ok(team) = query.get_single() {
+        info!("{:?} team preparing for kick off", team.color.team_color());
 
         // reset player positions
 
@@ -47,32 +49,29 @@ pub fn PrepareForKickOff_enter(
         }
 
         // send players home
-        for (entity, player) in players.iter() {
-            if player.team != team.team.team {
-                continue;
-            }
-
+        for entity in players.iter() {
             player_message_dispatcher.dispatch_message(Some(entity), FieldPlayerMessage::GoHome);
         }
 
-        for (entity, goal_keeper) in goal_keepers.iter() {
-            if goal_keeper.team != team.team.team {
-                continue;
-            }
-
+        for entity in goal_keepers.iter() {
             goal_keeper_message_dispatcher
                 .dispatch_message(Some(entity), GoalKeeperMessage::GoHome);
         }
     }
 }
 
-pub fn PrepareForKickOff_execute(
+pub fn PrepareForKickOff_execute<T>(
     mut commands: Commands,
     pitch: Res<Pitch>,
-    mut query: Query<(Entity, SoccerTeamQueryMut), With<SoccerTeamStatePrepareForKickOffExecute>>,
-    players: Query<(&FieldPlayer, &Transform)>,
-    goal_keepers: Query<(&GoalKeeper, &Transform)>,
-) {
+    mut query: Query<
+        (Entity, SoccerTeamQueryMut<T>),
+        With<SoccerTeamStatePrepareForKickOffExecute>,
+    >,
+    players: Query<(FieldPlayerQuery<T>, &Transform)>,
+    goal_keepers: Query<(GoalKeeperQuery<T>, &Transform)>,
+) where
+    T: TeamColorMarker,
+{
     if query.is_empty() {
         return;
     }
@@ -80,13 +79,13 @@ pub fn PrepareForKickOff_execute(
     info!("Waiting for teams ready ...");
 
     for (player, transform) in players.iter() {
-        if !player.is_in_home_region(transform, &pitch) {
+        if !player.player.is_in_home_region(transform, &pitch) {
             return;
         }
     }
 
     for (goal_keeper, transform) in goal_keepers.iter() {
-        if !goal_keeper.is_in_home_region(transform, &pitch) {
+        if !goal_keeper.goal_keeper.is_in_home_region(transform, &pitch) {
             return;
         }
     }
@@ -97,18 +96,20 @@ pub fn PrepareForKickOff_execute(
     }
 }
 
-pub fn Defending_enter(
-    query: Query<SoccerTeamQuery, With<SoccerTeamStateDefendingEnter>>,
+pub fn Defending_enter<T>(
     pitch: Res<Pitch>,
-    mut players: Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
-    mut goal_keepers: Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
-) {
+    query: Query<SoccerTeamQuery<T>, With<SoccerTeamStateDefendingEnter>>,
+    mut players: Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
+    mut goal_keepers: Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+) where
+    T: TeamColorMarker,
+{
     for team in query.iter() {
-        info!("{:?} team defending", team.team.team);
+        info!("{:?} team defending", team.color.team_color());
 
-        let home_regions = match team.team.team {
-            Team::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
-            Team::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
+        let home_regions = match team.color.team_color() {
+            TeamColor::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
+            TeamColor::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
         };
 
         team.team
@@ -119,10 +120,12 @@ pub fn Defending_enter(
     }
 }
 
-pub fn Defending_execute(
+pub fn Defending_execute<T>(
     mut commands: Commands,
-    mut query: Query<(Entity, SoccerTeamQueryMut), With<SoccerTeamStateDefendingExecute>>,
-) {
+    mut query: Query<(Entity, SoccerTeamQueryMut<T>), With<SoccerTeamStateDefendingExecute>>,
+) where
+    T: TeamColorMarker,
+{
     for (entity, mut team) in query.iter_mut() {
         //debug!("{:?} defender checking for control", team.team.team);
 
@@ -134,18 +137,20 @@ pub fn Defending_execute(
     }
 }
 
-pub fn Attacking_enter(
-    query: Query<SoccerTeamQuery, With<SoccerTeamStateAttackingEnter>>,
+pub fn Attacking_enter<T>(
     pitch: Res<Pitch>,
-    mut players: Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
-    mut goal_keepers: Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
-) {
+    query: Query<SoccerTeamQuery<T>, With<SoccerTeamStateAttackingEnter>>,
+    mut players: Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
+    mut goal_keepers: Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+) where
+    T: TeamColorMarker,
+{
     for team in query.iter() {
-        info!("{:?} team attacking", team.team.team);
+        info!("{:?} team attacking", team.color.team_color());
 
-        let home_regions = match team.team.team {
-            Team::Red => RED_TEAM_ATTACKING_HOME_REGIONS,
-            Team::Blue => BLUE_TEAM_ATTACKING_HOME_REGIONS,
+        let home_regions = match team.color.team_color() {
+            TeamColor::Red => RED_TEAM_ATTACKING_HOME_REGIONS,
+            TeamColor::Blue => BLUE_TEAM_ATTACKING_HOME_REGIONS,
         };
 
         team.team
@@ -156,19 +161,21 @@ pub fn Attacking_enter(
     }
 }
 
-pub fn Attacking_execute(
+pub fn Attacking_execute<T>(
     mut commands: Commands,
     params: Res<SimulationParams>,
     mut query: Query<
-        (Entity, SoccerTeamQueryMut, &mut SupportSpotCalculator),
+        (Entity, SoccerTeamQueryMut<T>, &mut SupportSpotCalculator),
         With<SoccerTeamStateAttackingExecute>,
     >,
-    players: Query<(&FieldPlayer, PhysicalQuery)>,
-    controller: Query<(&FieldPlayer, &Transform), With<ControllingPlayer>>,
-    support: Query<(&FieldPlayer, &Transform), With<SupportingPlayer>>,
+    players: Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+    controller: Query<(FieldPlayerQuery<T>, &Transform), With<ControllingPlayer>>,
+    support: Query<(FieldPlayerQuery<T>, &Transform), With<SupportingPlayer>>,
     ball: Query<PhysicalQuery, With<Ball>>,
-    goals: Query<GoalQuery>,
-) {
+    goal: Query<GoalQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
     for (entity, mut team, mut support_calculator) in query.iter_mut() {
         //debug!("{:?} attacker checking for control", team.team.team);
 
@@ -179,23 +186,16 @@ pub fn Attacking_execute(
             continue;
         }
 
-        let controller = controller.single();
         let ball = ball.single();
-
-        for goal in goals.iter() {
-            if goal.goal.team == team.team.team {
-                continue;
-            }
-
-            team.team.determine_best_supporting_position(
-                &params,
-                &mut support_calculator,
-                &players,
-                controller,
-                support.get_single().ok(),
-                &ball.physical,
-                &goal,
-            );
-        }
+        team.team.determine_best_supporting_position(
+            &params,
+            team.color,
+            &mut support_calculator,
+            &players,
+            controller.single(),
+            support.get_single().ok(),
+            &ball.physical,
+            goal.single(),
+        );
     }
 }

@@ -4,7 +4,7 @@ use bevy_inspector_egui::*;
 
 use crate::components::agent::*;
 use crate::components::steering::*;
-use crate::game::team::*;
+use crate::components::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
 
@@ -23,7 +23,6 @@ impl_state_machine!(
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct FieldPlayer {
-    pub team: Team,
     pub home_region: usize,
     pub default_region: usize,
 }
@@ -62,8 +61,12 @@ impl FieldPlayer {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct FieldPlayerQuery<'w> {
+pub struct FieldPlayerQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
     pub player: &'w FieldPlayer,
+    pub team: &'w T,
     pub agent: &'w Agent,
     pub steering: &'w Steering,
     pub name: &'w Name,
@@ -71,10 +74,25 @@ pub struct FieldPlayerQuery<'w> {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct FieldPlayerQueryMut<'w> {
+pub struct FieldPlayerQueryMut<'w, T>
+where
+    T: TeamColorMarker,
+{
     pub player: &'w mut FieldPlayer,
+    pub team: &'w T,
     pub agent: &'w mut Agent,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut FieldPlayerStateMachine,
+    pub name: &'w Name,
+}
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct AnyTeamFieldPlayerQuery<'w> {
+    pub player: &'w FieldPlayer,
+    pub blue_team: Option<&'w BlueTeam>,
+    pub red_team: Option<&'w RedTeam>,
+    pub agent: &'w Agent,
+    pub steering: &'w Steering,
     pub name: &'w Name,
 }

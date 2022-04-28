@@ -18,22 +18,23 @@ pub const BLUE_TEAM_ATTACKING_HOME_REGIONS: [usize; TEAM_SIZE] = [1, 4, 6, 12, 1
 pub const RED_TEAM_ATTACKING_HOME_REGIONS: [usize; TEAM_SIZE] = [16, 3, 5, 9, 13];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Inspectable)]
-pub enum Team {
+pub enum TeamColor {
     Red,
     Blue,
 }
 
-impl Default for Team {
-    fn default() -> Self {
-        Self::Red
-    }
-}
-
-impl Team {
+impl TeamColor {
     pub fn color(&self) -> Color {
         match self {
             Self::Red => Color::RED,
             Self::Blue => Color::BLUE,
+        }
+    }
+
+    pub fn goal_keeper_color(&self) -> Color {
+        match self {
+            Self::Red => Color::YELLOW,
+            Self::Blue => Color::YELLOW,
         }
     }
 

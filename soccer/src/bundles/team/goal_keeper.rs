@@ -7,15 +7,20 @@ use crate::components::obstacle::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
-use crate::game::{team::Team, PLAYER_RADIUS};
+use crate::game::PLAYER_RADIUS;
 use crate::resources::pitch::*;
 use crate::PLAYER_SORT;
 
 use super::super::actor::*;
 
 #[derive(Debug, Default, Bundle)]
-pub struct GoalKeeperBundle {
+pub struct GoalKeeperBundle<T>
+where
+    T: TeamColorMarker,
+{
     pub goal_keeper: GoalKeeper,
+    pub team: T,
+
     pub agent: Agent,
     pub steering: Steering,
     pub physical: Physical,
@@ -24,21 +29,27 @@ pub struct GoalKeeperBundle {
     pub obstacle_avoidance: ObstacleAvoidance,
 }
 
-impl GoalKeeperBundle {
-    pub fn spawn(commands: &mut Commands, home_region: usize, team: Team, pitch: &Pitch) -> Entity {
+impl<T> GoalKeeperBundle<T>
+where
+    T: TeamColorMarker,
+{
+    pub fn spawn(commands: &mut Commands, home_region: usize, pitch: &Pitch) -> Entity {
         let position = pitch.regions.get(home_region).unwrap().position;
+
+        let team = T::default();
+        let team_color = team.team_color();
 
         info!(
             "spawning goal keeper for team {:?} at {} (home region: {})",
-            team, position, home_region
+            team_color, position, home_region
         );
 
         let mut bundle = commands.spawn_bundle(GoalKeeperBundle {
             goal_keeper: GoalKeeper {
-                team,
                 home_region,
                 default_region: home_region,
             },
+            team,
             ..Default::default()
         });
 
@@ -47,7 +58,7 @@ impl GoalKeeperBundle {
                 bounding_radius: PLAYER_RADIUS,
             },
             transform: Transform::from_translation(position.extend(PLAYER_SORT)),
-            name: Name::new(format!("{:?} Goal Keeper", team)),
+            name: Name::new(format!("{:?} Goal Keeper", team_color)),
             ..Default::default()
         });
 
@@ -61,7 +72,7 @@ impl GoalKeeperBundle {
                         ..Default::default()
                     },
                     DrawMode::Fill(FillMode {
-                        color: Color::YELLOW,
+                        color: team_color.goal_keeper_color(),
                         options: FillOptions::default(),
                     }),
                     Transform::default(),

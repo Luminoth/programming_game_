@@ -21,23 +21,14 @@ use super::state::impl_state_machine;
 
 impl_state_machine!(SoccerTeam, PrepareForKickOff, Defending, Attacking);
 
-#[derive(Debug, Component, Inspectable)]
+#[derive(Debug, Default, Component, Inspectable)]
 pub struct SoccerTeam {
-    pub team: Team,
     pub in_control: bool,
 
     best_support_spot: Option<Vec2>,
 }
 
 impl SoccerTeam {
-    pub fn new(team: Team) -> Self {
-        Self {
-            team,
-            in_control: false,
-            best_support_spot: None,
-        }
-    }
-
     pub fn get_best_support_spot(&self) -> Vec2 {
         // TODO: if self.best_support_spot is None we should
         // calculate the best supporting spot
@@ -45,40 +36,36 @@ impl SoccerTeam {
         self.best_support_spot.unwrap()
     }
 
-    pub fn reset_player_home_regions(
+    pub fn reset_player_home_regions<T>(
         &self,
-        players: &mut Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
-        goal_keepers: &mut Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
+        players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
+        goal_keepers: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
         home_regions: [usize; TEAM_SIZE],
-    ) {
+    ) where
+        T: TeamColorMarker,
+    {
         let mut idx = 0;
         for mut goal_keeper in goal_keepers.iter_mut() {
-            if goal_keeper.goal_keeper.team != self.team {
-                continue;
-            }
-
             goal_keeper.goal_keeper.home_region = home_regions[idx];
 
             idx += 1;
         }
 
         for mut player in players.iter_mut() {
-            if player.player.team != self.team {
-                continue;
-            }
-
             player.player.home_region = home_regions[idx];
 
             idx += 1;
         }
     }
 
-    pub fn update_targets_of_waiting_players(
+    pub fn update_targets_of_waiting_players<T>(
         &self,
         pitch: &Pitch,
-        players: &mut Query<FieldPlayerQueryMut, Without<GoalKeeper>>,
-        goal_keepers: &mut Query<GoalKeeperQueryMut, Without<FieldPlayer>>,
-    ) {
+        players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
+        goal_keepers: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+    ) where
+        T: TeamColorMarker,
+    {
         for mut player in players.iter_mut() {
             if player.state_machine.is_in_state(FieldPlayerState::Wait)
                 || player
@@ -109,20 +96,23 @@ impl SoccerTeam {
         }
     }
 
-    pub fn determine_best_supporting_position(
+    pub fn determine_best_supporting_position<T>(
         &mut self,
         params: &SimulationParams,
+        team: &T,
         support_calculator: &mut SupportSpotCalculator,
-        players: &Query<(&FieldPlayer, PhysicalQuery)>,
-        controller: (&FieldPlayer, &Transform),
-        support: Option<(&FieldPlayer, &Transform)>,
+        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+        controller: (FieldPlayerQueryItem<T>, &Transform),
+        support: Option<(FieldPlayerQueryItem<T>, &Transform)>,
         ball_physical: &Physical,
-        goal: &GoalQueryItem,
-    ) {
-        assert!(controller.0.team == self.team);
-        assert!(goal.goal.team != self.team);
-
-        info!("updating support spot for controlling team {:?}", self.team);
+        goal: GoalQueryItem<T>,
+    ) where
+        T: TeamColorMarker,
+    {
+        info!(
+            "updating support spot for controlling team {:?}",
+            team.team_color()
+        );
 
         self.best_support_spot = None;
 
@@ -136,6 +126,7 @@ impl SoccerTeam {
             // is it safe to pass to this spot?
             if self.is_pass_safe_from_all_opponents(
                 params,
+                team,
                 controller_position,
                 spot.position,
                 None,
@@ -150,8 +141,9 @@ impl SoccerTeam {
             if self
                 .can_shoot(
                     params,
+                    team,
                     spot.position,
-                    goal,
+                    &goal,
                     ball_physical,
                     players,
                     params.max_passing_force,
@@ -162,9 +154,7 @@ impl SoccerTeam {
             }
 
             // how far away is our supporting player?
-            if let Some(support) = support {
-                assert!(support.0.team == controller.0.team);
-
+            if support.is_some() {
                 let optimal_distance = 200.0;
                 let dist = controller_position.distance(spot.position);
                 let temp = (optimal_distance - dist).abs();
@@ -185,19 +175,24 @@ impl SoccerTeam {
         self.best_support_spot = best_support_spot;
     }
 
-    fn is_pass_safe_from_all_opponents(
+    fn is_pass_safe_from_all_opponents<T>(
         &self,
         params: &SimulationParams,
+        team: &T,
         from: Vec2,
         target: Vec2,
-        receiver: Option<(&FieldPlayer, &Transform)>,
-        players: &Query<(&FieldPlayer, PhysicalQuery)>,
+        receiver: Option<&Query<(FieldPlayerQuery<T>, &Transform), With<ReceivingPlayer>>>,
+        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
         ball_physical: &Physical,
         passing_force: f32,
-    ) -> bool {
+    ) -> bool
+    where
+        T: TeamColorMarker,
+    {
         for player in players.iter() {
             if !self.is_pass_safe_from_opponent(
                 params,
+                team,
                 from,
                 target,
                 receiver,
@@ -212,18 +207,24 @@ impl SoccerTeam {
         true
     }
 
-    fn is_pass_safe_from_opponent(
+    fn is_pass_safe_from_opponent<T>(
         &self,
         params: &SimulationParams,
+        team: &T,
         from: Vec2,
         target: Vec2,
-        receiver: Option<(&FieldPlayer, &Transform)>,
-        opponent: (&FieldPlayer, PhysicalQueryItem),
+        receiver: Option<&Query<(FieldPlayerQuery<T>, &Transform), With<ReceivingPlayer>>>,
+        opponent: (AnyTeamFieldPlayerQueryItem, PhysicalQueryItem),
         ball_physical: &Physical,
         passing_force: f32,
-    ) -> bool {
+    ) -> bool
+    where
+        T: TeamColorMarker,
+    {
         // ignore teammates
-        if opponent.0.team == self.team {
+        if (opponent.0.red_team.is_some() && team.team_color() == TeamColor::Red)
+            || (opponent.0.blue_team.is_some() && team.team_color() == TeamColor::Blue)
+        {
             return true;
         }
 
@@ -249,9 +250,11 @@ impl SoccerTeam {
         if from.distance_squared(target) < opponent_position.distance_squared(from) {
             // can the receiver get there first?
             if let Some(receiver) = receiver {
-                let receiver_position = receiver.1.translation.truncate();
-                return target.distance_squared(opponent_position)
-                    < target.distance_squared(receiver_position);
+                if let Ok(receiver) = receiver.get_single() {
+                    let receiver_position = receiver.1.translation.truncate();
+                    return target.distance_squared(opponent_position)
+                        < target.distance_squared(receiver_position);
+                }
             } else {
                 return true;
             }
@@ -269,17 +272,19 @@ impl SoccerTeam {
         local_pos_opp.y.abs() >= reach
     }
 
-    fn can_shoot(
+    fn can_shoot<T>(
         &self,
         params: &SimulationParams,
+        team: &T,
         from: Vec2,
-        goal: &GoalQueryItem,
+        goal: &GoalQueryItem<T>,
         ball_physical: &Physical,
-        players: &Query<(&FieldPlayer, PhysicalQuery)>,
+        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
         power: f32,
-    ) -> Option<Vec2> {
-        assert!(goal.goal.team != self.team);
-
+    ) -> Option<Vec2>
+    where
+        T: TeamColorMarker,
+    {
         let mut rng = rand::thread_rng();
 
         let goal_position = goal.transform.translation.truncate();
@@ -297,6 +302,7 @@ impl SoccerTeam {
             if time >= 0.0
                 && self.is_pass_safe_from_all_opponents(
                     params,
+                    team,
                     from,
                     target,
                     None,
@@ -315,16 +321,46 @@ impl SoccerTeam {
     }
 }
 
+pub trait TeamColorMarker: std::fmt::Debug + Default + Component + Inspectable {
+    fn team_color(&self) -> TeamColor;
+}
+
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct RedTeam;
+
+impl TeamColorMarker for RedTeam {
+    fn team_color(&self) -> TeamColor {
+        TeamColor::Red
+    }
+}
+
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct BlueTeam;
+
+impl TeamColorMarker for BlueTeam {
+    fn team_color(&self) -> TeamColor {
+        TeamColor::Blue
+    }
+}
+
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct SoccerTeamQuery<'w> {
+pub struct SoccerTeamQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
     pub team: &'w SoccerTeam,
+    pub color: &'w T,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SoccerTeamQueryMut<'w> {
+pub struct SoccerTeamQueryMut<'w, T>
+where
+    T: TeamColorMarker,
+{
     pub team: &'w mut SoccerTeam,
+    pub color: &'w T,
     pub state_machine: &'w mut SoccerTeamStateMachine,
 }
 
@@ -343,7 +379,7 @@ pub struct SupportSpotCalculator {
 }
 
 impl SupportSpotCalculator {
-    pub fn new(team: Team, params: &SimulationParams) -> Self {
+    pub fn new(team_color: TeamColor, params: &SimulationParams) -> Self {
         let goal_half_extents = params.goal_extents * 0.5;
         let hw = params.pitch_extents.x * 0.5 - goal_half_extents.x;
         let hh = params.pitch_extents.y * 0.5;
@@ -360,7 +396,7 @@ impl SupportSpotCalculator {
         for y in 0..params.num_support_spots_vertical {
             for x in 0..half_spots_horizontal {
                 let position = Vec2::new(
-                    team.sign() * (-hw + (x as f32 * spot_size.x) + half_spot_size.x),
+                    team_color.sign() * (-hw + (x as f32 * spot_size.x) + half_spot_size.x),
                     -hh + (y as f32 * spot_size.y) + half_spot_size.y,
                 );
                 spots.push(SupportSpot {

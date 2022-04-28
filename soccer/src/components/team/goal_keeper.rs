@@ -4,7 +4,7 @@ use bevy_inspector_egui::*;
 
 use crate::components::agent::*;
 use crate::components::steering::*;
-use crate::game::team::*;
+use crate::components::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
 
@@ -20,7 +20,6 @@ impl_state_machine!(
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct GoalKeeper {
-    pub team: Team,
     pub home_region: usize,
     pub default_region: usize,
 }
@@ -48,8 +47,12 @@ impl GoalKeeper {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct GoalKeeperQuery<'w> {
+pub struct GoalKeeperQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
     pub goal_keeper: &'w GoalKeeper,
+    pub team: &'w T,
     pub agent: &'w Agent,
     pub steering: &'w Steering,
     pub name: &'w Name,
@@ -57,8 +60,12 @@ pub struct GoalKeeperQuery<'w> {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct GoalKeeperQueryMut<'w> {
+pub struct GoalKeeperQueryMut<'w, T>
+where
+    T: TeamColorMarker,
+{
     pub goal_keeper: &'w mut GoalKeeper,
+    pub team: &'w T,
     pub agent: &'w mut Agent,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut GoalKeeperStateMachine,

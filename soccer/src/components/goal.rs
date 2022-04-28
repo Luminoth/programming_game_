@@ -2,11 +2,10 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
-use crate::game::team::Team;
+use crate::components::team::*;
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Goal {
-    pub team: Team,
     pub facing: Vec2,
 
     // scoring offsets
@@ -20,7 +19,11 @@ pub struct GoalDebug;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct GoalQuery<'w> {
+pub struct GoalQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
     pub goal: &'w Goal,
+    pub team: &'w T,
     pub transform: &'w Transform,
 }

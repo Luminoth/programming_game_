@@ -14,19 +14,29 @@ use field_player::*;
 use goal_keeper::*;
 
 #[derive(Debug, Bundle)]
-pub struct SoccerTeamBundle {
+pub struct SoccerTeamBundle<T>
+where
+    T: TeamColorMarker,
+{
     pub team: SoccerTeam,
+    pub color: T,
     pub support_spots: SupportSpotCalculator,
 
     pub transform: Transform,
     pub global_transform: GlobalTransform,
 }
 
-impl SoccerTeamBundle {
-    pub fn spawn(commands: &mut Commands, params: &SimulationParams, team: Team, pitch: &Pitch) {
-        info!("spawning team {:?}", team);
+impl<T> SoccerTeamBundle<T>
+where
+    T: TeamColorMarker,
+{
+    pub fn spawn(commands: &mut Commands, params: &SimulationParams, pitch: &Pitch) {
+        let color = T::default();
+        let team_color = color.team_color();
 
-        let support_spots = SupportSpotCalculator::new(team, params);
+        info!("spawning team {:?}", team_color);
+
+        let support_spots = SupportSpotCalculator::new(team_color, params);
         let debug_support_spots = if params.debug_vis {
             Some(support_spots.spots.clone())
         } else {
@@ -34,7 +44,8 @@ impl SoccerTeamBundle {
         };
 
         let mut bundle = commands.spawn_bundle(SoccerTeamBundle {
-            team: SoccerTeam::new(team),
+            team: SoccerTeam::default(),
+            color,
             support_spots,
             transform: Transform::default(),
             global_transform: GlobalTransform::default(),
@@ -42,7 +53,7 @@ impl SoccerTeamBundle {
 
         SoccerTeamStateMachine::insert(&mut bundle, SoccerTeamState::PrepareForKickOff, false);
 
-        bundle.insert(Name::new(format!("{:?} Team", team)));
+        bundle.insert(Name::new(format!("{:?} Team", team_color)));
 
         if params.debug_vis {
             bundle.with_children(|parent| {
@@ -54,7 +65,7 @@ impl SoccerTeamBundle {
                                 ..Default::default()
                             },
                             DrawMode::Fill(FillMode {
-                                color: team.color(),
+                                color: team_color.color(),
                                 options: FillOptions::default(),
                             }),
                             Transform::from_translation(spot.position.extend(DEBUG_SORT)),
@@ -64,17 +75,17 @@ impl SoccerTeamBundle {
             });
         }
 
-        let home_regions = match team {
-            Team::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
-            Team::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
+        let home_regions = match team_color {
+            TeamColor::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
+            TeamColor::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
         };
 
         // goal keeper
-        GoalKeeperBundle::spawn(commands, home_regions[0], team, pitch);
+        GoalKeeperBundle::<T>::spawn(commands, home_regions[0], pitch);
 
         // players
         for home_region in home_regions.iter().take(TEAM_SIZE).skip(1) {
-            FieldPlayerBundle::spawn(commands, *home_region, team, pitch);
+            FieldPlayerBundle::<T>::spawn(commands, *home_region, pitch);
         }
     }
 }

@@ -10,6 +10,7 @@ use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
+use crate::util::*;
 
 // TODO: the functionality here makes more sense as a physics update step
 // rather than being part of the state machine
@@ -27,7 +28,7 @@ pub fn GlobalState_execute<T>(
         let mut max_speed = params.player_max_speed_without_ball;
 
         // reduce max speed when near the ball and in possession of it
-        if let Ok(controlling) = controlling.get_single() {
+        if let Some(controlling) = controlling.optional_single() {
             if controlling == entity
                 && field_player.field_player.is_ball_within_receiving_range(
                     &params,
@@ -165,7 +166,7 @@ pub fn ChaseBall_execute<T>(
         }
 
         // keep chasing the ball if we're the closest to it
-        if let Ok(closest) = closest.get_single() {
+        if let Some(closest) = closest.optional_single() {
             if entity == closest {
                 info!("continue chasing ball");
 
@@ -242,7 +243,7 @@ pub fn Wait_execute<T>(
             .physical
             .track(ball_physical.transform.translation.truncate());
 
-        if let Ok((controller, transform)) = controller.get_single() {
+        if let Some((controller, transform)) = controller.optional_single() {
             if entity != controller {
                 // if we're farther up the field from the controller
                 // we should request a pass
@@ -267,8 +268,8 @@ pub fn Wait_execute<T>(
         }
 
         if game_state.is_game_on() {
-            if let Ok(closest) = closest.get_single() {
-                let have_receiver = receiving.get_single().is_ok();
+            if let Some(closest) = closest.optional_single() {
+                let have_receiver = receiving.optional_single().is_some();
 
                 // if we're the closest field player
                 // and no one's after the ball, chase it
@@ -301,17 +302,17 @@ pub fn ReceiveBall_enter<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok(controlling) = controlling.get_single() {
+    if let Some(controlling) = controlling.optional_single() {
         commands.entity(controlling).remove::<ControllingPlayer>();
     }
 
-    if let Ok(receiving) = receiving.get_single() {
+    if let Some(receiving) = receiving.optional_single() {
         commands.entity(receiving).remove::<ReceivingPlayer>();
     }
 
     let mut rng = rand::thread_rng();
 
-    if let Ok((entity, field_player, transform)) = field_player.get_single() {
+    if let Some((entity, field_player, transform)) = field_player.optional_single() {
         // this player is now the receiver / controller
         commands
             .entity(entity)
@@ -354,7 +355,9 @@ pub fn ReceiveBall_execute<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok((entity, mut field_player, mut physical, pursuit)) = field_player.get_single_mut() {
+    if let Some((entity, mut field_player, mut physical, pursuit)) =
+        field_player.optional_single_mut()
+    {
         let ball_position = ball.single().translation.truncate();
 
         // chase the ball if it's close enough
@@ -362,7 +365,7 @@ pub fn ReceiveBall_execute<T>(
             &params,
             physical.transform,
             ball_position,
-        ) || !controlling.get_single().is_ok()
+        ) || !controlling.optional_single().is_some()
         {
             field_player.state_machine.change_state(
                 &mut commands,
@@ -430,8 +433,8 @@ pub fn ReturnToHomeRegion_execute<T>(
 {
     for (entity, mut field_player, transform) in field_players.iter_mut() {
         if game_state.is_game_on() {
-            if let Ok(closest) = closest.get_single() {
-                let have_receiver = receiving.get_single().is_ok();
+            if let Some(closest) = closest.optional_single() {
+                let have_receiver = receiving.optional_single().is_some();
 
                 // if we're the closest field player
                 // and no one's after the ball, chase it

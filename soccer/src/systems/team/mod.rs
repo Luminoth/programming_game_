@@ -12,6 +12,7 @@ use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
+use crate::util::*;
 
 pub fn update<T>(
     mut commands: Commands,
@@ -27,7 +28,7 @@ pub fn update<T>(
             &mut commands,
             &ball.single().transform,
             &players,
-            closest.get_single().ok(),
+            closest.optional_single(),
         );
     }
 }
@@ -46,24 +47,24 @@ pub fn PrepareForKickOff_enter<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok(team) = teams.get_single() {
+    if let Some(team) = teams.optional_single() {
         info!("{:?} team preparing for kick off", team.color.team_color());
 
         // reset player positions
 
-        if let Ok(receiving) = receiving.get_single() {
+        if let Some(receiving) = receiving.optional_single() {
             commands.entity(receiving).remove::<ReceivingPlayer>();
         }
 
-        if let Ok(closest) = closest.get_single() {
+        if let Some(closest) = closest.optional_single() {
             commands.entity(closest).remove::<ClosestPlayer>();
         }
 
-        if let Ok(controlling) = controlling.get_single() {
+        if let Some(controlling) = controlling.optional_single() {
             commands.entity(controlling).remove::<ControllingPlayer>();
         }
 
-        if let Ok(supporting) = supporting.get_single() {
+        if let Some(supporting) = supporting.optional_single() {
             commands.entity(supporting).remove::<SupportingPlayer>();
         }
 
@@ -89,7 +90,7 @@ pub fn PrepareForKickOff_execute<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok((entity, mut team)) = teams.get_single_mut() {
+    if let Some((entity, mut team)) = teams.optional_single_mut() {
         info!("waiting for teams ready ...");
 
         for (player, transform) in players.iter() {
@@ -109,7 +110,7 @@ pub fn PrepareForKickOff_exit<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok(team) = teams.get_single() {
+    if let Some(team) = teams.optional_single() {
         match team.color.team_color() {
             TeamColor::Red => game_state.red_team_ready = true,
             TeamColor::Blue => game_state.blue_team_ready = true,
@@ -125,7 +126,7 @@ pub fn Defending_enter<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok(team) = teams.get_single() {
+    if let Some(team) = teams.optional_single() {
         info!("{:?} team defending", team.color.team_color());
 
         let home_regions = match team.color.team_color() {
@@ -150,8 +151,8 @@ pub fn Defending_execute<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok((entity, mut team)) = teams.get_single_mut() {
-        if controller.get_single().is_ok() {
+    if let Some((entity, mut team)) = teams.optional_single_mut() {
+        if controller.optional_single().is_some() {
             team.state_machine
                 .change_state(&mut commands, entity, SoccerTeamState::Attacking);
         }
@@ -166,7 +167,7 @@ pub fn Attacking_enter<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok(team) = teams.get_single() {
+    if let Some(team) = teams.optional_single() {
         info!("{:?} team attacking", team.color.team_color());
 
         let home_regions = match team.color.team_color() {
@@ -199,15 +200,15 @@ pub fn Attacking_execute<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Ok((entity, mut team, mut support_calculator)) = teams.get_single_mut() {
-        if let Ok(controller) = controller.get_single() {
+    if let Some((entity, mut team, mut support_calculator)) = teams.optional_single_mut() {
+        if let Some(controller) = controller.optional_single() {
             team.team.determine_best_supporting_position(
                 &params,
                 team.color,
                 &mut support_calculator,
                 &opponents,
                 controller,
-                support.get_single().is_ok(),
+                support.optional_single().is_some(),
                 &ball.single().physical,
                 goal.single(),
             );

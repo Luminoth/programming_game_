@@ -128,7 +128,7 @@ impl SoccerTeam {
         params: &SimulationParams,
         team: &T,
         support_calculator: &mut SupportSpotCalculator,
-        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
         controller_transform: &Transform,
         have_support: bool,
         ball_physical: &Physical,
@@ -153,11 +153,10 @@ impl SoccerTeam {
             // is it safe to pass to this spot?
             if self.is_pass_safe_from_all_opponents(
                 params,
-                team,
                 controller_position,
                 spot.position,
                 None,
-                players,
+                opponents,
                 ball_physical,
                 params.max_passing_force,
             ) {
@@ -168,11 +167,10 @@ impl SoccerTeam {
             if self
                 .can_shoot(
                     params,
-                    team,
                     spot.position,
                     &goal,
                     ball_physical,
-                    players,
+                    opponents,
                     params.max_passing_force,
                 )
                 .is_some()
@@ -205,25 +203,23 @@ impl SoccerTeam {
     fn is_pass_safe_from_all_opponents<T>(
         &self,
         params: &SimulationParams,
-        team: &T,
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
         ball_physical: &Physical,
         passing_force: f32,
     ) -> bool
     where
         T: TeamColorMarker,
     {
-        for player in players.iter() {
+        for opponent in opponents.iter() {
             if !self.is_pass_safe_from_opponent(
                 params,
-                team,
                 from,
                 target,
                 receiver,
-                player,
+                &opponent,
                 ball_physical,
                 passing_force,
             ) {
@@ -234,26 +230,17 @@ impl SoccerTeam {
         true
     }
 
-    fn is_pass_safe_from_opponent<T>(
+    fn is_pass_safe_from_opponent(
         &self,
         params: &SimulationParams,
-        team: &T,
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        player: (AnyTeamSoccerPlayerQueryItem, PhysicalQueryItem),
+        opponent: &PhysicalQueryItem,
         ball_physical: &Physical,
         passing_force: f32,
-    ) -> bool
-    where
-        T: TeamColorMarker,
-    {
-        // ignore teammates
-        if SoccerPlayer::are_same_team(team, &player.0) {
-            return true;
-        }
-
-        let opponent_position = player.1.transform.translation.truncate();
+    ) -> bool {
+        let opponent_position = opponent.transform.translation.truncate();
 
         let to_target = target - from;
         let to_target_norm = to_target.normalize_or_zero();
@@ -291,18 +278,17 @@ impl SoccerTeam {
         );
 
         // can the opponent intercept the ball in flight?
-        let reach = player.1.physical.max_speed * time_for_ball + BALL_RADIUS + PLAYER_RADIUS;
+        let reach = opponent.physical.max_speed * time_for_ball + BALL_RADIUS + PLAYER_RADIUS;
         local_pos_opp.y.abs() >= reach
     }
 
     fn can_shoot<T>(
         &self,
         params: &SimulationParams,
-        team: &T,
         from: Vec2,
         goal: &GoalQueryItem<T>,
         ball_physical: &Physical,
-        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
         power: f32,
     ) -> Option<Vec2>
     where
@@ -325,11 +311,10 @@ impl SoccerTeam {
             if time >= 0.0
                 && self.is_pass_safe_from_all_opponents(
                     params,
-                    team,
                     from,
                     target,
                     None,
-                    players,
+                    opponents,
                     ball_physical,
                     power,
                 )
@@ -346,12 +331,11 @@ impl SoccerTeam {
     pub fn request_pass<T>(
         &self,
         params: &SimulationParams,
-        team: &T,
         controller: Entity,
         controller_transform: &Transform,
         receiver: Entity,
         receiver_transform: &Transform,
-        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
         ball_physical: &Physical,
         player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
     ) where
@@ -362,11 +346,10 @@ impl SoccerTeam {
 
         if self.is_pass_safe_from_all_opponents(
             params,
-            team,
             controller_position,
             receiver_position,
             Some(receiver_transform),
-            players,
+            opponents,
             ball_physical,
             params.max_passing_force,
         ) {

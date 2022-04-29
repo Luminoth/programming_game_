@@ -4,7 +4,6 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::components::ball::*;
-use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
@@ -77,8 +76,7 @@ pub fn GlobalState_on_message<T>(
                         return;
                     }
 
-                    let team = team.single();
-                    field_player.steering.target = team.team.get_best_support_spot();
+                    field_player.steering.target = team.single().team.get_best_support_spot();
                 }
                 FieldPlayerMessage::GoHome => {
                     field_player.player.home_region = field_player.player.default_region;
@@ -212,13 +210,13 @@ pub fn Wait_execute<T>(
         ),
         (With<FieldPlayerStateWaitExecute>, Without<Ball>),
     >,
-    controller: Query<(Entity, &Transform), (With<T>, With<ControllingPlayer>)>,
     team: Query<SoccerTeamQuery<T>>,
+    controller: Query<(Entity, &Transform), (With<T>, With<ControllingPlayer>)>,
     closest: Query<Entity, (With<FieldPlayer>, With<T>, With<ClosestPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
-    //players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+    opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
     ball_physical: Query<PhysicalQuery, With<Ball>>,
-    goals: Query<AnyTeamGoalQuery>,
+    opponent_goal: Query<&Transform, Without<T>>,
 ) where
     T: TeamColorMarker,
 {
@@ -249,23 +247,20 @@ pub fn Wait_execute<T>(
                 // if we're farther up the field from the controller
                 // we should request a pass
                 if field_player.field_player.is_ahead_of_attacker(
-                    field_player.team,
                     &physical.transform,
                     &transform,
-                    &goals,
+                    &opponent_goal.single(),
                 ) {
-                    /*let team = team.single();
-                    team.team.request_pass(
+                    team.single().team.request_pass(
                         &params,
-                        field_player.team,
                         controller,
                         transform,
                         entity,
                         physical.transform,
-                        players,
+                        &opponents,
                         ball_physical.physical,
                         &mut player_message_dispatcher,
-                    );*/
+                    );
                 }
                 continue;
             }
@@ -300,8 +295,8 @@ pub fn ReceiveBall_enter<T>(
     >,
     controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
-    players: Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
-    goals: Query<AnyTeamGoalQuery>,
+    opponents: Query<&Transform, (With<SoccerPlayer>, Without<T>)>,
+    opponent_goal: Query<&Transform, Without<T>>,
     ball: Query<Entity, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -325,12 +320,11 @@ pub fn ReceiveBall_enter<T>(
 
         if field_player
             .player
-            .is_in_hot_region(field_player.team, transform, &goals, &pitch)
+            .is_in_hot_region(transform, opponent_goal.single(), &pitch)
             && rng.gen::<f32>() < params.chance_of_using_arrive_type_receive_behavior
             && !field_player.player.is_opponent_within_radius(
-                field_player.team,
                 transform,
-                &players,
+                &opponents,
                 params.pass_threat_radius,
             )
         {

@@ -23,11 +23,9 @@ pub fn update<T>(
     T: TeamColorMarker,
 {
     for team in teams.iter() {
-        let ball = ball.single();
-
         team.team.calculate_closest_player_to_ball(
             &mut commands,
-            &ball.transform,
+            &ball.single().transform,
             &players,
             closest.get_single().ok(),
         );
@@ -75,9 +73,8 @@ pub fn PrepareForKickOff_enter<T>(
                 .dispatch_message(Some(field_player), FieldPlayerMessage::GoHome);
         }
 
-        let goal_keeper = goal_keeper.single();
         goal_keeper_message_dispatcher
-            .dispatch_message(Some(goal_keeper), GoalKeeperMessage::GoHome);
+            .dispatch_message(Some(goal_keeper.single()), GoalKeeperMessage::GoHome);
     }
 }
 
@@ -194,7 +191,7 @@ pub fn Attacking_execute<T>(
         (Entity, SoccerTeamQueryMut<T>, &mut SupportSpotCalculator),
         With<SoccerTeamStateAttackingExecute>,
     >,
-    players: Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+    opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
     controller: Query<&Transform, With<ControllingPlayer>>,
     support: Query<Entity, With<SupportingPlayer>>,
     ball: Query<PhysicalQuery, With<Ball>>,
@@ -204,15 +201,14 @@ pub fn Attacking_execute<T>(
 {
     if let Ok((entity, mut team, mut support_calculator)) = teams.get_single_mut() {
         if let Ok(controller) = controller.get_single() {
-            let ball = ball.single();
             team.team.determine_best_supporting_position(
                 &params,
                 team.color,
                 &mut support_calculator,
-                &players,
+                &opponents,
                 controller,
                 support.get_single().is_ok(),
-                &ball.physical,
+                &ball.single().physical,
                 goal.single(),
             );
         } else {

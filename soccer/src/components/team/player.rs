@@ -16,14 +16,6 @@ pub struct SoccerPlayer {
 }
 
 impl SoccerPlayer {
-    pub fn are_same_team<T>(team: &T, player: &AnyTeamSoccerPlayerQueryItem) -> bool
-    where
-        T: TeamColorMarker,
-    {
-        (player.red_team.is_some() && team.team_color() == TeamColor::Red)
-            || (player.blue_team.is_some() && team.team_color() == TeamColor::Blue)
-    }
-
     pub fn get_home_region<'a>(&self, pitch: &'a Pitch) -> &'a PitchRegion {
         pitch.regions.get(self.home_region).unwrap()
     }
@@ -33,27 +25,22 @@ impl SoccerPlayer {
             .is_inside_half(transform.translation.truncate())
     }
 
-    pub fn is_in_hot_region<T>(
+    pub fn is_in_hot_region(
         &self,
-        team: &T,
         transform: &Transform,
-        goals: &Query<AnyTeamGoalQuery>,
+        opponent_goal_transform: &Transform,
         pitch: &Pitch,
-    ) -> bool
-    where
-        T: TeamColorMarker,
-    {
+    ) -> bool {
         let position = transform.translation.truncate();
-        let opponent_goal_position = Goal::get_opponent_goal_position(team, goals).unwrap();
+        let opponent_goal_position = opponent_goal_transform.translation.truncate();
 
         (position.y - opponent_goal_position.y).abs() < pitch.length() / 3.0
     }
 
     pub fn is_opponent_within_radius<T>(
         &self,
-        team: &T,
         transform: &Transform,
-        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+        opponents: &Query<&Transform, (With<SoccerPlayer>, Without<T>)>,
         radius: f32,
     ) -> bool
     where
@@ -61,13 +48,8 @@ impl SoccerPlayer {
     {
         let radius_squared = radius * radius;
         let position = transform.translation.truncate();
-        for (player, physical) in players.iter() {
-            // ignore teammates
-            if SoccerPlayer::are_same_team(team, &player) {
-                return true;
-            }
-
-            let opponent_position = physical.transform.translation.truncate();
+        for opponent_transform in opponents.iter() {
+            let opponent_position = opponent_transform.translation.truncate();
             if position.distance_squared(opponent_position) < radius_squared {
                 return true;
             }
@@ -96,15 +78,6 @@ where
 {
     pub player: &'w mut SoccerPlayer,
     pub team: &'w T,
-    pub name: &'w Name,
-}
-
-#[derive(WorldQuery)]
-#[world_query(derive(Debug))]
-pub struct AnyTeamSoccerPlayerQuery<'w> {
-    pub player: &'w SoccerPlayer,
-    pub blue_team: Option<&'w BlueTeam>,
-    pub red_team: Option<&'w RedTeam>,
     pub name: &'w Name,
 }
 

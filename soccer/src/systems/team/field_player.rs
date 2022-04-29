@@ -8,6 +8,7 @@ use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
 use crate::game::team::*;
+use crate::resources::pitch::*;
 use crate::resources::*;
 
 pub fn GlobalState_execute<T>(
@@ -282,5 +283,95 @@ pub fn Wait_execute<T>(
                 }
             }
         }
+    }
+}
+
+pub fn ReturnToHomeRegion_enter<T>(
+    mut commands: Commands,
+    pitch: Res<Pitch>,
+    mut query: Query<
+        (Entity, FieldPlayerQueryMut<T>),
+        With<FieldPlayerStateReturnToHomeRegionEnter>,
+    >,
+) where
+    T: TeamColorMarker,
+{
+    for (entity, mut player) in query.iter_mut() {
+        player.agent.arrive_on(&mut commands, entity);
+
+        if !player
+            .player
+            .get_home_region(&pitch)
+            .is_inside_half(player.steering.target)
+        {
+            player.steering.target = player.player.get_home_region(&pitch).position;
+        }
+    }
+}
+
+pub fn ReturnToHomeRegion_execute<T>(
+    mut commands: Commands,
+    params: Res<SimulationParams>,
+    game_state: Res<GameState>,
+    pitch: Res<Pitch>,
+    mut query: Query<
+        (Entity, FieldPlayerQueryMut<T>, &Transform),
+        With<FieldPlayerStateReturnToHomeRegionExecute>,
+    >,
+    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+) where
+    T: TeamColorMarker,
+{
+    for (entity, mut player, transform) in query.iter_mut() {
+        if game_state.is_game_on() {
+            if let Ok(closest) = closest.get_single() {
+                let have_receiver = receiving.get_single().is_ok();
+
+                // if no one's after the ball, chase it
+                if entity == closest && !have_receiver
+                /*&& !goal_keeper_has_ball*/
+                {
+                    player.state_machine.change_state(
+                        &mut commands,
+                        entity,
+                        FieldPlayerState::ChaseBall,
+                    );
+                    continue;
+                }
+            }
+
+            let position = transform.translation.truncate();
+            if player
+                .player
+                .get_home_region(&pitch)
+                .is_inside_half(position)
+            {
+                player.steering.target = position;
+                player
+                    .state_machine
+                    .change_state(&mut commands, entity, FieldPlayerState::Wait);
+            }
+        } else {
+            if player
+                .steering
+                .is_at_target(transform, params.player_in_target_range_squared)
+            {
+                player
+                    .state_machine
+                    .change_state(&mut commands, entity, FieldPlayerState::Wait);
+            }
+        }
+    }
+}
+
+pub fn ReturnToHomeRegion_exit<T>(
+    mut commands: Commands,
+    query: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateReturnToHomeRegionExit>>,
+) where
+    T: TeamColorMarker,
+{
+    for (entity, player) in query.iter() {
+        player.agent.arrive_off(&mut commands, entity);
     }
 }

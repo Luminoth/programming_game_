@@ -28,11 +28,12 @@ pub struct FieldPlayer {
 }
 
 impl FieldPlayer {
+    pub fn get_home_region<'a>(&self, pitch: &'a Pitch) -> &'a PitchRegion {
+        pitch.regions.get(self.home_region).unwrap()
+    }
+
     pub fn is_in_home_region(&self, transform: &Transform, pitch: &Pitch) -> bool {
-        pitch
-            .regions
-            .get(self.home_region)
-            .unwrap()
+        self.get_home_region(pitch)
             .is_inside_half(transform.translation.truncate())
     }
 

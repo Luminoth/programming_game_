@@ -130,6 +130,18 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),
                     )
+                    .with_system(
+                        systems::team::field_player::ReturnToHomeRegion_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReturnToHomeRegion_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
                     // goal keeper systems
                     .with_system(
                         systems::team::goal_keeper::GlobalState_execute::<RedTeam>
@@ -215,6 +227,30 @@ impl Plugin for MainStatePlugin {
                     )
                     .with_system(
                         systems::team::field_player::ChaseBall_exit::<BlueTeam>
+                            .label(Systems::StateExit)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReturnToHomeRegion_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReturnToHomeRegion_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReturnToHomeRegion_exit::<RedTeam>
+                            .label(Systems::StateExit)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReturnToHomeRegion_exit::<BlueTeam>
                             .label(Systems::StateExit)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),

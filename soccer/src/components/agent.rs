@@ -21,4 +21,12 @@ impl Agent {
     pub fn arrive_off(&self, commands: &mut Commands, entity: Entity) {
         commands.entity(entity).remove::<Arrive>();
     }
+
+    pub fn pursuit_on(&self, commands: &mut Commands, entity: Entity, target: Entity) {
+        commands.entity(entity).insert(Pursuit { target });
+    }
+
+    pub fn pursuit_off(&self, commands: &mut Commands, entity: Entity) {
+        commands.entity(entity).remove::<Pursuit>();
+    }
 }

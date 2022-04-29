@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
 use crate::components::agent::*;
+use crate::components::goal::*;
 use crate::components::state::impl_state_machine;
 use crate::components::steering::*;
 use crate::resources::*;
@@ -58,16 +59,7 @@ impl FieldPlayer {
     {
         let position = transform.translation.truncate();
         let controller_position = controller_transform.translation.truncate();
-
-        let mut opponent_goal_position = Vec2::ZERO;
-        for goal in goals.iter() {
-            if (goal.blue_team.is_some() && team.team_color() == TeamColor::Red)
-                || (goal.red_team.is_some() && team.team_color() == TeamColor::Blue)
-            {
-                opponent_goal_position = goal.transform.translation.truncate();
-                break;
-            }
-        }
+        let opponent_goal_position = Goal::get_opponent_goal_position(team, goals).unwrap();
 
         (position.x - opponent_goal_position.x).abs()
             < (controller_position.x - opponent_goal_position.x).abs()

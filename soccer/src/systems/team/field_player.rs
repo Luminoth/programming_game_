@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::components::ball::*;
 use crate::components::goal::*;
@@ -290,6 +291,59 @@ pub fn Wait_execute<T>(
                     continue;
                 }
             }
+        }
+    }
+}
+
+pub fn ReceiveBall_enter<T>(
+    mut commands: Commands,
+    params: Res<SimulationParams>,
+    pitch: Res<Pitch>,
+    field_player: Query<
+        (Entity, FieldPlayerQuery<T>, &Transform),
+        With<FieldPlayerStateReceiveBallEnter>,
+    >,
+    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    players: Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+    goals: Query<AnyTeamGoalQuery>,
+    ball: Query<Entity, With<Ball>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Ok(controlling) = controlling.get_single() {
+        commands.entity(controlling).remove::<ControllingPlayer>();
+    }
+
+    if let Ok(receiving) = receiving.get_single() {
+        commands.entity(receiving).remove::<ReceivingPlayer>();
+    }
+
+    let mut rng = rand::thread_rng();
+
+    if let Ok((entity, field_player, transform)) = field_player.get_single() {
+        // this player is now the receiver / controller
+        commands
+            .entity(entity)
+            .insert(ReceivingPlayer)
+            .insert(ControllingPlayer);
+
+        if field_player
+            .player
+            .is_in_hot_region(field_player.team, transform, &goals, &pitch)
+            && rng.gen::<f32>() < params.chance_of_using_arrive_type_receive_behavior
+            && !field_player.player.is_opponent_within_radius(
+                field_player.team,
+                transform,
+                &players,
+                params.pass_threat_radius,
+            )
+        {
+            field_player.agent.arrive_on(&mut commands, entity);
+        } else {
+            field_player
+                .agent
+                .pursuit_on(&mut commands, entity, ball.single());
         }
     }
 }

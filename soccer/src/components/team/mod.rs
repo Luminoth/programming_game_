@@ -241,7 +241,7 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        opponent: (AnyTeamSoccerPlayerQueryItem, PhysicalQueryItem),
+        player: (AnyTeamSoccerPlayerQueryItem, PhysicalQueryItem),
         ball_physical: &Physical,
         passing_force: f32,
     ) -> bool
@@ -249,13 +249,11 @@ impl SoccerTeam {
         T: TeamColorMarker,
     {
         // ignore teammates
-        if (opponent.0.red_team.is_some() && team.team_color() == TeamColor::Red)
-            || (opponent.0.blue_team.is_some() && team.team_color() == TeamColor::Blue)
-        {
+        if SoccerPlayer::are_same_team(team, &player.0) {
             return true;
         }
 
-        let opponent_position = opponent.1.transform.translation.truncate();
+        let opponent_position = player.1.transform.translation.truncate();
 
         let to_target = target - from;
         let to_target_norm = to_target.normalize_or_zero();
@@ -293,7 +291,7 @@ impl SoccerTeam {
         );
 
         // can the opponent intercept the ball in flight?
-        let reach = opponent.1.physical.max_speed * time_for_ball + BALL_RADIUS + PLAYER_RADIUS;
+        let reach = player.1.physical.max_speed * time_for_ball + BALL_RADIUS + PLAYER_RADIUS;
         local_pos_opp.y.abs() >= reach
     }
 

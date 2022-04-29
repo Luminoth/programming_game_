@@ -49,12 +49,14 @@ impl Physical {
     }
 
     #[allow(dead_code)]
-    pub fn future_position(&self, params: &SimulationParams, transform: &Transform) -> Vec2 {
+    pub fn future_position(
+        &self,
+        params: &SimulationParams,
+        transform: &Transform,
+        dt: f32,
+    ) -> Vec2 {
         // x = ut + 1/2(-a)t^2
         // x = distance, a = friction, u = starting velocity
-
-        // https://github.com/bevyengine/bevy/issues/2041
-        let dt = PHYSICS_STEP;
 
         let ut = self.velocity * dt;
         let half_a_t_squared = 0.5 * -params.friction * dt * dt;

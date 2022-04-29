@@ -68,13 +68,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
         num_attempts_to_find_valid_strike: 5,
 
+        chance_of_using_arrive_type_receive_behavior: 0.5,
+
         ball_within_receiving_range_squared: 10.0 * 10.0,
         player_in_target_range_squared: 10.0 * 10.0,
         player_kicking_distance_squared: 10.0 * 10.0,
         keeper_in_ball_range_squared: 6.0 * 6.0,
+        pass_threat_radius: 70.0,
 
         seek_weight: 1.0,
         arrive_weight: 1.0,
+        pursuit_weight: 1.0,
 
         // NOTE: this is negative in the example source
         // so anywhere it's used, it needs to be negated

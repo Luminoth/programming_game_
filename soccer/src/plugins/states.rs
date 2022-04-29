@@ -41,6 +41,7 @@ impl Plugin for MainStatePlugin {
                     // steering
                     .with_system(systems::steering::update_seek.label(Systems::Steering))
                     .with_system(systems::steering::update_arrive.label(Systems::Steering))
+                    .with_system(systems::steering::update_pursuit.label(Systems::Steering))
                     .with_system(
                         systems::steering::update
                             .label(Systems::SteeringUpdatePhysics)
@@ -228,6 +229,18 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::team::field_player::ChaseBall_exit::<BlueTeam>
                             .label(Systems::StateExit)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReceiveBall_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReceiveBall_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),
                     )

@@ -84,4 +84,12 @@ impl Pitch {
             regions,
         }
     }
+
+    pub fn length(&self) -> f32 {
+        self.extents.x.max(self.extents.y)
+    }
+
+    pub fn breadth(&self) -> f32 {
+        self.extents.x.min(self.extents.y)
+    }
 }

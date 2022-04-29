@@ -33,3 +33,16 @@ pub fn update_arrive(
             .accumulate_force(&physical.physical, force, params.arrive_weight);
     }
 }
+
+pub fn update_pursuit(
+    params: Res<SimulationParams>,
+    mut pursuing: Query<(PursuitQueryMut, PhysicalQuery)>,
+    physicals: Query<PhysicalQuery>,
+) {
+    for (mut steering, physical) in pursuing.iter_mut() {
+        let force = steering.pursuit.force(&params, &physical, &physicals);
+        steering
+            .steering
+            .accumulate_force(&physical.physical, force, params.pursuit_weight);
+    }
+}

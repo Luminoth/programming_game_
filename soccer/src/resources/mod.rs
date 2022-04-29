@@ -38,15 +38,19 @@ pub struct SimulationParams {
 
     pub num_attempts_to_find_valid_strike: usize,
 
+    pub chance_of_using_arrive_type_receive_behavior: f32,
+
     // range checking
     pub ball_within_receiving_range_squared: f32,
     pub player_in_target_range_squared: f32,
     pub player_kicking_distance_squared: f32,
     pub keeper_in_ball_range_squared: f32,
+    pub pass_threat_radius: f32,
 
     // steering
     pub seek_weight: f32,
     pub arrive_weight: f32,
+    pub pursuit_weight: f32,
 
     // physics
     pub friction: f32,

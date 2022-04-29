@@ -75,17 +75,17 @@ where
             });
         }
 
-        let home_regions = match team_color {
-            TeamColor::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
-            TeamColor::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
+        let (numbers, home_regions) = match team_color {
+            TeamColor::Red => (RED_TEAM_NUMBERS, RED_TEAM_DEFENDING_HOME_REGIONS),
+            TeamColor::Blue => (BLUE_TEAM_NUMBERS, BLUE_TEAM_DEFENDING_HOME_REGIONS),
         };
 
         // goal keeper
-        GoalKeeperBundle::<T>::spawn(commands, params, home_regions[0], pitch);
+        GoalKeeperBundle::<T>::spawn(commands, params, pitch, numbers[0], home_regions[0]);
 
         // players
-        for home_region in home_regions.iter().take(TEAM_SIZE).skip(1) {
-            FieldPlayerBundle::<T>::spawn(commands, params, *home_region, pitch);
+        for i in 1..TEAM_SIZE {
+            FieldPlayerBundle::<T>::spawn(commands, params, pitch, numbers[i], home_regions[i]);
         }
     }
 }

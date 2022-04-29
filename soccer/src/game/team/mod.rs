@@ -11,6 +11,10 @@ use bevy_inspector_egui::prelude::*;
 
 pub const TEAM_SIZE: usize = 5;
 
+// first number is the goal keeper number
+pub const BLUE_TEAM_NUMBERS: [usize; TEAM_SIZE] = [1, 2, 3, 4, 5];
+pub const RED_TEAM_NUMBERS: [usize; TEAM_SIZE] = [11, 12, 13, 14, 15];
+
 // first region is the goal keeper home
 pub const BLUE_TEAM_DEFENDING_HOME_REGIONS: [usize; TEAM_SIZE] = [1, 6, 8, 3, 5];
 pub const RED_TEAM_DEFENDING_HOME_REGIONS: [usize; TEAM_SIZE] = [16, 9, 11, 12, 14];

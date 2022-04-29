@@ -37,8 +37,9 @@ where
     pub fn spawn(
         commands: &mut Commands,
         params: &SimulationParams,
-        home_region: usize,
         pitch: &Pitch,
+        number: usize,
+        home_region: usize,
     ) -> Entity
     where
         T: TeamColorMarker,
@@ -49,12 +50,13 @@ where
         let team_color = team.team_color();
 
         info!(
-            "spawning field player for team {:?} at {} (home region: {})",
-            team_color, position, home_region
+            "spawning field player #{} for team {:?} at {} (home region: {})",
+            number, team_color, position, home_region
         );
 
         let mut bundle = commands.spawn_bundle(FieldPlayerBundle {
             player: FieldPlayer {
+                number,
                 home_region,
                 default_region: home_region,
             },
@@ -74,7 +76,7 @@ where
                 bounding_radius: PLAYER_RADIUS,
             },
             transform: Transform::from_translation(position.extend(PLAYER_SORT)),
-            name: Name::new(format!("{:?} Field Player", team_color)),
+            name: Name::new(format!("#{} {:?} Field Player", number, team_color)),
             ..Default::default()
         });
 

@@ -37,8 +37,9 @@ where
     pub fn spawn(
         commands: &mut Commands,
         params: &SimulationParams,
-        home_region: usize,
         pitch: &Pitch,
+        number: usize,
+        home_region: usize,
     ) -> Entity {
         let position = pitch.regions.get(home_region).unwrap().position;
 
@@ -46,12 +47,13 @@ where
         let team_color = team.team_color();
 
         info!(
-            "spawning goal keeper for team {:?} at {} (home region: {})",
-            team_color, position, home_region
+            "spawning goal keeper #{} for team {:?} at {} (home region: {})",
+            number, team_color, position, home_region
         );
 
         let mut bundle = commands.spawn_bundle(GoalKeeperBundle {
             goal_keeper: GoalKeeper {
+                number,
                 home_region,
                 default_region: home_region,
             },
@@ -71,7 +73,7 @@ where
                 bounding_radius: PLAYER_RADIUS,
             },
             transform: Transform::from_translation(position.extend(PLAYER_SORT)),
-            name: Name::new(format!("{:?} Goal Keeper", team_color)),
+            name: Name::new(format!("#{} {:?} Goal Keeper", number, team_color)),
             ..Default::default()
         });
 

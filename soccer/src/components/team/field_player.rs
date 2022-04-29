@@ -23,6 +23,8 @@ impl_state_machine!(
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct FieldPlayer {
+    pub number: usize,
+
     pub home_region: usize,
     pub default_region: usize,
 }

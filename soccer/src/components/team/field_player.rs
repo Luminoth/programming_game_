@@ -29,10 +29,9 @@ impl FieldPlayer {
         &self,
         params: &SimulationParams,
         transform: &Transform,
-        ball_transform: &Transform,
+        ball_position: Vec2,
     ) -> bool {
         let position = transform.translation.truncate();
-        let ball_position = ball_transform.translation.truncate();
         position.distance_squared(ball_position) < params.ball_within_receiving_range_squared
     }
 
@@ -40,10 +39,9 @@ impl FieldPlayer {
         &self,
         params: &SimulationParams,
         transform: &Transform,
-        ball_transform: &Transform,
+        ball_position: Vec2,
     ) -> bool {
         let position = transform.translation.truncate();
-        let ball_position = ball_transform.translation.truncate();
         position.distance_squared(ball_position) < params.player_kicking_distance_squared
     }
 

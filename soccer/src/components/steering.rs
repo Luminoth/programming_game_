@@ -16,12 +16,12 @@ pub struct Steering {
 }
 
 impl Steering {
-    pub fn is_at_target(&self, transform: &Transform, range_squared: f32) -> bool {
+    pub fn is_at_target(&self, params: &SimulationParams, transform: &Transform) -> bool {
         transform
             .translation
             .truncate()
             .distance_squared(self.target)
-            < range_squared
+            < params.player_in_target_range_squared
     }
 
     #[allow(dead_code)]

@@ -52,7 +52,8 @@ impl Plugin for MainStatePlugin {
                         systems::physics::update
                             .label(Systems::Physics)
                             .after(Systems::SteeringUpdatePhysics),
-                    ),
+                    )
+                    .with_system(systems::facing.after(Systems::Physics)),
             )
             // agents (fixed timestep)
             .add_system_set(
@@ -127,6 +128,18 @@ impl Plugin for MainStatePlugin {
                     )
                     .with_system(
                         systems::team::field_player::Wait_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReceiveBall_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReceiveBall_execute::<BlueTeam>
                             .label(Systems::StateExecute)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),

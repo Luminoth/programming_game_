@@ -43,12 +43,14 @@ impl Default for Physical {
 }
 
 impl Physical {
-    #[allow(dead_code)]
     pub fn speed(&self) -> f32 {
         self.velocity.length()
     }
 
-    #[allow(dead_code)]
+    pub fn track(&mut self, position: Vec2) {
+        // TODO: RotateHeadingToFacePosition(position);
+    }
+
     pub fn future_position(
         &self,
         params: &SimulationParams,

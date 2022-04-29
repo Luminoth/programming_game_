@@ -23,7 +23,7 @@ pub fn GlobalState_execute<T>(
     T: TeamColorMarker,
 {
     for (entity, field_player, mut physical) in field_players.iter_mut() {
-        let ball = ball.single();
+        let ball_position = ball.single().translation.truncate();
 
         let mut max_speed = params.player_max_speed_without_ball;
 
@@ -33,7 +33,7 @@ pub fn GlobalState_execute<T>(
                 && field_player.field_player.is_ball_within_receiving_range(
                     &params,
                     &physical.transform,
-                    &ball,
+                    ball_position,
                 )
             {
                 max_speed = params.player_max_speed_with_ball;
@@ -103,7 +103,7 @@ pub fn GlobalState_on_message<T>(
                     if !field_player.field_player.is_ball_within_kicking_range(
                         &params,
                         transform,
-                        &ball_physical.transform,
+                        ball_position,
                     ) {
                         return;
                     }
@@ -143,18 +143,18 @@ pub fn ChaseBall_execute<T>(
         With<FieldPlayerStateChaseBallExecute>,
     >,
     closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
-    ball_physical: Query<PhysicalQuery, With<Ball>>,
+    ball_transform: Query<&Transform, With<Ball>>,
 ) where
     T: TeamColorMarker,
 {
     for (entity, mut field_player, transform) in field_players.iter_mut() {
-        let ball_physical = ball_physical.single();
+        let ball_position = ball_transform.single().translation.truncate();
 
         // kick the ball if it's in range
         if field_player.field_player.is_ball_within_kicking_range(
             &params,
             &transform,
-            &ball_physical.transform,
+            ball_position,
         ) {
             info!("kicking ball!");
 
@@ -171,7 +171,7 @@ pub fn ChaseBall_execute<T>(
             if entity == closest {
                 info!("continue chasing ball");
 
-                field_player.steering.target = ball_physical.transform.translation.truncate();
+                field_player.steering.target = ball_position;
                 continue;
             }
         }
@@ -226,7 +226,7 @@ pub fn Wait_execute<T>(
         // get back to our home if we got bumped off it
         if !field_player
             .steering
-            .is_at_target(&physical.transform, params.player_in_target_range_squared)
+            .is_at_target(&params, &physical.transform)
         {
             if arrive.is_none() {
                 field_player.agent.arrive_on(&mut commands, entity);
@@ -239,15 +239,10 @@ pub fn Wait_execute<T>(
         }
         physical.physical.velocity = Vec2::ZERO;
 
-        //let ball_physical = ball_physical.single();
-
-        // TODO:
-        //field_player.player.track_ball(&ball_physical.transform);
-        /*void PlayerBase::TrackBall()
-        {
-          RotateHeadingToFacePosition(Ball()->Pos());
-        }
-        */
+        let ball_physical = ball_physical.single();
+        physical
+            .physical
+            .track(ball_physical.transform.translation.truncate());
 
         if let Ok((controller, transform)) = controller.get_single() {
             if entity != controller {
@@ -348,6 +343,60 @@ pub fn ReceiveBall_enter<T>(
     }
 }
 
+pub fn ReceiveBall_execute<T>(
+    mut commands: Commands,
+    params: Res<SimulationParams>,
+    mut field_player: Query<
+        (
+            Entity,
+            FieldPlayerQueryMut<T>,
+            PhysicalQueryMut,
+            Option<&Pursuit>,
+        ),
+        With<FieldPlayerStateReceiveBallExecute>,
+    >,
+    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    ball: Query<&Transform, With<Ball>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Ok((entity, mut field_player, mut physical, pursuit)) = field_player.get_single_mut() {
+        let ball_position = ball.single().translation.truncate();
+
+        // chase the ball if it's close enough
+        if field_player.field_player.is_ball_within_receiving_range(
+            &params,
+            physical.transform,
+            ball_position,
+        ) || !controlling.get_single().is_ok()
+        {
+            field_player.state_machine.change_state(
+                &mut commands,
+                entity,
+                FieldPlayerState::ChaseBall,
+            );
+        }
+
+        // update pursuit target
+        if pursuit.is_some() {
+            field_player.steering.target = ball_position;
+        }
+
+        // stop if we've arrived
+        if field_player
+            .steering
+            .is_at_target(&params, physical.transform)
+        {
+            field_player.agent.arrive_off(&mut commands, entity);
+            field_player.agent.pursuit_off(&mut commands, entity);
+
+            physical.physical.track(ball_position);
+
+            physical.physical.velocity = Vec2::ZERO;
+        }
+    }
+}
+
 pub fn ReturnToHomeRegion_enter<T>(
     mut commands: Commands,
     pitch: Res<Pitch>,
@@ -416,10 +465,7 @@ pub fn ReturnToHomeRegion_execute<T>(
                 );
             }
         } else {
-            if field_player
-                .steering
-                .is_at_target(transform, params.player_in_target_range_squared)
-            {
+            if field_player.steering.is_at_target(&params, transform) {
                 field_player.state_machine.change_state(
                     &mut commands,
                     entity,

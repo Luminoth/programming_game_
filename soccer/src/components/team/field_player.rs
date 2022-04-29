@@ -3,12 +3,11 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
 use crate::components::agent::*;
+use crate::components::state::impl_state_machine;
 use crate::components::steering::*;
-use crate::components::team::*;
-use crate::resources::pitch::*;
 use crate::resources::*;
 
-use super::super::state::impl_state_machine;
+use super::*;
 
 impl_state_machine!(
     FieldPlayer,
@@ -22,23 +21,9 @@ impl_state_machine!(
 );
 
 #[derive(Debug, Default, Component, Inspectable)]
-pub struct FieldPlayer {
-    pub number: usize,
-
-    pub home_region: usize,
-    pub default_region: usize,
-}
+pub struct FieldPlayer;
 
 impl FieldPlayer {
-    pub fn get_home_region<'a>(&self, pitch: &'a Pitch) -> &'a PitchRegion {
-        pitch.regions.get(self.home_region).unwrap()
-    }
-
-    pub fn is_in_home_region(&self, transform: &Transform, pitch: &Pitch) -> bool {
-        self.get_home_region(pitch)
-            .is_inside_half(transform.translation.truncate())
-    }
-
     pub fn is_ball_within_receiving_range(
         &self,
         params: &SimulationParams,
@@ -95,11 +80,13 @@ pub struct FieldPlayerQuery<'w, T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w FieldPlayer,
+    pub player: &'w SoccerPlayer,
+    pub field_player: &'w FieldPlayer,
     pub team: &'w T,
+    pub name: &'w Name,
+
     pub agent: &'w Agent,
     pub steering: &'w Steering,
-    pub name: &'w Name,
 }
 
 #[derive(WorldQuery)]
@@ -108,21 +95,25 @@ pub struct FieldPlayerQueryMut<'w, T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w mut FieldPlayer,
+    pub player: &'w mut SoccerPlayer,
+    pub field_player: &'w FieldPlayer,
     pub team: &'w T,
+    pub name: &'w Name,
+
     pub agent: &'w mut Agent,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut FieldPlayerStateMachine,
-    pub name: &'w Name,
 }
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
 pub struct AnyTeamFieldPlayerQuery<'w> {
-    pub player: &'w FieldPlayer,
+    pub player: &'w SoccerPlayer,
+    pub field_player: &'w FieldPlayer,
     pub blue_team: Option<&'w BlueTeam>,
     pub red_team: Option<&'w RedTeam>,
+    pub name: &'w Name,
+
     pub agent: &'w Agent,
     pub steering: &'w Steering,
-    pub name: &'w Name,
 }

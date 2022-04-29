@@ -16,8 +16,7 @@ use crate::resources::*;
 pub fn update<T>(
     mut commands: Commands,
     query: Query<SoccerTeamQuery<T>>,
-    players: Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery), Without<GoalKeeper>>,
-    goal_keeper: Query<(Entity, GoalKeeperQuery<T>, PhysicalQuery), Without<FieldPlayer>>,
+    players: Query<(Entity, &Transform), (With<SoccerPlayer>, With<T>)>,
     closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
     ball: Query<PhysicalQuery, With<Ball>>,
 ) where
@@ -30,8 +29,7 @@ pub fn update<T>(
             &mut commands,
             &ball.transform,
             &players,
-            &goal_keeper,
-            &closest,
+            closest.get_single().ok(),
         );
     }
 }
@@ -104,7 +102,7 @@ pub fn PrepareForKickOff_execute<T>(
         }
 
         let (goal_keeper, transform) = goal_keeper.single();
-        if !goal_keeper.goal_keeper.is_in_home_region(transform, &pitch) {
+        if !goal_keeper.player.is_in_home_region(transform, &pitch) {
             return;
         }
 
@@ -142,6 +140,8 @@ pub fn Defending_enter<T>(
             TeamColor::Red => RED_TEAM_DEFENDING_HOME_REGIONS,
             TeamColor::Blue => BLUE_TEAM_DEFENDING_HOME_REGIONS,
         };
+
+        let mut goal_keeper = goal_keeper.single_mut();
 
         team.team
             .reset_player_home_regions(&mut players, &mut goal_keeper, home_regions);
@@ -182,6 +182,8 @@ pub fn Attacking_enter<T>(
             TeamColor::Blue => BLUE_TEAM_ATTACKING_HOME_REGIONS,
         };
 
+        let mut goal_keeper = goal_keeper.single_mut();
+
         team.team
             .reset_player_home_regions(&mut players, &mut goal_keeper, home_regions);
 
@@ -197,9 +199,9 @@ pub fn Attacking_execute<T>(
         (Entity, SoccerTeamQueryMut<T>, &mut SupportSpotCalculator),
         With<SoccerTeamStateAttackingExecute>,
     >,
-    players: Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
-    controller: Query<(FieldPlayerQuery<T>, &Transform), With<ControllingPlayer>>,
-    support: Query<(FieldPlayerQuery<T>, &Transform), With<SupportingPlayer>>,
+    players: Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+    controller: Query<&Transform, With<ControllingPlayer>>,
+    support: Query<Entity, With<SupportingPlayer>>,
     ball: Query<PhysicalQuery, With<Ball>>,
     goal: Query<GoalQuery<T>>,
 ) where
@@ -214,7 +216,7 @@ pub fn Attacking_execute<T>(
                 &mut support_calculator,
                 &players,
                 controller,
-                support.get_single().ok(),
+                support.get_single().is_ok(),
                 &ball.physical,
                 goal.single(),
             );

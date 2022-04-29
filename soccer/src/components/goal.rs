@@ -25,6 +25,7 @@ where
 {
     pub goal: &'w Goal,
     pub team: &'w T,
+
     pub transform: &'w Transform,
 }
 
@@ -34,5 +35,6 @@ pub struct AnyTeamGoalQuery<'w> {
     pub goal: &'w Goal,
     pub blue_team: Option<&'w BlueTeam>,
     pub red_team: Option<&'w RedTeam>,
+
     pub transform: &'w Transform,
 }

@@ -20,6 +20,7 @@ where
 {
     pub team: SoccerTeam,
     pub color: T,
+
     pub support_spots: SupportSpotCalculator,
 
     pub transform: Transform,

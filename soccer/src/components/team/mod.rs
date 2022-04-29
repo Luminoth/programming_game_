@@ -1,8 +1,10 @@
 mod field_player;
 mod goal_keeper;
+mod player;
 
 pub use field_player::*;
 pub use goal_keeper::*;
+pub use player::*;
 
 use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
@@ -18,10 +20,6 @@ use crate::resources::SimulationParams;
 use crate::util::point_to_world_space;
 
 use super::state::impl_state_machine;
-
-// rename of the book's PlayerBase
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct SoccerPlayer;
 
 impl_state_machine!(SoccerTeam, PrepareForKickOff, Defending, Attacking);
 
@@ -42,13 +40,12 @@ impl SoccerTeam {
         &self,
         commands: &mut Commands,
         ball_transform: &Transform,
-        players: &Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery), Without<GoalKeeper>>,
-        _goal_keeper: &Query<(Entity, GoalKeeperQuery<T>, PhysicalQuery), Without<FieldPlayer>>,
-        closest: &Query<Entity, (With<T>, With<ClosestPlayer>)>,
+        players: &Query<(Entity, &Transform), (With<SoccerPlayer>, With<T>)>,
+        closest: Option<Entity>,
     ) where
         T: TeamColorMarker,
     {
-        if let Ok(closest) = closest.get_single() {
+        if let Some(closest) = closest {
             commands.entity(closest).remove::<ClosestPlayer>();
         }
 
@@ -56,17 +53,14 @@ impl SoccerTeam {
 
         let mut closest_dist = f32::MAX;
         let mut closest_player = None;
-        for (entity, player, physical) in players.iter() {
-            let position = physical.transform.translation.truncate();
+        for (entity, transform) in players.iter() {
+            let position = transform.translation.truncate();
             let dist = position.distance_squared(ball_position);
             if dist < closest_dist {
                 closest_dist = dist;
                 closest_player = Some(entity);
             }
         }
-
-        // TODO: goal keepers being closest is completely unaccounted for
-        //let goal_keeper = goal_keeper.single();
 
         if let Some(closest_player) = closest_player {
             commands.entity(closest_player).insert(ClosestPlayer);
@@ -75,18 +69,17 @@ impl SoccerTeam {
 
     pub fn reset_player_home_regions<T>(
         &self,
-        players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
-        goal_keeper: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+        field_players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
+        goal_keeper: &mut GoalKeeperQueryMutItem<T>,
         home_regions: [usize; TEAM_SIZE],
     ) where
         T: TeamColorMarker,
     {
-        let mut goal_keeper = goal_keeper.single_mut();
-        goal_keeper.goal_keeper.home_region = home_regions[0];
+        goal_keeper.player.home_region = home_regions[0];
 
         let mut idx = 1;
-        for mut player in players.iter_mut() {
-            player.player.home_region = home_regions[idx];
+        for mut field_player in field_players.iter_mut() {
+            field_player.player.home_region = home_regions[idx];
 
             idx += 1;
         }
@@ -95,34 +88,35 @@ impl SoccerTeam {
     pub fn update_targets_of_waiting_players<T>(
         &self,
         pitch: &Pitch,
-        players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
-        goal_keeper: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+        field_players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
+        goal_keeper: &mut GoalKeeperQueryMutItem<T>,
     ) where
         T: TeamColorMarker,
     {
-        for mut player in players.iter_mut() {
-            if player.state_machine.is_in_state(FieldPlayerState::Wait)
-                || player
+        for mut field_player in field_players.iter_mut() {
+            if field_player
+                .state_machine
+                .is_in_state(FieldPlayerState::Wait)
+                || field_player
                     .state_machine
                     .is_in_state(FieldPlayerState::ReturnToHomeRegion)
             {
                 let target = pitch
                     .regions
-                    .get(player.player.home_region)
+                    .get(field_player.player.home_region)
                     .unwrap()
                     .position;
-                player.steering.target = target;
+                field_player.steering.target = target;
             }
         }
 
-        let mut goal_keeper = goal_keeper.single_mut();
         if goal_keeper
             .state_machine
             .is_in_state(GoalKeeperState::ReturnHome)
         {
             let target = pitch
                 .regions
-                .get(goal_keeper.goal_keeper.home_region)
+                .get(goal_keeper.player.home_region)
                 .unwrap()
                 .position;
             goal_keeper.steering.target = target;
@@ -134,9 +128,9 @@ impl SoccerTeam {
         params: &SimulationParams,
         team: &T,
         support_calculator: &mut SupportSpotCalculator,
-        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
-        controller: (FieldPlayerQueryItem<T>, &Transform),
-        support: Option<(FieldPlayerQueryItem<T>, &Transform)>,
+        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
+        controller_transform: &Transform,
+        have_support: bool,
         ball_physical: &Physical,
         goal: GoalQueryItem<T>,
     ) where
@@ -149,7 +143,7 @@ impl SoccerTeam {
 
         self.best_support_spot = None;
 
-        let controller_position = controller.1.translation.truncate();
+        let controller_position = controller_transform.translation.truncate();
 
         let mut best_score = 0.0;
         let mut best_support_spot = None;
@@ -187,7 +181,7 @@ impl SoccerTeam {
             }
 
             // how far away is our supporting player?
-            if support.is_some() {
+            if have_support {
                 let optimal_distance = 200.0;
                 let dist = controller_position.distance(spot.position);
                 let temp = (optimal_distance - dist).abs();
@@ -215,7 +209,7 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
         ball_physical: &Physical,
         passing_force: f32,
     ) -> bool
@@ -247,7 +241,7 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        opponent: (AnyTeamFieldPlayerQueryItem, PhysicalQueryItem),
+        opponent: (AnyTeamSoccerPlayerQueryItem, PhysicalQueryItem),
         ball_physical: &Physical,
         passing_force: f32,
     ) -> bool
@@ -310,7 +304,7 @@ impl SoccerTeam {
         from: Vec2,
         goal: &GoalQueryItem<T>,
         ball_physical: &Physical,
-        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
         power: f32,
     ) -> Option<Vec2>
     where
@@ -359,7 +353,7 @@ impl SoccerTeam {
         controller_transform: &Transform,
         receiver: Entity,
         receiver_transform: &Transform,
-        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+        players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
         ball_physical: &Physical,
         player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
     ) where
@@ -426,6 +420,7 @@ where
 {
     pub team: &'w mut SoccerTeam,
     pub color: &'w T,
+
     pub state_machine: &'w mut SoccerTeamStateMachine,
 }
 
@@ -474,19 +469,3 @@ impl SupportSpotCalculator {
         Self { spots }
     }
 }
-
-#[derive(Debug, Default, Component, Inspectable)]
-#[component(storage = "SparseSet")]
-pub struct ReceivingPlayer;
-
-#[derive(Debug, Default, Component, Inspectable)]
-#[component(storage = "SparseSet")]
-pub struct ClosestPlayer;
-
-#[derive(Debug, Default, Component, Inspectable)]
-#[component(storage = "SparseSet")]
-pub struct ControllingPlayer;
-
-#[derive(Debug, Default, Component, Inspectable)]
-#[component(storage = "SparseSet")]
-pub struct SupportingPlayer;

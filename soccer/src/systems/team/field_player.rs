@@ -27,9 +27,11 @@ pub fn GlobalState_execute<T>(
         // reduce max speed when near the ball and in possession of it
         if let Ok(controlling) = controlling.get_single() {
             if controlling == entity
-                && player
-                    .player
-                    .is_ball_within_receiving_range(&params, &physical.transform, &ball)
+                && player.field_player.is_ball_within_receiving_range(
+                    &params,
+                    &physical.transform,
+                    &ball,
+                )
             {
                 max_speed = params.player_max_speed_with_ball;
             }
@@ -93,7 +95,7 @@ pub fn GlobalState_on_message<T>(
                     let (ball, mut ball_physical) = ball.single_mut();
                     let ball_position = ball_physical.transform.translation.truncate();
 
-                    if !player.player.is_ball_within_kicking_range(
+                    if !player.field_player.is_ball_within_kicking_range(
                         &params,
                         transform,
                         &ball_physical.transform,
@@ -144,10 +146,11 @@ pub fn ChaseBall_execute<T>(
         let ball_physical = ball_physical.single();
 
         // kick the ball if it's in range
-        if player
-            .player
-            .is_ball_within_kicking_range(&params, &transform, &ball_physical.transform)
-        {
+        if player.field_player.is_ball_within_kicking_range(
+            &params,
+            &transform,
+            &ball_physical.transform,
+        ) {
             info!("kicking ball!");
 
             player
@@ -243,7 +246,7 @@ pub fn Wait_execute<T>(
             if entity != controller {
                 // if we're farther up the field from the controller
                 // we should request a pass
-                if player.player.is_ahead_of_attacker(
+                if player.field_player.is_ahead_of_attacker(
                     player.team,
                     &physical.transform,
                     &transform,

@@ -137,6 +137,7 @@ fn main() {
     .register_inspectable::<components::team::BlueTeam>()
     .register_inspectable::<components::team::SupportSpot>()
     .register_inspectable::<components::team::SupportSpotCalculator>()
+    .register_inspectable::<components::team::SoccerPlayer>()
     .register_inspectable::<components::team::FieldPlayer>()
     .register_inspectable::<components::team::GoalKeeper>()
     .register_inspectable::<components::team::ReceivingPlayer>()

@@ -3,12 +3,11 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
 use crate::components::agent::*;
+use crate::components::state::impl_state_machine;
 use crate::components::steering::*;
-use crate::components::team::*;
-use crate::resources::pitch::*;
 use crate::resources::*;
 
-use super::super::state::impl_state_machine;
+use super::*;
 
 impl_state_machine!(
     GoalKeeper,
@@ -19,22 +18,9 @@ impl_state_machine!(
 );
 
 #[derive(Debug, Default, Component, Inspectable)]
-pub struct GoalKeeper {
-    pub number: usize,
-
-    pub home_region: usize,
-    pub default_region: usize,
-}
+pub struct GoalKeeper;
 
 impl GoalKeeper {
-    pub fn is_in_home_region(&self, transform: &Transform, pitch: &Pitch) -> bool {
-        pitch
-            .regions
-            .get(self.home_region)
-            .unwrap()
-            .is_inside(transform.translation.truncate())
-    }
-
     pub fn is_ball_within_keeper_range(
         &self,
         params: &SimulationParams,
@@ -53,11 +39,13 @@ pub struct GoalKeeperQuery<'w, T>
 where
     T: TeamColorMarker,
 {
+    pub player: &'w SoccerPlayer,
     pub goal_keeper: &'w GoalKeeper,
     pub team: &'w T,
+    pub name: &'w Name,
+
     pub agent: &'w Agent,
     pub steering: &'w Steering,
-    pub name: &'w Name,
 }
 
 #[derive(WorldQuery)]
@@ -66,10 +54,12 @@ pub struct GoalKeeperQueryMut<'w, T>
 where
     T: TeamColorMarker,
 {
-    pub goal_keeper: &'w mut GoalKeeper,
+    pub player: &'w mut SoccerPlayer,
+    pub goal_keeper: &'w GoalKeeper,
     pub team: &'w T,
+    pub name: &'w Name,
+
     pub agent: &'w mut Agent,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut GoalKeeperStateMachine,
-    pub name: &'w Name,
 }

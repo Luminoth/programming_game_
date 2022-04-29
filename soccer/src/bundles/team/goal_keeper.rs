@@ -19,14 +19,14 @@ pub struct GoalKeeperBundle<T>
 where
     T: TeamColorMarker,
 {
-    pub goal_keeper: GoalKeeper,
     pub player: SoccerPlayer,
+    pub goal_keeper: GoalKeeper,
     pub team: T,
+
+    pub physical: Physical,
 
     pub agent: Agent,
     pub steering: Steering,
-    pub physical: Physical,
-
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
 }
@@ -53,7 +53,7 @@ where
         );
 
         let mut bundle = commands.spawn_bundle(GoalKeeperBundle {
-            goal_keeper: GoalKeeper {
+            player: SoccerPlayer {
                 number,
                 home_region,
                 default_region: home_region,

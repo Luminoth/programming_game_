@@ -18,3 +18,15 @@ pub fn update_seek(params: Res<SimulationParams>, mut query: Query<(SeekQueryMut
             .accumulate_force(&physical.physical, force, params.seek_weight);
     }
 }
+
+pub fn update_arrive(
+    params: Res<SimulationParams>,
+    mut query: Query<(ArriveQueryMut, PhysicalQuery)>,
+) {
+    for (mut steering, physical) in query.iter_mut() {
+        let force = steering.arrive.force(&steering.steering, &physical);
+        steering
+            .steering
+            .accumulate_force(&physical.physical, force, params.seek_weight);
+    }
+}

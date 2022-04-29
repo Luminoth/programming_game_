@@ -131,6 +131,13 @@ pub struct PhysicalQuery<'w> {
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
 pub struct PhysicalQueryMut<'w> {
+    pub transform: &'w Transform,
+    pub physical: &'w mut Physical,
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct PhysicalQueryUpdateMut<'w> {
     pub transform: &'w mut Transform,
     pub physical: &'w mut Physical,
 }

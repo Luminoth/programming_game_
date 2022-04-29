@@ -81,11 +81,11 @@ where
         };
 
         // goal keeper
-        GoalKeeperBundle::<T>::spawn(commands, home_regions[0], pitch);
+        GoalKeeperBundle::<T>::spawn(commands, params, home_regions[0], pitch);
 
         // players
         for home_region in home_regions.iter().take(TEAM_SIZE).skip(1) {
-            FieldPlayerBundle::<T>::spawn(commands, *home_region, pitch);
+            FieldPlayerBundle::<T>::spawn(commands, params, *home_region, pitch);
         }
     }
 }

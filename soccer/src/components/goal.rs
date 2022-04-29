@@ -27,3 +27,12 @@ where
     pub team: &'w T,
     pub transform: &'w Transform,
 }
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct AnyTeamGoalQuery<'w> {
+    pub goal: &'w Goal,
+    pub blue_team: Option<&'w BlueTeam>,
+    pub red_team: Option<&'w RedTeam>,
+    pub transform: &'w Transform,
+}

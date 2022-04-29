@@ -13,4 +13,12 @@ impl Agent {
     pub fn seek_off(&self, commands: &mut Commands, entity: Entity) {
         commands.entity(entity).remove::<Seek>();
     }
+
+    pub fn arrive_on(&self, commands: &mut Commands, entity: Entity) {
+        commands.entity(entity).insert(Arrive::default());
+    }
+
+    pub fn arrive_off(&self, commands: &mut Commands, entity: Entity) {
+        commands.entity(entity).remove::<Arrive>();
+    }
 }

@@ -3,7 +3,9 @@
 use bevy::prelude::*;
 
 use crate::components::ball::*;
+use crate::components::goal::*;
 use crate::components::physics::*;
+use crate::components::steering::*;
 use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::*;
@@ -145,6 +147,8 @@ pub fn ChaseBall_execute<T>(
             .player
             .is_ball_within_kicking_range(&params, &transform, &ball_physical.transform)
         {
+            info!("kicking ball!");
+
             player
                 .state_machine
                 .change_state(&mut commands, entity, FieldPlayerState::KickBall);
@@ -154,10 +158,13 @@ pub fn ChaseBall_execute<T>(
         // keep chasing the ball if we're the closest to it
         if let Ok(closest) = closest.get_single() {
             if entity == closest {
+                info!("chasing ball");
                 player.steering.target = ball_physical.transform.translation.truncate();
                 continue;
             }
         }
+
+        info!("returning home");
 
         // not closest, so go home
         player.state_machine.change_state(
@@ -176,5 +183,104 @@ pub fn ChaseBall_exit<T>(
 {
     for (entity, player) in query.iter() {
         player.agent.seek_off(&mut commands, entity);
+    }
+}
+
+pub fn Wait_execute<T>(
+    mut commands: Commands,
+    params: Res<SimulationParams>,
+    game_state: Res<GameState>,
+    mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut query: Query<
+        (
+            Entity,
+            FieldPlayerQueryMut<T>,
+            PhysicalQueryMut,
+            Option<&Arrive>,
+        ),
+        (With<FieldPlayerStateWaitExecute>, Without<Ball>),
+    >,
+    controller: Query<(Entity, &Transform), (With<T>, With<ControllingPlayer>)>,
+    team: Query<SoccerTeamQuery<T>>,
+    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    //players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+    ball_physical: Query<PhysicalQuery, With<Ball>>,
+    goals: Query<AnyTeamGoalQuery>,
+) where
+    T: TeamColorMarker,
+{
+    for (entity, mut player, mut physical, arrive) in query.iter_mut() {
+        if !player
+            .steering
+            .is_at_target(&physical.transform, params.player_in_target_range_squared)
+        {
+            if arrive.is_none() {
+                player.agent.arrive_on(&mut commands, entity);
+            }
+            continue;
+        }
+
+        if arrive.is_some() {
+            player.agent.arrive_off(&mut commands, entity);
+        }
+
+        physical.physical.velocity = Vec2::ZERO;
+
+        let _ball_physical = ball_physical.single();
+
+        // TODO:
+        //player.track_ball(&ball_physical.transform);
+        /*
+        void PlayerBase::TrackBall()
+        {
+          RotateHeadingToFacePosition(Ball()->Pos());
+        }
+        */
+
+        if let Ok((controller, transform)) = controller.get_single() {
+            if entity != controller {
+                // if we're farther up the field from the controller
+                // we should request a pass
+                if player.player.is_ahead_of_attacker(
+                    player.team,
+                    &physical.transform,
+                    &transform,
+                    &goals,
+                ) {
+                    /*let team = team.single();
+                    team.team.request_pass(
+                        &params,
+                        player.team,
+                        controller,
+                        transform,
+                        entity,
+                        physical.transform,
+                        players,
+                        ball_physical.physical,
+                        &mut player_message_dispatcher,
+                    );*/
+                }
+                continue;
+            }
+        }
+
+        if game_state.is_game_on() {
+            if let Ok(closest) = closest.get_single() {
+                let have_receiver = receiving.get_single().is_ok();
+
+                // if no one's after the ball, chase it
+                if entity == closest && !have_receiver
+                /*&& !goal_keeper_has_ball*/
+                {
+                    player.state_machine.change_state(
+                        &mut commands,
+                        entity,
+                        FieldPlayerState::ChaseBall,
+                    );
+                    continue;
+                }
+            }
+        }
     }
 }

@@ -11,7 +11,30 @@ use crate::components::physics::*;
 use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
-use crate::resources::SimulationParams;
+use crate::resources::*;
+
+pub fn update<T>(
+    mut commands: Commands,
+    query: Query<SoccerTeamQuery<T>>,
+    players: Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery), Without<GoalKeeper>>,
+    goal_keeper: Query<(Entity, GoalKeeperQuery<T>, PhysicalQuery), Without<FieldPlayer>>,
+    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    ball: Query<PhysicalQuery, With<Ball>>,
+) where
+    T: TeamColorMarker,
+{
+    for team in query.iter() {
+        let ball = ball.single();
+
+        team.team.calculate_closest_player_to_ball(
+            &mut commands,
+            &ball.transform,
+            &players,
+            &goal_keeper,
+            &closest,
+        );
+    }
+}
 
 pub fn PrepareForKickOff_enter<T>(
     mut commands: Commands,
@@ -87,6 +110,20 @@ pub fn PrepareForKickOff_execute<T>(
 
         team.state_machine
             .change_state(&mut commands, entity, SoccerTeamState::Defending);
+    }
+}
+
+pub fn PrepareForKickOff_exit<T>(
+    mut game_state: ResMut<GameState>,
+    query: Query<SoccerTeamQuery<T>, With<SoccerTeamStatePrepareForKickOffExit>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Ok(team) = query.get_single() {
+        match team.color.team_color() {
+            TeamColor::Red => game_state.red_team_ready = true,
+            TeamColor::Blue => game_state.blue_team_ready = true,
+        }
     }
 }
 

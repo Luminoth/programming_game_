@@ -57,6 +57,33 @@ impl FieldPlayer {
         let ball_position = ball_transform.translation.truncate();
         position.distance_squared(ball_position) < params.player_kicking_distance_squared
     }
+
+    pub fn is_ahead_of_attacker<T>(
+        &self,
+        team: &T,
+        transform: &Transform,
+        controller_transform: &Transform,
+        goals: &Query<AnyTeamGoalQuery>,
+    ) -> bool
+    where
+        T: TeamColorMarker,
+    {
+        let position = transform.translation.truncate();
+        let controller_position = controller_transform.translation.truncate();
+
+        let mut opponent_goal_position = Vec2::ZERO;
+        for goal in goals.iter() {
+            if (goal.blue_team.is_some() && team.team_color() == TeamColor::Red)
+                || (goal.red_team.is_some() && team.team_color() == TeamColor::Blue)
+            {
+                opponent_goal_position = goal.transform.translation.truncate();
+                break;
+            }
+        }
+
+        (position.x - opponent_goal_position.x).abs()
+            < (controller_position.x - opponent_goal_position.x).abs()
+    }
 }
 
 #[derive(WorldQuery)]

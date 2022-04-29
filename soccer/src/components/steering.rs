@@ -14,6 +14,14 @@ pub struct Steering {
 }
 
 impl Steering {
+    pub fn is_at_target(&self, transform: &Transform, range_squared: f32) -> bool {
+        transform
+            .translation
+            .truncate()
+            .distance_squared(self.target)
+            < range_squared
+    }
+
     #[allow(dead_code)]
     pub fn accumulate_force(&mut self, physical: &Physical, force: Vec2, weight: f32) {
         let force = force * weight;
@@ -68,6 +76,56 @@ impl Seek {
 #[world_query(mutable, derive(Debug))]
 pub struct SeekQueryMut<'w> {
     pub seek: &'w Seek,
+    pub steering: &'w mut Steering,
+}
+
+#[derive(Debug, Clone, Copy, Inspectable)]
+pub enum Deceleration {
+    Slow = 3,
+    Normal = 2,
+    Fast = 1,
+}
+
+impl Default for Deceleration {
+    fn default() -> Self {
+        Self::Normal
+    }
+}
+
+#[derive(Debug, Default, Component, Inspectable)]
+#[component(storage = "SparseSet")]
+pub struct Arrive {
+    pub deceleration: Deceleration,
+}
+
+impl SteeringBehavior for Arrive {}
+
+impl Arrive {
+    pub fn force(&self, steering: &Steering, physical: &PhysicalQueryItem) -> Vec2 {
+        let translation = physical.transform.translation.truncate();
+        let deceleration = self.deceleration as i32;
+
+        let to_target = steering.target - translation;
+
+        let dist = to_target.length();
+        if dist > 0.0 {
+            // fine tweaking of deceleration
+            let deceleration_tweaker = 0.3;
+
+            let speed = (dist / (deceleration as f32 * deceleration_tweaker))
+                .min(physical.physical.max_speed);
+            let desired_velocity = to_target * speed / dist;
+            return desired_velocity - physical.physical.velocity;
+        }
+
+        Vec2::ZERO
+    }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct ArriveQueryMut<'w> {
+    pub arrive: &'w Arrive,
     pub steering: &'w mut Steering,
 }
 

@@ -24,4 +24,7 @@ pub enum Systems {
 
     TeamStates,
     PlayerStates,
+
+    TeamUpdate,
+    PlayerUpdate,
 }

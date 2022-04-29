@@ -37,6 +37,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
     asset_server.watch_for_changes().unwrap();
 
+    let force_tweaker = 200.0;
+    let speed_tweaker = 125.0;
+
     commands.insert_resource(SimulationParams {
         pitch_extents: Vec2::new(900.0, 450.0),
         goal_extents: Vec2::new(40.0, 90.0),
@@ -51,14 +54,18 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         can_score_score: 1.0,
         distance_from_controller_player_score: 2.0,
 
-        player_max_speed_without_ball: 1.6,
-        player_max_speed_with_ball: 1.2,
+        player_mass: 1.0,
+        player_max_force: 1.0 * force_tweaker,
+        player_max_speed_without_ball: 1.6 * speed_tweaker,
+        player_max_speed_with_ball: 1.2 * speed_tweaker,
+        player_max_turn_rate: 0.4,
 
         max_passing_force: 3.0,
 
         num_attempts_to_find_valid_strike: 5,
 
         ball_within_receiving_range_squared: 10.0 * 10.0,
+        player_in_target_range_squared: 10.0 * 10.0,
         player_kicking_distance_squared: 10.0 * 10.0,
         keeper_in_ball_range_squared: 6.0 * 6.0,
 
@@ -114,6 +121,7 @@ fn main() {
     .register_inspectable::<components::obstacle::Obstacle>()
     .register_inspectable::<components::obstacle::Wall>()
     .register_inspectable::<components::steering::Steering>()
+    .register_inspectable::<components::steering::Arrive>()
     .register_inspectable::<components::steering::Seek>()
     .register_inspectable::<components::steering::ObstacleAvoidance>()
     .register_inspectable::<components::ball::Ball>()

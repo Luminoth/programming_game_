@@ -23,14 +23,18 @@ pub struct SimulationParams {
     pub distance_from_controller_player_score: f32,
 
     // players
+    pub player_mass: f32,
+    pub player_max_force: f32,
     pub player_max_speed_without_ball: f32,
     pub player_max_speed_with_ball: f32,
+    pub player_max_turn_rate: f32,
 
     pub max_passing_force: f32,
 
     pub num_attempts_to_find_valid_strike: usize,
 
     pub ball_within_receiving_range_squared: f32,
+    pub player_in_target_range_squared: f32,
     pub player_kicking_distance_squared: f32,
     pub keeper_in_ball_range_squared: f32,
 
@@ -45,4 +49,13 @@ pub struct SimulationParams {
 }
 
 #[derive(Debug, Default)]
-pub struct GameState;
+pub struct GameState {
+    pub red_team_ready: bool,
+    pub blue_team_ready: bool,
+}
+
+impl GameState {
+    pub fn is_game_on(&self) -> bool {
+        self.red_team_ready && self.blue_team_ready
+    }
+}

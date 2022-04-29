@@ -9,6 +9,7 @@ use crate::components::steering::*;
 use crate::components::team::*;
 use crate::game::PLAYER_RADIUS;
 use crate::resources::pitch::*;
+use crate::resources::*;
 use crate::PLAYER_SORT;
 
 use super::super::actor::*;
@@ -33,7 +34,12 @@ impl<T> GoalKeeperBundle<T>
 where
     T: TeamColorMarker,
 {
-    pub fn spawn(commands: &mut Commands, home_region: usize, pitch: &Pitch) -> Entity {
+    pub fn spawn(
+        commands: &mut Commands,
+        params: &SimulationParams,
+        home_region: usize,
+        pitch: &Pitch,
+    ) -> Entity {
         let position = pitch.regions.get(home_region).unwrap().position;
 
         let team = T::default();
@@ -50,6 +56,13 @@ where
                 default_region: home_region,
             },
             team,
+            physical: Physical {
+                mass: params.player_mass,
+                max_speed: params.player_max_speed_without_ball,
+                max_force: params.player_max_force,
+                max_turn_rate: params.player_max_turn_rate,
+                ..Default::default()
+            },
             ..Default::default()
         });
 

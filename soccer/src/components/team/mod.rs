@@ -34,6 +34,41 @@ impl SoccerTeam {
         self.best_support_spot.unwrap()
     }
 
+    pub fn calculate_closest_player_to_ball<T>(
+        &self,
+        commands: &mut Commands,
+        ball_transform: &Transform,
+        players: &Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery), Without<GoalKeeper>>,
+        _goal_keeper: &Query<(Entity, GoalKeeperQuery<T>, PhysicalQuery), Without<FieldPlayer>>,
+        closest: &Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    ) where
+        T: TeamColorMarker,
+    {
+        if let Ok(closest) = closest.get_single() {
+            commands.entity(closest).remove::<ClosestPlayer>();
+        }
+
+        let ball_position = ball_transform.translation.truncate();
+
+        let mut closest_dist = f32::MAX;
+        let mut closest_player = None;
+        for (entity, player, physical) in players.iter() {
+            let position = physical.transform.translation.truncate();
+            let dist = position.distance_squared(ball_position);
+            if dist < closest_dist {
+                closest_dist = dist;
+                closest_player = Some(entity);
+            }
+        }
+
+        // TODO: goal keepers being closest is completely unaccounted for
+        //let goal_keeper = goal_keeper.single();
+
+        if let Some(closest_player) = closest_player {
+            commands.entity(closest_player).insert(ClosestPlayer);
+        }
+    }
+
     pub fn reset_player_home_regions<T>(
         &self,
         players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
@@ -175,7 +210,7 @@ impl SoccerTeam {
         team: &T,
         from: Vec2,
         target: Vec2,
-        receiver: Option<&Query<(FieldPlayerQuery<T>, &Transform), With<ReceivingPlayer>>>,
+        receiver: Option<&Transform>,
         players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
         ball_physical: &Physical,
         passing_force: f32,
@@ -207,7 +242,7 @@ impl SoccerTeam {
         team: &T,
         from: Vec2,
         target: Vec2,
-        receiver: Option<&Query<(FieldPlayerQuery<T>, &Transform), With<ReceivingPlayer>>>,
+        receiver: Option<&Transform>,
         opponent: (AnyTeamFieldPlayerQueryItem, PhysicalQueryItem),
         ball_physical: &Physical,
         passing_force: f32,
@@ -244,11 +279,9 @@ impl SoccerTeam {
         if from.distance_squared(target) < opponent_position.distance_squared(from) {
             // can the receiver get there first?
             if let Some(receiver) = receiver {
-                if let Ok(receiver) = receiver.get_single() {
-                    let receiver_position = receiver.1.translation.truncate();
-                    return target.distance_squared(opponent_position)
-                        < target.distance_squared(receiver_position);
-                }
+                let receiver_position = receiver.translation.truncate();
+                return target.distance_squared(opponent_position)
+                    < target.distance_squared(receiver_position);
             } else {
                 return true;
             }
@@ -312,6 +345,40 @@ impl SoccerTeam {
         }
 
         None
+    }
+
+    pub fn request_pass<T>(
+        &self,
+        params: &SimulationParams,
+        team: &T,
+        controller: Entity,
+        controller_transform: &Transform,
+        receiver: Entity,
+        receiver_transform: &Transform,
+        players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+        ball_physical: &Physical,
+        player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
+    ) where
+        T: TeamColorMarker,
+    {
+        let controller_position = controller_transform.translation.truncate();
+        let receiver_position = receiver_transform.translation.truncate();
+
+        if self.is_pass_safe_from_all_opponents(
+            params,
+            team,
+            controller_position,
+            receiver_position,
+            Some(receiver_transform),
+            players,
+            ball_physical,
+            params.max_passing_force,
+        ) {
+            player_message_dispatcher.dispatch_message(
+                Some(controller),
+                FieldPlayerMessage::PassToMe(receiver, receiver_position),
+            );
+        }
     }
 }
 

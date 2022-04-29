@@ -40,6 +40,7 @@ impl Plugin for MainStatePlugin {
                     .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
                     // steering
                     .with_system(systems::steering::update_seek.label(Systems::Steering))
+                    .with_system(systems::steering::update_arrive.label(Systems::Steering))
                     .with_system(
                         systems::steering::update
                             .label(Systems::SteeringUpdatePhysics)
@@ -117,6 +118,18 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),
                     )
+                    .with_system(
+                        systems::team::field_player::Wait_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::Wait_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
                     // goal keeper systems
                     .with_system(
                         systems::team::goal_keeper::GlobalState_execute::<RedTeam>
@@ -130,7 +143,9 @@ impl Plugin for MainStatePlugin {
             // per-frame systems
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
-                    // team event handlers
+                    // team systems
+                    .with_system(systems::team::update::<RedTeam>.label(Systems::TeamUpdate))
+                    .with_system(systems::team::update::<BlueTeam>.label(Systems::TeamUpdate))
                     .with_system(
                         systems::team::PrepareForKickOff_enter::<RedTeam>
                             .label(Systems::StateEnter)
@@ -139,6 +154,16 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::team::PrepareForKickOff_enter::<BlueTeam>
                             .label(Systems::StateEnter)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::PrepareForKickOff_exit::<RedTeam>
+                            .label(Systems::StateExit)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::PrepareForKickOff_exit::<BlueTeam>
+                            .label(Systems::StateExit)
                             .label(Systems::TeamStates),
                     )
                     .with_system(

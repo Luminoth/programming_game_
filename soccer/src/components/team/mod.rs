@@ -37,18 +37,15 @@ impl SoccerTeam {
     pub fn reset_player_home_regions<T>(
         &self,
         players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
-        goal_keepers: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+        goal_keeper: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
         home_regions: [usize; TEAM_SIZE],
     ) where
         T: TeamColorMarker,
     {
-        let mut idx = 0;
-        for mut goal_keeper in goal_keepers.iter_mut() {
-            goal_keeper.goal_keeper.home_region = home_regions[idx];
+        let mut goal_keeper = goal_keeper.single_mut();
+        goal_keeper.goal_keeper.home_region = home_regions[0];
 
-            idx += 1;
-        }
-
+        let mut idx = 1;
         for mut player in players.iter_mut() {
             player.player.home_region = home_regions[idx];
 
@@ -60,7 +57,7 @@ impl SoccerTeam {
         &self,
         pitch: &Pitch,
         players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
-        goal_keepers: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+        goal_keeper: &mut Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
     ) where
         T: TeamColorMarker,
     {
@@ -79,18 +76,17 @@ impl SoccerTeam {
             }
         }
 
-        for mut goal_keeper in goal_keepers.iter_mut() {
-            if goal_keeper
-                .state_machine
-                .is_in_state(GoalKeeperState::ReturnHome)
-            {
-                let target = pitch
-                    .regions
-                    .get(goal_keeper.goal_keeper.home_region)
-                    .unwrap()
-                    .position;
-                goal_keeper.steering.target = target;
-            }
+        let mut goal_keeper = goal_keeper.single_mut();
+        if goal_keeper
+            .state_machine
+            .is_in_state(GoalKeeperState::ReturnHome)
+        {
+            let target = pitch
+                .regions
+                .get(goal_keeper.goal_keeper.home_region)
+                .unwrap()
+                .position;
+            goal_keeper.steering.target = target;
         }
     }
 

@@ -23,7 +23,7 @@ pub fn PrepareForKickOff_enter<T>(
     controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
     supporting: Query<Entity, (With<T>, With<SupportingPlayer>)>,
     players: Query<Entity, (With<FieldPlayer>, With<T>)>,
-    goal_keepers: Query<Entity, (With<GoalKeeper>, With<T>)>,
+    goal_keeper: Query<Entity, (With<GoalKeeper>, With<T>)>,
 ) where
     T: TeamColorMarker,
 {
@@ -49,14 +49,13 @@ pub fn PrepareForKickOff_enter<T>(
         }
 
         // send players home
-        for entity in players.iter() {
-            player_message_dispatcher.dispatch_message(Some(entity), FieldPlayerMessage::GoHome);
+        for player in players.iter() {
+            player_message_dispatcher.dispatch_message(Some(player), FieldPlayerMessage::GoHome);
         }
 
-        for entity in goal_keepers.iter() {
-            goal_keeper_message_dispatcher
-                .dispatch_message(Some(entity), GoalKeeperMessage::GoHome);
-        }
+        let goal_keeper = goal_keeper.single();
+        goal_keeper_message_dispatcher
+            .dispatch_message(Some(goal_keeper), GoalKeeperMessage::GoHome);
     }
 }
 
@@ -68,7 +67,7 @@ pub fn PrepareForKickOff_execute<T>(
         With<SoccerTeamStatePrepareForKickOffExecute>,
     >,
     players: Query<(FieldPlayerQuery<T>, &Transform)>,
-    goal_keepers: Query<(GoalKeeperQuery<T>, &Transform)>,
+    goal_keeper: Query<(GoalKeeperQuery<T>, &Transform)>,
 ) where
     T: TeamColorMarker,
 {
@@ -81,10 +80,9 @@ pub fn PrepareForKickOff_execute<T>(
             }
         }
 
-        for (goal_keeper, transform) in goal_keepers.iter() {
-            if !goal_keeper.goal_keeper.is_in_home_region(transform, &pitch) {
-                return;
-            }
+        let (goal_keeper, transform) = goal_keeper.single();
+        if !goal_keeper.goal_keeper.is_in_home_region(transform, &pitch) {
+            return;
         }
 
         team.state_machine
@@ -96,7 +94,7 @@ pub fn Defending_enter<T>(
     pitch: Res<Pitch>,
     query: Query<SoccerTeamQuery<T>, With<SoccerTeamStateDefendingEnter>>,
     mut players: Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
-    mut goal_keepers: Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+    mut goal_keeper: Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
 ) where
     T: TeamColorMarker,
 {
@@ -109,10 +107,10 @@ pub fn Defending_enter<T>(
         };
 
         team.team
-            .reset_player_home_regions(&mut players, &mut goal_keepers, home_regions);
+            .reset_player_home_regions(&mut players, &mut goal_keeper, home_regions);
 
         team.team
-            .update_targets_of_waiting_players(&pitch, &mut players, &mut goal_keepers);
+            .update_targets_of_waiting_players(&pitch, &mut players, &mut goal_keeper);
     }
 }
 
@@ -135,7 +133,7 @@ pub fn Attacking_enter<T>(
     pitch: Res<Pitch>,
     query: Query<SoccerTeamQuery<T>, With<SoccerTeamStateAttackingEnter>>,
     mut players: Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
-    mut goal_keepers: Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
+    mut goal_keeper: Query<GoalKeeperQueryMut<T>, Without<FieldPlayer>>,
 ) where
     T: TeamColorMarker,
 {
@@ -148,10 +146,10 @@ pub fn Attacking_enter<T>(
         };
 
         team.team
-            .reset_player_home_regions(&mut players, &mut goal_keepers, home_regions);
+            .reset_player_home_regions(&mut players, &mut goal_keeper, home_regions);
 
         team.team
-            .update_targets_of_waiting_players(&pitch, &mut players, &mut goal_keepers);
+            .update_targets_of_waiting_players(&pitch, &mut players, &mut goal_keeper);
     }
 }
 

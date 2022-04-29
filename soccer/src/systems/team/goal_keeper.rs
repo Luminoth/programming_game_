@@ -8,10 +8,9 @@ pub fn GlobalState_execute<T>(query: Query<GoalKeeperQuery<T>>)
 where
     T: TeamColorMarker,
 {
-    for _goal_keeper in query.iter() {
-        /*debug!(
-            "executing global state for goal keeper {}",
-            goal_keeper.name.as_ref()
-        );*/
-    }
+    let _goal_keeper = query.single();
+    /*debug!(
+        "executing global state for goal keeper {}",
+        goal_keeper.name.as_ref()
+    );*/
 }

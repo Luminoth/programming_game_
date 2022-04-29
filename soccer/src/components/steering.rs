@@ -148,15 +148,15 @@ impl Pursuit {
     pub fn force(
         &self,
         params: &SimulationParams,
+        steering: &Steering,
         physical: &PhysicalQueryItem,
         physicals: &Query<PhysicalQuery>,
     ) -> Vec2 {
         let target = physicals.get(self.target).unwrap();
 
         let position = physical.transform.translation.truncate();
-        let target_position = target.transform.translation.truncate();
 
-        let to_target = target_position - position;
+        let to_target = steering.target - position;
 
         let mut look_ahead_time = 0.0;
         if target.physical.speed() != 0.0 {

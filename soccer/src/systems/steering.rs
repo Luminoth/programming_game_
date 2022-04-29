@@ -40,7 +40,9 @@ pub fn update_pursuit(
     physicals: Query<PhysicalQuery>,
 ) {
     for (mut steering, physical) in pursuing.iter_mut() {
-        let force = steering.pursuit.force(&params, &physical, &physicals);
+        let force = steering
+            .pursuit
+            .force(&params, &steering.steering, &physical, &physicals);
         steering
             .steering
             .accumulate_force(&physical.physical, force, params.pursuit_weight);

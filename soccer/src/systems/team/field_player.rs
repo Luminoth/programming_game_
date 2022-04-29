@@ -11,15 +11,17 @@ use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
 
+// TODO: the functionality here makes more sense as a physics update step
+// rather than being part of the state machine
 pub fn GlobalState_execute<T>(
     params: Res<SimulationParams>,
-    mut query: Query<(Entity, FieldPlayerQuery<T>, PhysicalQueryMut), Without<Ball>>,
+    mut field_players: Query<(Entity, FieldPlayerQuery<T>, PhysicalQueryMut), Without<Ball>>,
     ball: Query<&Transform, With<Ball>>,
     controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, player, mut physical) in query.iter_mut() {
+    for (entity, field_player, mut physical) in field_players.iter_mut() {
         let ball = ball.single();
 
         let mut max_speed = params.player_max_speed_without_ball;
@@ -27,7 +29,7 @@ pub fn GlobalState_execute<T>(
         // reduce max speed when near the ball and in possession of it
         if let Ok(controlling) = controlling.get_single() {
             if controlling == entity
-                && player.field_player.is_ball_within_receiving_range(
+                && field_player.field_player.is_ball_within_receiving_range(
                     &params,
                     &physical.transform,
                     &ball,
@@ -46,26 +48,28 @@ pub fn GlobalState_on_message<T>(
     params: Res<SimulationParams>,
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut message_events: EventReader<FieldPlayerDispatchedMessageEvent>,
-    mut players: Query<(Entity, FieldPlayerQueryMut<T>, &Transform), Without<Ball>>,
+    mut field_players: Query<(Entity, FieldPlayerQueryMut<T>, &Transform), Without<Ball>>,
     team: Query<SoccerTeamQuery<T>>,
     mut ball: Query<(&Ball, PhysicalQueryMut)>,
 ) where
     T: TeamColorMarker,
 {
     for event in message_events.iter() {
-        if let Ok((entity, mut player, transform)) = players.get_mut(event.receiver.unwrap()) {
+        if let Ok((entity, mut field_player, transform)) =
+            field_players.get_mut(event.receiver.unwrap())
+        {
             match event.message {
                 FieldPlayerMessage::ReceiveBall(position) => {
-                    player.steering.target = position;
+                    field_player.steering.target = position;
 
-                    player.state_machine.change_state(
+                    field_player.state_machine.change_state(
                         &mut commands,
                         entity,
                         FieldPlayerState::ReceiveBall,
                     );
                 }
                 FieldPlayerMessage::SupportAttacker => {
-                    if player
+                    if field_player
                         .state_machine
                         .is_in_state(FieldPlayerState::SupportAttacker)
                     {
@@ -73,19 +77,19 @@ pub fn GlobalState_on_message<T>(
                     }
 
                     let team = team.single();
-                    player.steering.target = team.team.get_best_support_spot();
+                    field_player.steering.target = team.team.get_best_support_spot();
                 }
                 FieldPlayerMessage::GoHome => {
-                    player.player.home_region = player.player.default_region;
+                    field_player.player.home_region = field_player.player.default_region;
 
-                    player.state_machine.change_state(
+                    field_player.state_machine.change_state(
                         &mut commands,
                         entity,
                         FieldPlayerState::ReturnToHomeRegion,
                     );
                 }
                 FieldPlayerMessage::Wait => {
-                    player.state_machine.change_state(
+                    field_player.state_machine.change_state(
                         &mut commands,
                         entity,
                         FieldPlayerState::Wait,
@@ -95,7 +99,7 @@ pub fn GlobalState_on_message<T>(
                     let (ball, mut ball_physical) = ball.single_mut();
                     let ball_position = ball_physical.transform.translation.truncate();
 
-                    if !player.field_player.is_ball_within_kicking_range(
+                    if !field_player.field_player.is_ball_within_kicking_range(
                         &params,
                         transform,
                         &ball_physical.transform,
@@ -121,19 +125,19 @@ pub fn GlobalState_on_message<T>(
 
 pub fn ChaseBall_enter<T>(
     mut commands: Commands,
-    query: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateChaseBallEnter>>,
+    field_players: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateChaseBallEnter>>,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, player) in query.iter() {
-        player.agent.seek_on(&mut commands, entity);
+    for (entity, field_player) in field_players.iter() {
+        field_player.agent.seek_on(&mut commands, entity);
     }
 }
 
 pub fn ChaseBall_execute<T>(
     mut commands: Commands,
     params: Res<SimulationParams>,
-    mut query: Query<
+    mut field_players: Query<
         (Entity, FieldPlayerQueryMut<T>, &Transform),
         With<FieldPlayerStateChaseBallExecute>,
     >,
@@ -142,36 +146,39 @@ pub fn ChaseBall_execute<T>(
 ) where
     T: TeamColorMarker,
 {
-    for (entity, mut player, transform) in query.iter_mut() {
+    for (entity, mut field_player, transform) in field_players.iter_mut() {
         let ball_physical = ball_physical.single();
 
         // kick the ball if it's in range
-        if player.field_player.is_ball_within_kicking_range(
+        if field_player.field_player.is_ball_within_kicking_range(
             &params,
             &transform,
             &ball_physical.transform,
         ) {
             info!("kicking ball!");
 
-            player
-                .state_machine
-                .change_state(&mut commands, entity, FieldPlayerState::KickBall);
+            field_player.state_machine.change_state(
+                &mut commands,
+                entity,
+                FieldPlayerState::KickBall,
+            );
             continue;
         }
 
         // keep chasing the ball if we're the closest to it
         if let Ok(closest) = closest.get_single() {
             if entity == closest {
-                info!("chasing ball");
-                player.steering.target = ball_physical.transform.translation.truncate();
+                info!("continue chasing ball");
+
+                field_player.steering.target = ball_physical.transform.translation.truncate();
                 continue;
             }
         }
 
-        info!("returning home");
+        info!("lost the ball, returning home");
 
         // not closest, so go home
-        player.state_machine.change_state(
+        field_player.state_machine.change_state(
             &mut commands,
             entity,
             FieldPlayerState::ReturnToHomeRegion,
@@ -181,12 +188,12 @@ pub fn ChaseBall_execute<T>(
 
 pub fn ChaseBall_exit<T>(
     mut commands: Commands,
-    query: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateChaseBallExit>>,
+    field_players: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateChaseBallExit>>,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, player) in query.iter() {
-        player.agent.seek_off(&mut commands, entity);
+    for (entity, field_player) in field_players.iter() {
+        field_player.agent.seek_off(&mut commands, entity);
     }
 }
 
@@ -195,7 +202,7 @@ pub fn Wait_execute<T>(
     params: Res<SimulationParams>,
     game_state: Res<GameState>,
     mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
-    mut query: Query<
+    mut field_players: Query<
         (
             Entity,
             FieldPlayerQueryMut<T>,
@@ -206,37 +213,36 @@ pub fn Wait_execute<T>(
     >,
     controller: Query<(Entity, &Transform), (With<T>, With<ControllingPlayer>)>,
     team: Query<SoccerTeamQuery<T>>,
-    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    closest: Query<Entity, (With<FieldPlayer>, With<T>, With<ClosestPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
-    //players: &Query<(AnyTeamFieldPlayerQuery, PhysicalQuery)>,
+    //players: &Query<(AnyTeamSoccerPlayerQuery, PhysicalQuery)>,
     ball_physical: Query<PhysicalQuery, With<Ball>>,
     goals: Query<AnyTeamGoalQuery>,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, mut player, mut physical, arrive) in query.iter_mut() {
-        if !player
+    for (entity, mut field_player, mut physical, arrive) in field_players.iter_mut() {
+        // get back to our home if we got bumped off it
+        if !field_player
             .steering
             .is_at_target(&physical.transform, params.player_in_target_range_squared)
         {
             if arrive.is_none() {
-                player.agent.arrive_on(&mut commands, entity);
+                field_player.agent.arrive_on(&mut commands, entity);
             }
             continue;
         }
 
         if arrive.is_some() {
-            player.agent.arrive_off(&mut commands, entity);
+            field_player.agent.arrive_off(&mut commands, entity);
         }
-
         physical.physical.velocity = Vec2::ZERO;
 
-        let _ball_physical = ball_physical.single();
+        //let ball_physical = ball_physical.single();
 
         // TODO:
-        //player.track_ball(&ball_physical.transform);
-        /*
-        void PlayerBase::TrackBall()
+        //field_player.player.track_ball(&ball_physical.transform);
+        /*void PlayerBase::TrackBall()
         {
           RotateHeadingToFacePosition(Ball()->Pos());
         }
@@ -246,8 +252,8 @@ pub fn Wait_execute<T>(
             if entity != controller {
                 // if we're farther up the field from the controller
                 // we should request a pass
-                if player.field_player.is_ahead_of_attacker(
-                    player.team,
+                if field_player.field_player.is_ahead_of_attacker(
+                    field_player.team,
                     &physical.transform,
                     &transform,
                     &goals,
@@ -255,7 +261,7 @@ pub fn Wait_execute<T>(
                     /*let team = team.single();
                     team.team.request_pass(
                         &params,
-                        player.team,
+                        field_player.team,
                         controller,
                         transform,
                         entity,
@@ -273,11 +279,10 @@ pub fn Wait_execute<T>(
             if let Ok(closest) = closest.get_single() {
                 let have_receiver = receiving.get_single().is_ok();
 
-                // if no one's after the ball, chase it
-                if entity == closest && !have_receiver
-                /*&& !goal_keeper_has_ball*/
-                {
-                    player.state_machine.change_state(
+                // if we're the closest field player
+                // and no one's after the ball, chase it
+                if entity == closest && !have_receiver {
+                    field_player.state_machine.change_state(
                         &mut commands,
                         entity,
                         FieldPlayerState::ChaseBall,
@@ -292,22 +297,22 @@ pub fn Wait_execute<T>(
 pub fn ReturnToHomeRegion_enter<T>(
     mut commands: Commands,
     pitch: Res<Pitch>,
-    mut query: Query<
+    mut field_players: Query<
         (Entity, FieldPlayerQueryMut<T>),
         With<FieldPlayerStateReturnToHomeRegionEnter>,
     >,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, mut player) in query.iter_mut() {
-        player.agent.arrive_on(&mut commands, entity);
+    for (entity, mut field_player) in field_players.iter_mut() {
+        field_player.agent.arrive_on(&mut commands, entity);
 
-        if !player
+        if !field_player
             .player
             .get_home_region(&pitch)
-            .is_inside_half(player.steering.target)
+            .is_inside_half(field_player.steering.target)
         {
-            player.steering.target = player.player.get_home_region(&pitch).position;
+            field_player.steering.target = field_player.player.get_home_region(&pitch).position;
         }
     }
 }
@@ -317,25 +322,24 @@ pub fn ReturnToHomeRegion_execute<T>(
     params: Res<SimulationParams>,
     game_state: Res<GameState>,
     pitch: Res<Pitch>,
-    mut query: Query<
+    mut field_players: Query<
         (Entity, FieldPlayerQueryMut<T>, &Transform),
         With<FieldPlayerStateReturnToHomeRegionExecute>,
     >,
-    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    closest: Query<Entity, (With<FieldPlayer>, With<T>, With<ClosestPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, mut player, transform) in query.iter_mut() {
+    for (entity, mut field_player, transform) in field_players.iter_mut() {
         if game_state.is_game_on() {
             if let Ok(closest) = closest.get_single() {
                 let have_receiver = receiving.get_single().is_ok();
 
-                // if no one's after the ball, chase it
-                if entity == closest && !have_receiver
-                /*&& !goal_keeper_has_ball*/
-                {
-                    player.state_machine.change_state(
+                // if we're the closest field player
+                // and no one's after the ball, chase it
+                if entity == closest && !have_receiver {
+                    field_player.state_machine.change_state(
                         &mut commands,
                         entity,
                         FieldPlayerState::ChaseBall,
@@ -345,24 +349,28 @@ pub fn ReturnToHomeRegion_execute<T>(
             }
 
             let position = transform.translation.truncate();
-            if player
+            if field_player
                 .player
                 .get_home_region(&pitch)
                 .is_inside_half(position)
             {
-                player.steering.target = position;
-                player
-                    .state_machine
-                    .change_state(&mut commands, entity, FieldPlayerState::Wait);
+                field_player.steering.target = position;
+                field_player.state_machine.change_state(
+                    &mut commands,
+                    entity,
+                    FieldPlayerState::Wait,
+                );
             }
         } else {
-            if player
+            if field_player
                 .steering
                 .is_at_target(transform, params.player_in_target_range_squared)
             {
-                player
-                    .state_machine
-                    .change_state(&mut commands, entity, FieldPlayerState::Wait);
+                field_player.state_machine.change_state(
+                    &mut commands,
+                    entity,
+                    FieldPlayerState::Wait,
+                );
             }
         }
     }
@@ -370,11 +378,14 @@ pub fn ReturnToHomeRegion_execute<T>(
 
 pub fn ReturnToHomeRegion_exit<T>(
     mut commands: Commands,
-    query: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateReturnToHomeRegionExit>>,
+    field_players: Query<
+        (Entity, FieldPlayerQuery<T>),
+        With<FieldPlayerStateReturnToHomeRegionExit>,
+    >,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, player) in query.iter() {
-        player.agent.arrive_off(&mut commands, entity);
+    for (entity, field_player) in field_players.iter() {
+        field_player.agent.arrive_off(&mut commands, entity);
     }
 }

@@ -20,6 +20,7 @@ where
     T: TeamColorMarker,
 {
     pub goal_keeper: GoalKeeper,
+    pub player: SoccerPlayer,
     pub team: T,
 
     pub agent: Agent,

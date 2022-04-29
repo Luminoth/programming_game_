@@ -19,6 +19,10 @@ use crate::util::point_to_world_space;
 
 use super::state::impl_state_machine;
 
+// rename of the book's PlayerBase
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct SoccerPlayer;
+
 impl_state_machine!(SoccerTeam, PrepareForKickOff, Defending, Attacking);
 
 #[derive(Debug, Default, Component, Inspectable)]

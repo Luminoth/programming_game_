@@ -19,7 +19,8 @@ pub struct FieldPlayerBundle<T>
 where
     T: TeamColorMarker,
 {
-    pub player: FieldPlayer,
+    pub field_player: FieldPlayer,
+    pub player: SoccerPlayer,
     pub team: T,
 
     pub agent: Agent,
@@ -55,7 +56,7 @@ where
         );
 
         let mut bundle = commands.spawn_bundle(FieldPlayerBundle {
-            player: FieldPlayer {
+            field_player: FieldPlayer {
                 number,
                 home_region,
                 default_region: home_region,

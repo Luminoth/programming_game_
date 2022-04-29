@@ -72,25 +72,21 @@ pub fn PrepareForKickOff_execute<T>(
 ) where
     T: TeamColorMarker,
 {
-    if query.is_empty() {
-        return;
-    }
+    if let Ok((entity, mut team)) = query.get_single_mut() {
+        info!("waiting for teams ready ...");
 
-    info!("Waiting for teams ready ...");
-
-    for (player, transform) in players.iter() {
-        if !player.player.is_in_home_region(transform, &pitch) {
-            return;
+        for (player, transform) in players.iter() {
+            if !player.player.is_in_home_region(transform, &pitch) {
+                return;
+            }
         }
-    }
 
-    for (goal_keeper, transform) in goal_keepers.iter() {
-        if !goal_keeper.goal_keeper.is_in_home_region(transform, &pitch) {
-            return;
+        for (goal_keeper, transform) in goal_keepers.iter() {
+            if !goal_keeper.goal_keeper.is_in_home_region(transform, &pitch) {
+                return;
+            }
         }
-    }
 
-    for (entity, mut team) in query.iter_mut() {
         team.state_machine
             .change_state(&mut commands, entity, SoccerTeamState::Defending);
     }
@@ -104,7 +100,7 @@ pub fn Defending_enter<T>(
 ) where
     T: TeamColorMarker,
 {
-    for team in query.iter() {
+    if let Ok(team) = query.get_single() {
         info!("{:?} team defending", team.color.team_color());
 
         let home_regions = match team.color.team_color() {
@@ -123,14 +119,12 @@ pub fn Defending_enter<T>(
 pub fn Defending_execute<T>(
     mut commands: Commands,
     mut query: Query<(Entity, SoccerTeamQueryMut<T>), With<SoccerTeamStateDefendingExecute>>,
+    controller: Query<Entity, (With<T>, With<ControllingPlayer>)>,
 ) where
     T: TeamColorMarker,
 {
-    for (entity, mut team) in query.iter_mut() {
-        //debug!("{:?} defender checking for control", team.team.team);
-
-        // TODO: why not use a message / event for this rather than polling?
-        if team.team.in_control {
+    if let Ok((entity, mut team)) = query.get_single_mut() {
+        if controller.get_single().is_ok() {
             team.state_machine
                 .change_state(&mut commands, entity, SoccerTeamState::Attacking);
         }
@@ -145,7 +139,7 @@ pub fn Attacking_enter<T>(
 ) where
     T: TeamColorMarker,
 {
-    for team in query.iter() {
+    if let Ok(team) = query.get_single() {
         info!("{:?} team attacking", team.color.team_color());
 
         let home_regions = match team.color.team_color() {
@@ -176,26 +170,22 @@ pub fn Attacking_execute<T>(
 ) where
     T: TeamColorMarker,
 {
-    for (entity, mut team, mut support_calculator) in query.iter_mut() {
-        //debug!("{:?} attacker checking for control", team.team.team);
-
-        // TODO: why not use a message / event for this rather than polling?
-        if !team.team.in_control {
+    if let Ok((entity, mut team, mut support_calculator)) = query.get_single_mut() {
+        if let Ok(controller) = controller.get_single() {
+            let ball = ball.single();
+            team.team.determine_best_supporting_position(
+                &params,
+                team.color,
+                &mut support_calculator,
+                &players,
+                controller,
+                support.get_single().ok(),
+                &ball.physical,
+                goal.single(),
+            );
+        } else {
             team.state_machine
                 .change_state(&mut commands, entity, SoccerTeamState::Defending);
-            continue;
         }
-
-        let ball = ball.single();
-        team.team.determine_best_supporting_position(
-            &params,
-            team.color,
-            &mut support_calculator,
-            &players,
-            controller.single(),
-            support.get_single().ok(),
-            &ball.physical,
-            goal.single(),
-        );
     }
 }

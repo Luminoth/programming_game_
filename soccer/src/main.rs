@@ -54,11 +54,15 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         can_score_score: 1.0,
         distance_from_controller_player_score: 2.0,
 
-        player_mass: 1.0,
+        player_mass: 3.0,
         player_max_force: 1.0 * force_tweaker,
         player_max_speed_without_ball: 1.6 * speed_tweaker,
         player_max_speed_with_ball: 1.2 * speed_tweaker,
         player_max_turn_rate: 0.4,
+
+        ball_mass: 1.0,
+        ball_max_force: 1.0 * force_tweaker,
+        ball_max_speed: 1.0 * speed_tweaker,
 
         max_passing_force: 3.0,
 
@@ -70,6 +74,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         keeper_in_ball_range_squared: 6.0 * 6.0,
 
         seek_weight: 1.0,
+        arrive_weight: 1.0,
 
         // NOTE: this is negative in the example source
         // so anywhere it's used, it needs to be negated

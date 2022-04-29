@@ -34,11 +34,10 @@ impl Default for Physical {
             heading,
             side,
 
-            // TODO: these defaults aren't good
-            mass: 0.0,
-            max_speed: 0.0,
-            max_force: 0.0,
-            max_turn_rate: 0.0,
+            mass: 1.0,
+            max_speed: 1.0,
+            max_force: 1.0,
+            max_turn_rate: std::f32::consts::PI,
         }
     }
 }

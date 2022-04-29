@@ -27,6 +27,6 @@ pub fn update_arrive(
         let force = steering.arrive.force(&steering.steering, &physical);
         steering
             .steering
-            .accumulate_force(&physical.physical, force, params.seek_weight);
+            .accumulate_force(&physical.physical, force, params.arrive_weight);
     }
 }

@@ -33,7 +33,7 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
     GoalBundle::spawn(&mut commands, &params, BlueTeam, &pitch);
 
     // ball
-    BallBundle::spawn(&mut commands, Vec2::ZERO);
+    BallBundle::spawn(&mut commands, &params, Vec2::ZERO);
 
     // teams
     SoccerTeamBundle::<RedTeam>::spawn(&mut commands, &params, &pitch);

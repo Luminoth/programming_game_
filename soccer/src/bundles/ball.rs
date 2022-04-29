@@ -5,6 +5,7 @@ use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::physics::*;
 use crate::game::BALL_RADIUS;
+use crate::resources::*;
 use crate::BALL_SORT;
 
 use super::actor::*;
@@ -16,10 +17,18 @@ pub struct BallBundle {
 }
 
 impl BallBundle {
-    pub fn spawn(commands: &mut Commands, position: Vec2) -> Entity {
+    pub fn spawn(commands: &mut Commands, params: &SimulationParams, position: Vec2) -> Entity {
         info!("spawning ball at {}", position);
 
-        let mut bundle = commands.spawn_bundle(BallBundle::default());
+        let mut bundle = commands.spawn_bundle(BallBundle {
+            physical: Physical {
+                mass: params.ball_mass,
+                max_speed: params.ball_max_speed,
+                max_force: params.ball_max_force,
+                ..Default::default()
+            },
+            ..Default::default()
+        });
 
         bundle.insert_bundle(ActorBundle {
             actor: Actor {

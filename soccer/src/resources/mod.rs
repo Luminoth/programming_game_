@@ -29,10 +29,16 @@ pub struct SimulationParams {
     pub player_max_speed_with_ball: f32,
     pub player_max_turn_rate: f32,
 
+    // ball
+    pub ball_mass: f32,
+    pub ball_max_force: f32,
+    pub ball_max_speed: f32,
+
     pub max_passing_force: f32,
 
     pub num_attempts_to_find_valid_strike: usize,
 
+    // range checking
     pub ball_within_receiving_range_squared: f32,
     pub player_in_target_range_squared: f32,
     pub player_kicking_distance_squared: f32,
@@ -40,6 +46,7 @@ pub struct SimulationParams {
 
     // steering
     pub seek_weight: f32,
+    pub arrive_weight: f32,
 
     // physics
     pub friction: f32,

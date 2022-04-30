@@ -165,7 +165,7 @@ impl Pursuit {
 
         let target = target
             .physical
-            .future_position(&params, target.transform, look_ahead_time);
+            .future_position(params, target.transform, look_ahead_time);
 
         arrive_force(target, physical, Deceleration::Fast)
     }

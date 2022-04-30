@@ -18,7 +18,7 @@ pub fn update_seek(
         let force = steering.seek.force(&steering.steering, &physical);
         steering
             .steering
-            .accumulate_force(&physical.physical, force, params.seek_weight);
+            .accumulate_force(physical.physical, force, params.seek_weight);
     }
 }
 
@@ -30,7 +30,7 @@ pub fn update_arrive(
         let force = steering.arrive.force(&steering.steering, &physical);
         steering
             .steering
-            .accumulate_force(&physical.physical, force, params.arrive_weight);
+            .accumulate_force(physical.physical, force, params.arrive_weight);
     }
 }
 
@@ -45,6 +45,6 @@ pub fn update_pursuit(
             .force(&params, &steering.steering, &physical, &physicals);
         steering
             .steering
-            .accumulate_force(&physical.physical, force, params.pursuit_weight);
+            .accumulate_force(physical.physical, force, params.pursuit_weight);
     }
 }

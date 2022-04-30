@@ -46,7 +46,7 @@ pub fn GlobalState_execute<T>(
             if controlling == entity
                 && field_player.field_player.is_ball_within_receiving_range(
                     &params,
-                    &physical.transform,
+                    physical.transform,
                     ball_position,
                 )
             {
@@ -164,11 +164,10 @@ pub fn ChaseBall_execute<T>(
         let ball_position = ball_transform.single().translation.truncate();
 
         // kick the ball if it's in range
-        if field_player.field_player.is_ball_within_kicking_range(
-            &params,
-            &transform,
-            ball_position,
-        ) {
+        if field_player
+            .field_player
+            .is_ball_within_kicking_range(&params, transform, ball_position)
+        {
             info!("kicking ball!");
 
             field_player.state_machine.change_state(
@@ -242,7 +241,7 @@ pub fn Wait_execute<T>(
         // get back to our home if we got bumped off it
         if !field_player
             .steering
-            .is_at_target(&params, &physical.transform)
+            .is_at_target(&params, physical.transform)
         {
             if arrive.is_none() {
                 field_player.agent.arrive_on(&mut commands, entity);
@@ -268,9 +267,9 @@ pub fn Wait_execute<T>(
                 // if we're farther up the field from the controller
                 // we should request a pass
                 if field_player.field_player.is_ahead_of_attacker(
-                    &physical.transform,
-                    &transform,
-                    &opponent_goal.single(),
+                    physical.transform,
+                    transform,
+                    opponent_goal.single(),
                 ) {
                     team.single().team.request_pass(
                         &params,
@@ -586,14 +585,10 @@ pub fn ReturnToHomeRegion_execute<T>(
                     FieldPlayerState::Wait,
                 );
             }
-        } else {
-            if field_player.steering.is_at_target(&params, transform) {
-                field_player.state_machine.change_state(
-                    &mut commands,
-                    entity,
-                    FieldPlayerState::Wait,
-                );
-            }
+        } else if field_player.steering.is_at_target(&params, transform) {
+            field_player
+                .state_machine
+                .change_state(&mut commands, entity, FieldPlayerState::Wait);
         }
     }
 }

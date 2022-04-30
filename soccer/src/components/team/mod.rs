@@ -282,7 +282,34 @@ impl SoccerTeam {
         local_pos_opp.y.abs() >= reach
     }
 
-    pub fn determine_best_supporting_attacker(&self) {
+    pub fn determine_best_supporting_attacker<T>(
+        &self,
+        team: &SoccerTeam,
+        field_players: &Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery)>,
+        controlling: Entity,
+    ) -> Option<Entity>
+    where
+        T: TeamColorMarker,
+    {
+        let mut closest = f32::MAX;
+        let mut best_supporting = None;
+
+        for (entity, field_player, physical) in field_players.iter() {
+            // only attackers can support
+            if field_player.field_player.role != FieldPlayerRole::Attacker || entity == controlling
+            {
+                continue;
+            }
+
+            let position = physical.transform.translation.truncate();
+            let dist = position.distance_squared(team.best_support_spot.unwrap());
+            if dist < closest {
+                closest = dist;
+                best_supporting = Some(entity);
+            }
+        }
+
+        best_supporting
     }
 
     pub fn can_shoot<T>(
@@ -332,6 +359,59 @@ impl SoccerTeam {
 
         (target, false)
     }
+
+    //TODO:
+    /*pub fn can_pass<T>(
+        &self,
+        passer: (Entity, &Transform),
+        players: &Query<(Entity, SoccerPlayerQuery<T>, PhysicalQuery)>,
+        min_passing_distance: f32,
+    ) -> (Option<Entity>, Vec2)
+    where
+        T: TeamColorMarker,
+    {
+        let passer_position = passer.1.translation.truncate();
+        let min_passing_distance_squared = min_passing_distance * min_passing_distance;
+
+        let mut closest = f32::MAX;
+        let mut target = Vec2::ZERO;
+        let mut receiver = None;
+
+        for (entity, player, physical) in players.iter() {
+            let position = physical.transform.translation.truncate();
+            if passer.0 == entity
+                || passer_position.distance_squared(position) <= min_passing_distance_squared
+            {
+                continue;
+            }
+        }
+
+        (receiver, target)
+    }
+
+    fn get_best_pass_to_receiver(
+        &self,
+        params: &SimulationParams,
+        receiver: (&Physical, &Transform),
+        ball: (&Physical, &Transform),
+        power: f32,
+    ) -> Option<Vec2> {
+        let receiver_position = receiver.1.translation.truncate();
+        let ball_position = ball.1.translation.truncate();
+
+        let time = ball
+            .0
+            .time_to_cover_distance(params, ball_position, receiver_position, power);
+        if time < 0.0 {
+            return None;
+        }
+
+        let mut intercept_range = time * receiver.0.max_speed;
+
+        // scale the intercept range
+        let scaling_factor = 0.3;
+        intercept_range *= scaling_factor;
+    }*/
 
     pub fn request_pass<T>(
         &self,

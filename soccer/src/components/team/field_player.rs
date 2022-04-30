@@ -10,6 +10,12 @@ use crate::resources::*;
 
 use super::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Inspectable)]
+pub enum FieldPlayerRole {
+    Attacker,
+    Defender,
+}
+
 impl_state_machine!(
     FieldPlayer,
     Wait,
@@ -23,13 +29,16 @@ impl_state_machine!(
 
 #[derive(Debug, Component, Inspectable)]
 pub struct FieldPlayer {
+    pub role: FieldPlayerRole,
+
     #[inspectable(ignore)]
     pub kick_cooldown: Cooldown,
 }
 
 impl FieldPlayer {
-    pub fn new(params: &SimulationParams) -> Self {
+    pub fn new(params: &SimulationParams, role: FieldPlayerRole) -> Self {
         Self {
+            role,
             kick_cooldown: Cooldown::from_seconds(1.0 / params.player_kick_frequency as f32),
         }
     }

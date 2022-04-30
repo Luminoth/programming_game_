@@ -39,6 +39,7 @@ where
         commands: &mut Commands,
         params: &SimulationParams,
         pitch: &Pitch,
+        role: FieldPlayerRole,
         number: usize,
         home_region: usize,
     ) -> Entity
@@ -61,7 +62,7 @@ where
                 home_region,
                 default_region: home_region,
             },
-            field_player: FieldPlayer::new(params),
+            field_player: FieldPlayer::new(params, role),
             team,
             physical: Physical {
                 mass: params.player_mass,

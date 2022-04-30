@@ -441,12 +441,16 @@ pub fn KickBall_enter<T>(
 pub fn KickBall_execute<T>(
     mut commands: Commands,
     params: Res<SimulationParams>,
+    mut _message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut field_player: Query<
         (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
         (With<FieldPlayerStateKickBallExecute>, Without<Ball>),
     >,
     team: Query<SoccerTeamQuery<T>>,
+    //players: Query<(Entity, SoccerPlayerQuery<T>, PhysicalQuery)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    _supporting: Query<Entity, (With<T>, With<SupportingPlayer>)>,
+    _controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
     mut ball: Query<(&Ball, PhysicalQueryMut), Without<SoccerPlayer>>,
     opponent_goal: Query<(&Goal, &Transform), Without<T>>,
     opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
@@ -471,11 +475,13 @@ pub fn KickBall_execute<T>(
             return;
         }
 
+        let team = team.single();
+
         let mut rng = rand::thread_rng();
 
         // attempt a kick
         let power = params.max_shooting_force * dot;
-        let (mut ball_target, can_shoot) = team.single().team.can_shoot(
+        let (mut ball_target, can_shoot) = team.team.can_shoot(
             &params,
             ball_position,
             opponent_goal.single(),
@@ -492,11 +498,19 @@ pub fn KickBall_execute<T>(
                 .state_machine
                 .change_state(&mut commands, entity, FieldPlayerState::Wait);
 
-            field_player.player.find_support();
+            /*field_player.player.find_support(
+                &mut commands,
+                &mut message_dispatcher,
+                &team.team,
+                &players,
+                supporting.optional_single(),
+                controlling.single(),
+            );*/
             return;
         }
 
         // can't kick, attempt a pass
+        // TODO:
     }
 }
 

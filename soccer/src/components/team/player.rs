@@ -58,7 +58,36 @@ impl SoccerPlayer {
         false
     }
 
-    pub fn find_support(&self) {
+    pub fn find_support<T>(
+        &self,
+        commands: &mut Commands,
+        message_dispatcher: &mut FieldPlayerMessageDispatcher,
+        team: &SoccerTeam,
+        field_players: &Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery)>,
+        supporting: Option<Entity>,
+        controlling: Entity,
+    ) where
+        T: TeamColorMarker,
+    {
+        let best_supporting = team
+            .determine_best_supporting_attacker(team, field_players, controlling)
+            .unwrap();
+        if let Some(supporting) = supporting {
+            if best_supporting != supporting {
+                commands.entity(supporting).remove::<SupportingPlayer>();
+                message_dispatcher.dispatch_message(Some(supporting), FieldPlayerMessage::GoHome);
+
+                commands.entity(best_supporting).insert(SupportingPlayer);
+            }
+
+            message_dispatcher
+                .dispatch_message(Some(best_supporting), FieldPlayerMessage::SupportAttacker);
+        } else {
+            commands.entity(best_supporting).insert(SupportingPlayer);
+
+            message_dispatcher
+                .dispatch_message(Some(best_supporting), FieldPlayerMessage::SupportAttacker);
+        }
     }
 }
 

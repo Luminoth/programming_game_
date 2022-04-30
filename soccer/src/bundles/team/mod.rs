@@ -86,7 +86,18 @@ where
 
         // players
         for i in 1..TEAM_SIZE {
-            FieldPlayerBundle::<T>::spawn(commands, params, pitch, numbers[i], home_regions[i]);
+            FieldPlayerBundle::<T>::spawn(
+                commands,
+                params,
+                pitch,
+                if i % 2 == 0 {
+                    FieldPlayerRole::Attacker
+                } else {
+                    FieldPlayerRole::Defender
+                },
+                numbers[i],
+                home_regions[i],
+            );
         }
     }
 }

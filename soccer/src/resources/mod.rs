@@ -28,6 +28,7 @@ pub struct SimulationParams {
     pub player_max_speed_without_ball: f32,
     pub player_max_speed_with_ball: f32,
     pub player_max_turn_rate: f32,
+    pub player_kick_frequency: usize,
 
     // ball
     pub ball_mass: f32,

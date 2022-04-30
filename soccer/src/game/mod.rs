@@ -1,4 +1,7 @@
+pub mod cooldown;
 pub mod team;
+
+pub use cooldown::*;
 
 pub const BALL_RADIUS: f32 = 7.0;
 pub const GOAL_BAR_WIDTH: f32 = 5.0;

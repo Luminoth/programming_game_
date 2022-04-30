@@ -14,7 +14,7 @@ use crate::PLAYER_SORT;
 
 use super::super::actor::*;
 
-#[derive(Debug, Default, Bundle)]
+#[derive(Debug, Bundle)]
 pub struct FieldPlayerBundle<T>
 where
     T: TeamColorMarker,
@@ -61,6 +61,7 @@ where
                 home_region,
                 default_region: home_region,
             },
+            field_player: FieldPlayer::new(params),
             team,
             physical: Physical {
                 mass: params.player_mass,
@@ -69,7 +70,10 @@ where
                 max_turn_rate: params.player_max_turn_rate,
                 ..Default::default()
             },
-            ..Default::default()
+            agent: Agent::default(),
+            steering: Steering::default(),
+            obstacle: Obstacle::default(),
+            obstacle_avoidance: ObstacleAvoidance::default(),
         });
 
         bundle.insert_bundle(ActorBundle {

@@ -59,6 +59,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         player_max_speed_without_ball: 1.6 * speed_tweaker,
         player_max_speed_with_ball: 1.2 * speed_tweaker,
         player_max_turn_rate: 0.4,
+        player_kick_frequency: 8,
 
         ball_mass: 1.0,
         ball_max_force: 1.0 * force_tweaker,

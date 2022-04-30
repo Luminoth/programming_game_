@@ -12,6 +12,18 @@ use crate::resources::pitch::*;
 use crate::resources::*;
 use crate::util::*;
 
+pub fn update<T>(time: Res<Time>, mut field_players: Query<FieldPlayerQueryMut<T>>)
+where
+    T: TeamColorMarker,
+{
+    for mut field_player in field_players.iter_mut() {
+        field_player
+            .field_player
+            .kick_cooldown
+            .tick(time.delta_seconds());
+    }
+}
+
 // TODO: the functionality here makes more sense as a physics update step
 // rather than being part of the state machine
 pub fn GlobalState_execute<T>(
@@ -302,17 +314,17 @@ pub fn ReceiveBall_enter<T>(
 ) where
     T: TeamColorMarker,
 {
-    if let Some(controlling) = controlling.optional_single() {
-        commands.entity(controlling).remove::<ControllingPlayer>();
-    }
-
-    if let Some(receiving) = receiving.optional_single() {
-        commands.entity(receiving).remove::<ReceivingPlayer>();
-    }
-
-    let mut rng = rand::thread_rng();
-
     if let Some((entity, field_player, transform)) = field_player.optional_single() {
+        if let Some(controlling) = controlling.optional_single() {
+            commands.entity(controlling).remove::<ControllingPlayer>();
+        }
+
+        if let Some(receiving) = receiving.optional_single() {
+            commands.entity(receiving).remove::<ReceivingPlayer>();
+        }
+
+        let mut rng = rand::thread_rng();
+
         // this player is now the receiver / controller
         commands
             .entity(entity)
@@ -390,6 +402,31 @@ pub fn ReceiveBall_execute<T>(
             physical.physical.track(ball_position);
 
             physical.physical.velocity = Vec2::ZERO;
+        }
+    }
+}
+
+pub fn KickBall_enter<T>(
+    mut commands: Commands,
+    mut field_player: Query<(Entity, FieldPlayerQueryMut<T>), With<FieldPlayerStateKickBallEnter>>,
+    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, mut field_player)) = field_player.optional_single_mut() {
+        if let Some(controlling) = controlling.optional_single() {
+            commands.entity(controlling).remove::<ControllingPlayer>();
+        }
+
+        // this player is now the  controller
+        commands.entity(entity).insert(ControllingPlayer);
+
+        if !field_player.field_player.is_ready_for_next_kick() {
+            field_player.state_machine.change_state(
+                &mut commands,
+                entity,
+                FieldPlayerState::ChaseBall,
+            );
         }
     }
 }

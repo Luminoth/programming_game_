@@ -173,6 +173,16 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::team::update::<RedTeam>.label(Systems::TeamUpdate))
                     .with_system(systems::team::update::<BlueTeam>.label(Systems::TeamUpdate))
                     .with_system(
+                        systems::team::field_player::update::<RedTeam>
+                            .label(Systems::PlayerUpdate)
+                            .after(Systems::TeamUpdate),
+                    )
+                    .with_system(
+                        systems::team::field_player::update::<BlueTeam>
+                            .label(Systems::PlayerUpdate)
+                            .after(Systems::TeamUpdate),
+                    )
+                    .with_system(
                         systems::team::PrepareForKickOff_enter::<RedTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::TeamStates),
@@ -253,6 +263,18 @@ impl Plugin for MainStatePlugin {
                     )
                     .with_system(
                         systems::team::field_player::ReceiveBall_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::KickBall_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::KickBall_enter::<BlueTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),

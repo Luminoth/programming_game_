@@ -5,6 +5,7 @@ use bevy_inspector_egui::*;
 use crate::components::agent::*;
 use crate::components::state::impl_state_machine;
 use crate::components::steering::*;
+use crate::game::Cooldown;
 use crate::resources::*;
 
 use super::*;
@@ -20,10 +21,23 @@ impl_state_machine!(
     SupportAttacker
 );
 
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct FieldPlayer;
+#[derive(Debug, Component, Inspectable)]
+pub struct FieldPlayer {
+    #[inspectable(ignore)]
+    pub kick_cooldown: Cooldown,
+}
 
 impl FieldPlayer {
+    pub fn new(params: &SimulationParams) -> Self {
+        Self {
+            kick_cooldown: Cooldown::from_seconds(1.0 / params.player_kick_frequency as f32),
+        }
+    }
+
+    pub fn is_ready_for_next_kick(&self) -> bool {
+        self.kick_cooldown.available()
+    }
+
     pub fn is_ball_within_receiving_range(
         &self,
         params: &SimulationParams,
@@ -81,7 +95,7 @@ where
     T: TeamColorMarker,
 {
     pub player: &'w mut SoccerPlayer,
-    pub field_player: &'w FieldPlayer,
+    pub field_player: &'w mut FieldPlayer,
     pub team: &'w T,
     pub name: &'w Name,
 

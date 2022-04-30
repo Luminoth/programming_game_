@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::components::ball::*;
+use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
@@ -224,12 +225,15 @@ pub fn Wait_execute<T>(
         (With<FieldPlayerStateWaitExecute>, Without<Ball>),
     >,
     team: Query<SoccerTeamQuery<T>>,
-    controller: Query<(Entity, &Transform), (With<T>, With<ControllingPlayer>)>,
-    closest: Query<Entity, (With<FieldPlayer>, With<T>, With<ClosestPlayer>)>,
+    controller: Query<
+        (Entity, &Transform, Option<&GoalKeeper>),
+        (With<T>, With<ControllingPlayer>),
+    >,
+    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
     opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
     ball_physical: Query<PhysicalQuery, With<Ball>>,
-    opponent_goal: Query<&Transform, Without<T>>,
+    opponent_goal: Query<&Transform, (With<Goal>, Without<T>)>,
 ) where
     T: TeamColorMarker,
 {
@@ -255,7 +259,10 @@ pub fn Wait_execute<T>(
             .physical
             .track(ball_physical.transform.translation.truncate());
 
-        if let Some((controller, transform)) = controller.optional_single() {
+        let mut controller_is_goalkeeper = false;
+        if let Some((controller, transform, goal_keeper)) = controller.optional_single() {
+            controller_is_goalkeeper = goal_keeper.is_some();
+
             if entity != controller {
                 // if we're farther up the field from the controller
                 // we should request a pass
@@ -285,7 +292,7 @@ pub fn Wait_execute<T>(
 
                 // if we're the closest field player
                 // and no one's after the ball, chase it
-                if entity == closest && !have_receiver {
+                if entity == closest && !have_receiver && !controller_is_goalkeeper {
                     field_player.state_machine.change_state(
                         &mut commands,
                         entity,
@@ -309,7 +316,7 @@ pub fn ReceiveBall_enter<T>(
     controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
     opponents: Query<&Transform, (With<SoccerPlayer>, Without<T>)>,
-    opponent_goal: Query<&Transform, Without<T>>,
+    opponent_goal: Query<&Transform, (With<Goal>, Without<T>)>,
     ball: Query<Entity, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -377,7 +384,7 @@ pub fn ReceiveBall_execute<T>(
             &params,
             physical.transform,
             ball_position,
-        ) || !controlling.optional_single().is_some()
+        ) || controlling.optional_single().is_none()
         {
             field_player.state_machine.change_state(
                 &mut commands,
@@ -463,7 +470,8 @@ pub fn ReturnToHomeRegion_execute<T>(
         (Entity, FieldPlayerQueryMut<T>, &Transform),
         With<FieldPlayerStateReturnToHomeRegionExecute>,
     >,
-    closest: Query<Entity, (With<FieldPlayer>, With<T>, With<ClosestPlayer>)>,
+    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    controlling_goal_keeper: Query<Entity, (With<GoalKeeper>, With<T>, With<ControllingPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
 ) where
     T: TeamColorMarker,
@@ -475,7 +483,10 @@ pub fn ReturnToHomeRegion_execute<T>(
 
                 // if we're the closest field player
                 // and no one's after the ball, chase it
-                if entity == closest && !have_receiver {
+                if entity == closest
+                    && !have_receiver
+                    && controlling_goal_keeper.optional_single().is_none()
+                {
                     field_player.state_machine.change_state(
                         &mut commands,
                         entity,

@@ -132,7 +132,7 @@ impl SoccerTeam {
         controller_transform: &Transform,
         have_support: bool,
         ball_physical: &Physical,
-        goal: GoalQueryItem<T>,
+        opponent_goal: (&Goal, &Transform),
     ) where
         T: TeamColorMarker,
     {
@@ -168,7 +168,7 @@ impl SoccerTeam {
                 .can_shoot(
                     params,
                     spot.position,
-                    &goal,
+                    opponent_goal,
                     ball_physical,
                     opponents,
                     params.max_passing_force,
@@ -282,11 +282,11 @@ impl SoccerTeam {
         local_pos_opp.y.abs() >= reach
     }
 
-    fn can_shoot<T>(
+    pub fn can_shoot<T>(
         &self,
         params: &SimulationParams,
         from: Vec2,
-        goal: &GoalQueryItem<T>,
+        opponent_goal: (&Goal, &Transform),
         ball_physical: &Physical,
         opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
         power: f32,
@@ -296,14 +296,14 @@ impl SoccerTeam {
     {
         let mut rng = rand::thread_rng();
 
-        let goal_position = goal.transform.translation.truncate();
+        let goal_position = opponent_goal.1.translation.truncate();
 
         let mut num_attempts = params.num_attempts_to_find_valid_strike;
         while num_attempts > 0 {
-            let mut target = goal_position + goal.goal.score_center;
+            let mut target = goal_position + opponent_goal.0.score_center;
 
-            let min_y = goal_position.y + goal.goal.top.y + BALL_RADIUS;
-            let max_y = goal_position.y + goal.goal.bottom.y - BALL_RADIUS;
+            let min_y = goal_position.y + opponent_goal.0.top.y + BALL_RADIUS;
+            let max_y = goal_position.y + opponent_goal.0.bottom.y - BALL_RADIUS;
 
             target.y = rng.gen_range(min_y..=max_y);
 

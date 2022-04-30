@@ -193,10 +193,10 @@ pub fn Attacking_execute<T>(
         With<SoccerTeamStateAttackingExecute>,
     >,
     opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
-    controller: Query<&Transform, With<ControllingPlayer>>,
-    support: Query<Entity, With<SupportingPlayer>>,
+    controller: Query<&Transform, (With<T>, With<ControllingPlayer>)>,
+    support: Query<Entity, (With<T>, With<SupportingPlayer>)>,
     ball: Query<PhysicalQuery, With<Ball>>,
-    goal: Query<GoalQuery<T>>,
+    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
 ) where
     T: TeamColorMarker,
 {
@@ -210,7 +210,7 @@ pub fn Attacking_execute<T>(
                 controller,
                 support.optional_single().is_some(),
                 &ball.single().physical,
-                goal.single(),
+                opponent_goal.single(),
             );
         } else {
             team.state_machine

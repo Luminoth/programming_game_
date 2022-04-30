@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
+use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
@@ -231,8 +232,8 @@ pub fn Wait_execute<T>(
     >,
     closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
-    opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
-    ball_physical: Query<PhysicalQuery, With<Ball>>,
+    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+    ball: Query<(&Actor, PhysicalQuery), With<Ball>>,
     opponent_goal: Query<&Transform, (With<Goal>, Without<T>)>,
 ) where
     T: TeamColorMarker,
@@ -254,10 +255,10 @@ pub fn Wait_execute<T>(
         }
         physical.physical.velocity = Vec2::ZERO;
 
-        let ball_physical = ball_physical.single();
-        physical
-            .physical
-            .track(ball_physical.transform.translation.truncate());
+        let ball = ball.single();
+        let ball_position = ball.1.transform.translation.truncate();
+
+        physical.physical.track(ball_position);
 
         let mut controller_is_goalkeeper = false;
         if let Some((controller, transform, goal_keeper)) = controller.optional_single() {
@@ -278,7 +279,7 @@ pub fn Wait_execute<T>(
                         entity,
                         physical.transform,
                         &opponents,
-                        ball_physical.physical,
+                        (ball.0, ball.1.physical),
                         &mut player_message_dispatcher,
                     );
                 }
@@ -451,14 +452,14 @@ pub fn KickBall_execute<T>(
     receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
     _supporting: Query<Entity, (With<T>, With<SupportingPlayer>)>,
     _controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
-    mut ball: Query<(&Ball, PhysicalQueryMut), Without<SoccerPlayer>>,
+    mut ball: Query<(&Ball, &Actor, PhysicalQueryMut), Without<SoccerPlayer>>,
     opponent_goal: Query<(&Goal, &Transform), Without<T>>,
-    opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
+    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
 ) where
     T: TeamColorMarker,
 {
     if let Some((entity, mut field_player, physical)) = field_player.optional_single_mut() {
-        let (ball, mut ball_physical) = ball.single_mut();
+        let (ball, ball_actor, mut ball_physical) = ball.single_mut();
         let ball_position = ball_physical.transform.translation.truncate();
         let position = physical.transform.translation.truncate();
 
@@ -485,7 +486,7 @@ pub fn KickBall_execute<T>(
             &params,
             ball_position,
             opponent_goal.single(),
-            &ball_physical.physical,
+            (ball_actor, &ball_physical.physical),
             &opponents,
             power,
         );

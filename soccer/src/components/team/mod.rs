@@ -11,10 +11,10 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 use rand::Rng;
 
+use crate::components::actor::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::game::team::*;
-use crate::game::{BALL_RADIUS, PLAYER_RADIUS};
 use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
 use crate::util::point_to_world_space;
@@ -39,7 +39,7 @@ impl SoccerTeam {
     pub fn calculate_closest_player_to_ball<T>(
         &self,
         commands: &mut Commands,
-        ball_transform: &Transform,
+        ball_position: Vec2,
         players: &Query<(Entity, &Transform), (With<SoccerPlayer>, With<T>)>,
         closest: Option<Entity>,
     ) where
@@ -48,8 +48,6 @@ impl SoccerTeam {
         if let Some(closest) = closest {
             commands.entity(closest).remove::<ClosestPlayer>();
         }
-
-        let ball_position = ball_transform.translation.truncate();
 
         let mut closest_dist = f32::MAX;
         let mut closest_player = None;
@@ -128,10 +126,10 @@ impl SoccerTeam {
         params: &SimulationParams,
         team: &T,
         support_calculator: &mut SupportSpotCalculator,
-        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
+        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
         controller_transform: &Transform,
         have_support: bool,
-        ball_physical: &Physical,
+        ball: (&Actor, &Physical),
         opponent_goal: (&Goal, &Transform),
     ) where
         T: TeamColorMarker,
@@ -157,7 +155,7 @@ impl SoccerTeam {
                 spot.position,
                 None,
                 opponents,
-                ball_physical,
+                ball,
                 params.max_passing_force,
             ) {
                 spot.score += params.pass_safe_score;
@@ -169,7 +167,7 @@ impl SoccerTeam {
                     params,
                     spot.position,
                     opponent_goal,
-                    ball_physical,
+                    ball,
                     opponents,
                     params.max_shooting_force,
                 )
@@ -206,8 +204,8 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
-        ball_physical: &Physical,
+        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+        ball: (&Actor, &Physical),
         passing_force: f32,
     ) -> bool
     where
@@ -219,8 +217,8 @@ impl SoccerTeam {
                 from,
                 target,
                 receiver,
-                &opponent,
-                ball_physical,
+                opponent,
+                ball,
                 passing_force,
             ) {
                 return false;
@@ -236,11 +234,11 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        opponent: &PhysicalQueryItem,
-        ball_physical: &Physical,
+        opponent: (&Actor, PhysicalQueryItem),
+        ball: (&Actor, &Physical),
         passing_force: f32,
     ) -> bool {
-        let opponent_position = opponent.transform.translation.truncate();
+        let opponent_position = opponent.1.transform.translation.truncate();
 
         let to_target = target - from;
         let to_target_norm = to_target.normalize_or_zero();
@@ -270,7 +268,7 @@ impl SoccerTeam {
             }
         }
 
-        let time_for_ball = ball_physical.time_to_cover_distance(
+        let time_for_ball = ball.1.time_to_cover_distance(
             params,
             Vec2::ZERO,
             Vec2::new(local_pos_opp.x, 0.0),
@@ -278,7 +276,9 @@ impl SoccerTeam {
         );
 
         // can the opponent intercept the ball in flight?
-        let reach = opponent.physical.max_speed * time_for_ball + BALL_RADIUS + PLAYER_RADIUS;
+        let reach = opponent.1.physical.max_speed * time_for_ball
+            + ball.0.bounding_radius
+            + opponent.0.bounding_radius;
         local_pos_opp.y.abs() >= reach
     }
 
@@ -317,8 +317,8 @@ impl SoccerTeam {
         params: &SimulationParams,
         from: Vec2,
         opponent_goal: (&Goal, &Transform),
-        ball_physical: &Physical,
-        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
+        ball: (&Actor, &Physical),
+        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
         power: f32,
     ) -> (Vec2, bool)
     where
@@ -334,21 +334,15 @@ impl SoccerTeam {
         while num_attempts > 0 {
             target = goal_position + opponent_goal.0.score_center;
 
-            let min_y = goal_position.y + opponent_goal.0.bottom.y + BALL_RADIUS;
-            let max_y = goal_position.y + opponent_goal.0.top.y - BALL_RADIUS;
+            let min_y = goal_position.y + opponent_goal.0.bottom.y + ball.0.bounding_radius;
+            let max_y = goal_position.y + opponent_goal.0.top.y - ball.0.bounding_radius;
 
             target.y = rng.gen_range(min_y..=max_y);
 
-            let time = ball_physical.time_to_cover_distance(params, from, target, power);
+            let time = ball.1.time_to_cover_distance(params, from, target, power);
             if time >= 0.0
                 && self.is_pass_safe_from_all_opponents(
-                    params,
-                    from,
-                    target,
-                    None,
-                    opponents,
-                    ball_physical,
-                    power,
+                    params, from, target, None, opponents, ball, power,
                 )
             {
                 return (target, true);
@@ -420,8 +414,8 @@ impl SoccerTeam {
         controller_transform: &Transform,
         receiver: Entity,
         receiver_transform: &Transform,
-        opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
-        ball_physical: &Physical,
+        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+        ball: (&Actor, &Physical),
         player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
     ) where
         T: TeamColorMarker,
@@ -435,7 +429,7 @@ impl SoccerTeam {
             receiver_position,
             Some(receiver_transform),
             opponents,
-            ball_physical,
+            ball,
             params.max_passing_force,
         ) {
             player_message_dispatcher.dispatch_message(

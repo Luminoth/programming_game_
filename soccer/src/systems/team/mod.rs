@@ -5,6 +5,7 @@ pub mod goal_keeper;
 
 use bevy::prelude::*;
 
+use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
@@ -26,7 +27,7 @@ pub fn update<T>(
     for team in teams.iter() {
         team.team.calculate_closest_player_to_ball(
             &mut commands,
-            &ball.single().transform,
+            ball.single().transform.translation.truncate(),
             &players,
             closest.optional_single(),
         );
@@ -192,10 +193,10 @@ pub fn Attacking_execute<T>(
         (Entity, SoccerTeamQueryMut<T>, &mut SupportSpotCalculator),
         With<SoccerTeamStateAttackingExecute>,
     >,
-    opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
+    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
     controller: Query<&Transform, (With<T>, With<ControllingPlayer>)>,
     support: Query<Entity, (With<T>, With<SupportingPlayer>)>,
-    ball: Query<PhysicalQuery, With<Ball>>,
+    ball: Query<(&Actor, &Physical), With<Ball>>,
     opponent_goal: Query<(&Goal, &Transform), Without<T>>,
 ) where
     T: TeamColorMarker,
@@ -209,7 +210,7 @@ pub fn Attacking_execute<T>(
                 &opponents,
                 controller,
                 support.optional_single().is_some(),
-                &ball.single().physical,
+                ball.single(),
                 opponent_goal.single(),
             );
         } else {

@@ -60,16 +60,20 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         player_max_speed_with_ball: 1.2 * speed_tweaker,
         player_max_turn_rate: 0.4,
         player_kick_frequency: 8,
+        player_kick_accuracy: 0.99,
 
         ball_mass: 1.0,
         ball_max_force: 1.0 * force_tweaker,
         ball_max_speed: 1.0 * speed_tweaker,
 
         max_passing_force: 3.0,
+        max_shooting_force: 6.0,
+        max_dribble_force: 1.5,
 
         num_attempts_to_find_valid_strike: 5,
 
         chance_of_using_arrive_type_receive_behavior: 0.5,
+        chance_player_attempts_pot_shot: 0.005,
 
         ball_within_receiving_range_squared: 10.0 * 10.0,
         player_in_target_range_squared: 10.0 * 10.0,

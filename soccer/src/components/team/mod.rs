@@ -171,9 +171,9 @@ impl SoccerTeam {
                     opponent_goal,
                     ball_physical,
                     opponents,
-                    params.max_passing_force,
+                    params.max_shooting_force,
                 )
-                .is_some()
+                .1
             {
                 spot.score += params.can_score_score;
             }
@@ -282,6 +282,9 @@ impl SoccerTeam {
         local_pos_opp.y.abs() >= reach
     }
 
+    pub fn determine_best_supporting_attacker(&self) {
+    }
+
     pub fn can_shoot<T>(
         &self,
         params: &SimulationParams,
@@ -290,7 +293,7 @@ impl SoccerTeam {
         ball_physical: &Physical,
         opponents: &Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
         power: f32,
-    ) -> Option<Vec2>
+    ) -> (Vec2, bool)
     where
         T: TeamColorMarker,
     {
@@ -298,9 +301,11 @@ impl SoccerTeam {
 
         let goal_position = opponent_goal.1.translation.truncate();
 
+        let mut target = Vec2::ZERO;
+
         let mut num_attempts = params.num_attempts_to_find_valid_strike;
         while num_attempts > 0 {
-            let mut target = goal_position + opponent_goal.0.score_center;
+            target = goal_position + opponent_goal.0.score_center;
 
             let min_y = goal_position.y + opponent_goal.0.bottom.y + BALL_RADIUS;
             let max_y = goal_position.y + opponent_goal.0.top.y - BALL_RADIUS;
@@ -319,13 +324,13 @@ impl SoccerTeam {
                     power,
                 )
             {
-                return Some(target);
+                return (target, true);
             }
 
             num_attempts -= 1;
         }
 
-        None
+        (target, false)
     }
 
     pub fn request_pass<T>(

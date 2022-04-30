@@ -57,6 +57,9 @@ impl SoccerPlayer {
 
         false
     }
+
+    pub fn find_support(&self) {
+    }
 }
 
 #[derive(WorldQuery)]

@@ -29,6 +29,7 @@ pub struct SimulationParams {
     pub player_max_speed_with_ball: f32,
     pub player_max_turn_rate: f32,
     pub player_kick_frequency: usize,
+    pub player_kick_accuracy: f32,
 
     // ball
     pub ball_mass: f32,
@@ -36,10 +37,13 @@ pub struct SimulationParams {
     pub ball_max_speed: f32,
 
     pub max_passing_force: f32,
+    pub max_shooting_force: f32,
+    pub max_dribble_force: f32,
 
     pub num_attempts_to_find_valid_strike: usize,
 
     pub chance_of_using_arrive_type_receive_behavior: f32,
+    pub chance_player_attempts_pot_shot: f32,
 
     // range checking
     pub ball_within_receiving_range_squared: f32,

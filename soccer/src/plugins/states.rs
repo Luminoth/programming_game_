@@ -145,6 +145,18 @@ impl Plugin for MainStatePlugin {
                             .after(Systems::TeamStates),
                     )
                     .with_system(
+                        systems::team::field_player::KickBall_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::KickBall_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
                         systems::team::field_player::ReturnToHomeRegion_execute::<RedTeam>
                             .label(Systems::StateExecute)
                             .label(Systems::PlayerStates)

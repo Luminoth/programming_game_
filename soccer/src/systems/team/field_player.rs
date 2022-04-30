@@ -438,6 +438,68 @@ pub fn KickBall_enter<T>(
     }
 }
 
+pub fn KickBall_execute<T>(
+    mut commands: Commands,
+    params: Res<SimulationParams>,
+    mut field_player: Query<
+        (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
+        (With<FieldPlayerStateKickBallExecute>, Without<Ball>),
+    >,
+    team: Query<SoccerTeamQuery<T>>,
+    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    mut ball: Query<(&Ball, PhysicalQueryMut), Without<SoccerPlayer>>,
+    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
+    opponents: Query<PhysicalQuery, (With<SoccerPlayer>, Without<T>)>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, mut field_player, physical)) = field_player.optional_single_mut() {
+        let (ball, mut ball_physical) = ball.single_mut();
+        let ball_position = ball_physical.transform.translation.truncate();
+        let position = physical.transform.translation.truncate();
+
+        let to_ball = ball_position - position;
+        let dot = physical.physical.heading.dot(to_ball.normalize_or_zero());
+
+        // can't kick the ball if there's a receiver, or the goal keeper has it, or it's behind us
+        if receiving.optional_single().is_none() || /* !goal_keeper_has_ball ||*/ dot < 0.0 {
+            field_player.state_machine.change_state(
+                &mut commands,
+                entity,
+                FieldPlayerState::ChaseBall,
+            );
+            return;
+        }
+
+        let mut rng = rand::thread_rng();
+
+        // attempt a kick
+        let power = params.max_shooting_force * dot;
+        let (mut ball_target, can_shoot) = team.single().team.can_shoot(
+            &params,
+            ball_position,
+            opponent_goal.single(),
+            &ball_physical.physical,
+            &opponents,
+            power,
+        );
+        if can_shoot || rng.gen::<f32>() < params.chance_player_attempts_pot_shot {
+            ball_target = ball.add_noise_to_kick(&params, ball_physical.transform, ball_target);
+            let direction = ball_target - ball_position;
+            ball.kick(&mut ball_physical.physical, direction, power);
+
+            field_player
+                .state_machine
+                .change_state(&mut commands, entity, FieldPlayerState::Wait);
+
+            field_player.player.find_support();
+            return;
+        }
+
+        // can't kick, attempt a pass
+    }
+}
+
 pub fn ReturnToHomeRegion_enter<T>(
     mut commands: Commands,
     pitch: Res<Pitch>,

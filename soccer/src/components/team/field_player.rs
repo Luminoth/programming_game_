@@ -2,6 +2,7 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
+use crate::components::actor::*;
 use crate::components::agent::*;
 use crate::components::state::impl_state_machine;
 use crate::components::steering::*;
@@ -93,6 +94,7 @@ where
     pub team: &'w T,
     pub name: &'w Name,
 
+    pub actor: &'w Actor,
     pub agent: &'w Agent,
     pub steering: &'w Steering,
 }
@@ -108,6 +110,7 @@ where
     pub team: &'w T,
     pub name: &'w Name,
 
+    pub actor: &'w Actor,
     pub agent: &'w mut Agent,
     pub steering: &'w mut Steering,
     pub state_machine: &'w mut FieldPlayerStateMachine,

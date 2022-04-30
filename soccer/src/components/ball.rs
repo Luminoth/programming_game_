@@ -1,7 +1,9 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 use rand::Rng;
 
+use crate::components::actor::*;
 use crate::resources::*;
 
 use super::physics::Physical;
@@ -31,4 +33,12 @@ impl Ball {
         let direction = direction.normalize();
         physical.apply_force(direction * force);
     }
+}
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct BallQuery<'w> {
+    pub ball: &'w Ball,
+
+    pub actor: &'w Actor,
 }

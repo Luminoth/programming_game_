@@ -302,8 +302,8 @@ impl SoccerTeam {
         while num_attempts > 0 {
             let mut target = goal_position + opponent_goal.0.score_center;
 
-            let min_y = goal_position.y + opponent_goal.0.top.y + BALL_RADIUS;
-            let max_y = goal_position.y + opponent_goal.0.bottom.y - BALL_RADIUS;
+            let min_y = goal_position.y + opponent_goal.0.bottom.y + BALL_RADIUS;
+            let max_y = goal_position.y + opponent_goal.0.top.y - BALL_RADIUS;
 
             target.y = rng.gen_range(min_y..=max_y);
 

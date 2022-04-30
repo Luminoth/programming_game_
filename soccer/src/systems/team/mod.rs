@@ -19,7 +19,7 @@ pub fn update<T>(
     mut commands: Commands,
     teams: Query<SoccerTeamQuery<T>>,
     players: Query<(Entity, &Transform), (With<SoccerPlayer>, With<T>)>,
-    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    closest: Query<ClosestPlayerQuery<T>>,
     ball: Query<PhysicalQuery, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -29,7 +29,7 @@ pub fn update<T>(
             &mut commands,
             ball.single().transform.translation.truncate(),
             &players,
-            closest.optional_single(),
+            closest.optional_single().map(|x| x.entity),
         );
     }
 }
@@ -39,10 +39,10 @@ pub fn PrepareForKickOff_enter<T>(
     mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut goal_keeper_message_dispatcher: ResMut<GoalKeeperMessageDispatcher>,
     teams: Query<SoccerTeamQuery<T>, With<SoccerTeamStatePrepareForKickOffEnter>>,
-    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
-    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
-    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
-    supporting: Query<Entity, (With<T>, With<SupportingPlayer>)>,
+    receiving: Query<ReceivingPlayerQuery<T>>,
+    closest: Query<ClosestPlayerQuery<T>>,
+    controlling: Query<ControllingPlayerQuery<T>>,
+    supporting: Query<SupportingPlayerQuery<T>>,
     field_players: Query<Entity, (With<FieldPlayer>, With<T>)>,
     goal_keeper: Query<Entity, (With<GoalKeeper>, With<T>)>,
 ) where
@@ -54,19 +54,25 @@ pub fn PrepareForKickOff_enter<T>(
         // reset player positions
 
         if let Some(receiving) = receiving.optional_single() {
-            commands.entity(receiving).remove::<ReceivingPlayer>();
+            commands
+                .entity(receiving.entity)
+                .remove::<ReceivingPlayer>();
         }
 
         if let Some(closest) = closest.optional_single() {
-            commands.entity(closest).remove::<ClosestPlayer>();
+            commands.entity(closest.entity).remove::<ClosestPlayer>();
         }
 
         if let Some(controlling) = controlling.optional_single() {
-            commands.entity(controlling).remove::<ControllingPlayer>();
+            commands
+                .entity(controlling.entity)
+                .remove::<ControllingPlayer>();
         }
 
         if let Some(supporting) = supporting.optional_single() {
-            commands.entity(supporting).remove::<SupportingPlayer>();
+            commands
+                .entity(supporting.entity)
+                .remove::<SupportingPlayer>();
         }
 
         // send players home
@@ -148,7 +154,7 @@ pub fn Defending_enter<T>(
 pub fn Defending_execute<T>(
     mut commands: Commands,
     mut teams: Query<(Entity, SoccerTeamQueryMut<T>), With<SoccerTeamStateDefendingExecute>>,
-    controller: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    controller: Query<ControllingPlayerQuery<T>>,
 ) where
     T: TeamColorMarker,
 {
@@ -195,20 +201,20 @@ pub fn Attacking_execute<T>(
     >,
     opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
     controller: Query<&Transform, (With<T>, With<ControllingPlayer>)>,
-    support: Query<Entity, (With<T>, With<SupportingPlayer>)>,
+    support: Query<SupportingPlayerQuery<T>>,
     ball: Query<(&Actor, &Physical), With<Ball>>,
     opponent_goal: Query<(&Goal, &Transform), Without<T>>,
 ) where
     T: TeamColorMarker,
 {
     if let Some((entity, mut team, mut support_calculator)) = teams.optional_single_mut() {
-        if let Some(controller) = controller.optional_single() {
+        if let Some(controller_transform) = controller.optional_single() {
             team.team.determine_best_supporting_position(
                 &params,
                 team.color,
                 &mut support_calculator,
                 &opponents,
-                controller,
+                controller_transform,
                 support.optional_single().is_some(),
                 ball.single(),
                 opponent_goal.single(),

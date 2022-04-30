@@ -117,14 +117,62 @@ where
 #[component(storage = "SparseSet")]
 pub struct ReceivingPlayer;
 
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct ReceivingPlayerQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
+    pub entity: Entity,
+    pub receiving: &'w ReceivingPlayer,
+    pub team: &'w T,
+    pub name: &'w Name,
+}
+
 #[derive(Debug, Default, Component, Inspectable)]
 #[component(storage = "SparseSet")]
 pub struct ClosestPlayer;
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct ClosestPlayerQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
+    pub entity: Entity,
+    pub closest: &'w ClosestPlayer,
+    pub team: &'w T,
+    pub name: &'w Name,
+}
 
 #[derive(Debug, Default, Component, Inspectable)]
 #[component(storage = "SparseSet")]
 pub struct ControllingPlayer;
 
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct ControllingPlayerQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
+    pub entity: Entity,
+    pub controlling: &'w ControllingPlayer,
+    pub team: &'w T,
+    pub name: &'w Name,
+}
+
 #[derive(Debug, Default, Component, Inspectable)]
 #[component(storage = "SparseSet")]
 pub struct SupportingPlayer;
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct SupportingPlayerQuery<'w, T>
+where
+    T: TeamColorMarker,
+{
+    pub entity: Entity,
+    pub supporting: &'w SupportingPlayer,
+    pub team: &'w T,
+    pub name: &'w Name,
+}

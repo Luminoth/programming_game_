@@ -32,7 +32,7 @@ pub fn GlobalState_execute<T>(
     params: Res<SimulationParams>,
     mut field_players: Query<(Entity, FieldPlayerQuery<T>, PhysicalQueryMut), Without<Ball>>,
     ball: Query<&Transform, With<Ball>>,
-    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    controlling: Query<ControllingPlayerQuery<T>>,
 ) where
     T: TeamColorMarker,
 {
@@ -43,7 +43,7 @@ pub fn GlobalState_execute<T>(
 
         // reduce max speed when near the ball and in possession of it
         if let Some(controlling) = controlling.optional_single() {
-            if controlling == entity
+            if controlling.entity == entity
                 && field_player.field_player.is_ball_within_receiving_range(
                     &params,
                     physical.transform,
@@ -155,7 +155,7 @@ pub fn ChaseBall_execute<T>(
         (Entity, FieldPlayerQueryMut<T>, &Transform),
         With<FieldPlayerStateChaseBallExecute>,
     >,
-    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
+    closest: Query<ClosestPlayerQuery<T>>,
     ball_transform: Query<&Transform, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -180,7 +180,7 @@ pub fn ChaseBall_execute<T>(
 
         // keep chasing the ball if we're the closest to it
         if let Some(closest) = closest.optional_single() {
-            if entity == closest {
+            if entity == closest.entity {
                 info!("continue chasing ball");
 
                 field_player.steering.target = ball_position;
@@ -225,12 +225,9 @@ pub fn Wait_execute<T>(
         (With<FieldPlayerStateWaitExecute>, Without<Ball>),
     >,
     team: Query<SoccerTeamQuery<T>>,
-    controller: Query<
-        (Entity, &Transform, Option<&GoalKeeper>),
-        (With<T>, With<ControllingPlayer>),
-    >,
-    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
-    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    controller: Query<(ControllingPlayerQuery<T>, &Transform, Option<&GoalKeeper>)>,
+    closest: Query<ClosestPlayerQuery<T>>,
+    receiving: Query<ReceivingPlayerQuery<T>>,
     opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
     ball: Query<(&Actor, PhysicalQuery), With<Ball>>,
     opponent_goal: Query<&Transform, (With<Goal>, Without<T>)>,
@@ -244,12 +241,16 @@ pub fn Wait_execute<T>(
             .is_at_target(&params, physical.transform)
         {
             if arrive.is_none() {
+                info!("heading back home");
+
                 field_player.agent.arrive_on(&mut commands, entity);
             }
             continue;
         }
 
         if arrive.is_some() {
+            info!("arrived back home");
+
             field_player.agent.arrive_off(&mut commands, entity);
         }
         physical.physical.velocity = Vec2::ZERO;
@@ -263,7 +264,7 @@ pub fn Wait_execute<T>(
         if let Some((controller, transform, goal_keeper)) = controller.optional_single() {
             controller_is_goalkeeper = goal_keeper.is_some();
 
-            if entity != controller {
+            if entity != controller.entity {
                 // if we're farther up the field from the controller
                 // we should request a pass
                 if field_player.field_player.is_ahead_of_attacker(
@@ -273,7 +274,7 @@ pub fn Wait_execute<T>(
                 ) {
                     team.single().team.request_pass(
                         &params,
-                        controller,
+                        controller.entity,
                         transform,
                         entity,
                         physical.transform,
@@ -292,7 +293,7 @@ pub fn Wait_execute<T>(
 
                 // if we're the closest field player
                 // and no one's after the ball, chase it
-                if entity == closest && !have_receiver && !controller_is_goalkeeper {
+                if entity == closest.entity && !have_receiver && !controller_is_goalkeeper {
                     field_player.state_machine.change_state(
                         &mut commands,
                         entity,
@@ -313,8 +314,8 @@ pub fn ReceiveBall_enter<T>(
         (Entity, FieldPlayerQuery<T>, &Transform),
         With<FieldPlayerStateReceiveBallEnter>,
     >,
-    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
-    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    controlling: Query<ControllingPlayerQuery<T>>,
+    receiving: Query<ReceivingPlayerQuery<T>>,
     opponents: Query<&Transform, (With<SoccerPlayer>, Without<T>)>,
     opponent_goal: Query<&Transform, (With<Goal>, Without<T>)>,
     ball: Query<Entity, With<Ball>>,
@@ -323,11 +324,15 @@ pub fn ReceiveBall_enter<T>(
 {
     if let Some((entity, field_player, transform)) = field_player.optional_single() {
         if let Some(controlling) = controlling.optional_single() {
-            commands.entity(controlling).remove::<ControllingPlayer>();
+            commands
+                .entity(controlling.entity)
+                .remove::<ControllingPlayer>();
         }
 
         if let Some(receiving) = receiving.optional_single() {
-            commands.entity(receiving).remove::<ReceivingPlayer>();
+            commands
+                .entity(receiving.entity)
+                .remove::<ReceivingPlayer>();
         }
 
         let mut rng = rand::thread_rng();
@@ -369,7 +374,7 @@ pub fn ReceiveBall_execute<T>(
         ),
         With<FieldPlayerStateReceiveBallExecute>,
     >,
-    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    controlling: Query<ControllingPlayerQuery<T>>,
     ball: Query<&Transform, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -416,13 +421,15 @@ pub fn ReceiveBall_execute<T>(
 pub fn KickBall_enter<T>(
     mut commands: Commands,
     mut field_player: Query<(Entity, FieldPlayerQueryMut<T>), With<FieldPlayerStateKickBallEnter>>,
-    controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    controlling: Query<ControllingPlayerQuery<T>>,
 ) where
     T: TeamColorMarker,
 {
     if let Some((entity, mut field_player)) = field_player.optional_single_mut() {
         if let Some(controlling) = controlling.optional_single() {
-            commands.entity(controlling).remove::<ControllingPlayer>();
+            commands
+                .entity(controlling.entity)
+                .remove::<ControllingPlayer>();
         }
 
         // this player is now the  controller
@@ -448,9 +455,9 @@ pub fn KickBall_execute<T>(
     >,
     team: Query<SoccerTeamQuery<T>>,
     //players: Query<(Entity, SoccerPlayerQuery<T>, PhysicalQuery)>,
-    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
-    _supporting: Query<Entity, (With<T>, With<SupportingPlayer>)>,
-    _controlling: Query<Entity, (With<T>, With<ControllingPlayer>)>,
+    receiving: Query<ReceivingPlayerQuery<T>>,
+    _supporting: Query<SupportingPlayerQuery<T>>,
+    _controlling: Query<ControllingPlayerQuery<T>>,
     mut ball: Query<(&Ball, &Actor, PhysicalQueryMut), Without<SoccerPlayer>>,
     opponent_goal: Query<(&Goal, &Transform), Without<T>>,
     opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
@@ -546,9 +553,9 @@ pub fn ReturnToHomeRegion_execute<T>(
         (Entity, FieldPlayerQueryMut<T>, &Transform),
         With<FieldPlayerStateReturnToHomeRegionExecute>,
     >,
-    closest: Query<Entity, (With<T>, With<ClosestPlayer>)>,
-    controlling_goal_keeper: Query<Entity, (With<GoalKeeper>, With<T>, With<ControllingPlayer>)>,
-    receiving: Query<Entity, (With<T>, With<ReceivingPlayer>)>,
+    closest: Query<ClosestPlayerQuery<T>>,
+    controlling_goal_keeper: Query<ControllingPlayerQuery<T>, With<GoalKeeper>>,
+    receiving: Query<ReceivingPlayerQuery<T>>,
 ) where
     T: TeamColorMarker,
 {
@@ -559,7 +566,7 @@ pub fn ReturnToHomeRegion_execute<T>(
 
                 // if we're the closest field player
                 // and no one's after the ball, chase it
-                if entity == closest
+                if entity == closest.entity
                     && !have_receiver
                     && controlling_goal_keeper.optional_single().is_none()
                 {

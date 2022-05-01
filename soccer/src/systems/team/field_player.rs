@@ -272,13 +272,13 @@ pub fn Wait_execute<T>(
                     transform,
                     opponent_goal.single(),
                 ) {
-                    team.single().team.request_pass(
+                    team.single().team.request_pass::<T, _>(
                         &params,
                         controller.entity,
                         transform,
                         entity,
                         physical.transform,
-                        &opponents,
+                        opponents.iter(),
                         (ball.0, ball.1.physical),
                         &mut player_message_dispatcher,
                     );
@@ -347,9 +347,9 @@ pub fn ReceiveBall_enter<T>(
             .player
             .is_in_hot_region(transform, opponent_goal.single(), &pitch)
             && rng.gen::<f32>() < params.chance_of_using_arrive_type_receive_behavior
-            && !field_player.player.is_opponent_within_radius(
+            && !field_player.player.is_opponent_within_radius::<T, _>(
                 transform,
-                &opponents,
+                opponents.iter(),
                 params.pass_threat_radius,
             )
         {
@@ -448,16 +448,19 @@ pub fn KickBall_enter<T>(
 pub fn KickBall_execute<T>(
     mut commands: Commands,
     params: Res<SimulationParams>,
-    mut _message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut field_player: Query<
         (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
         (With<FieldPlayerStateKickBallExecute>, Without<Ball>),
     >,
     team: Query<SoccerTeamQuery<T>>,
-    //players: Query<(Entity, SoccerPlayerQuery<T>, PhysicalQuery)>,
+    teammates: Query<
+        (Entity, FieldPlayerQuery<T>, PhysicalQuery),
+        Without<FieldPlayerStateKickBallExecute>,
+    >,
     receiving: Query<ReceivingPlayerQuery<T>>,
-    _supporting: Query<SupportingPlayerQuery<T>>,
-    _controlling: Query<ControllingPlayerQuery<T>>,
+    supporting: Query<SupportingPlayerQuery<T>>,
+    controlling: Query<ControllingPlayerQuery<T>>,
     mut ball: Query<(&Ball, &Actor, PhysicalQueryMut), Without<SoccerPlayer>>,
     opponent_goal: Query<(&Goal, &Transform), Without<T>>,
     opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
@@ -488,12 +491,12 @@ pub fn KickBall_execute<T>(
 
         // attempt a kick
         let power = params.max_shooting_force * dot;
-        let (mut ball_target, can_shoot) = team.team.can_shoot(
+        let (mut ball_target, can_shoot) = team.team.can_shoot::<T, _, _>(
             &params,
             ball_position,
             opponent_goal.single(),
             (ball_actor, &ball_physical.physical),
-            &opponents,
+            || opponents.iter(),
             power,
         );
         if can_shoot || rng.gen::<f32>() < params.chance_player_attempts_pot_shot {
@@ -505,14 +508,14 @@ pub fn KickBall_execute<T>(
                 .state_machine
                 .change_state(&mut commands, entity, FieldPlayerState::Wait);
 
-            /*field_player.player.find_support(
+            field_player.player.find_support(
                 &mut commands,
                 &mut message_dispatcher,
                 &team.team,
-                &players,
-                supporting.optional_single(),
-                controlling.single(),
-            );*/
+                teammates.iter(),
+                supporting.optional_single().map(|x| x.entity),
+                controlling.single().entity,
+            );
             return;
         }
 

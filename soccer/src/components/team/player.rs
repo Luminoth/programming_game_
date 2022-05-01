@@ -37,18 +37,19 @@ impl SoccerPlayer {
         (position.y - opponent_goal_position.y).abs() < pitch.length() / 3.0
     }
 
-    pub fn is_opponent_within_radius<T>(
+    pub fn is_opponent_within_radius<'a, T, O>(
         &self,
         transform: &Transform,
-        opponents: &Query<&Transform, (With<SoccerPlayer>, Without<T>)>,
+        opponents: O,
         radius: f32,
     ) -> bool
     where
         T: TeamColorMarker,
+        O: Iterator<Item = &'a Transform>,
     {
         let radius_squared = radius * radius;
         let position = transform.translation.truncate();
-        for opponent_transform in opponents.iter() {
+        for opponent_transform in opponents {
             let opponent_position = opponent_transform.translation.truncate();
             if position.distance_squared(opponent_position) < radius_squared {
                 return true;
@@ -58,19 +59,22 @@ impl SoccerPlayer {
         false
     }
 
-    pub fn find_support<T>(
+    pub fn find_support<'a, T, M>(
         &self,
         commands: &mut Commands,
         message_dispatcher: &mut FieldPlayerMessageDispatcher,
         team: &SoccerTeam,
-        field_players: &Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery)>,
+        teammates: M,
         supporting: Option<Entity>,
         controlling: Entity,
     ) where
         T: TeamColorMarker,
+        M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
     {
+        info!("looking for support");
+
         let best_supporting = team
-            .determine_best_supporting_attacker(team, field_players, controlling)
+            .determine_best_supporting_attacker(team, teammates, controlling)
             .unwrap();
         if let Some(supporting) = supporting {
             if best_supporting != supporting {

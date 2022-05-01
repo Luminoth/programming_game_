@@ -25,10 +25,10 @@ pub fn update<T>(
     T: TeamColorMarker,
 {
     for team in teams.iter() {
-        team.team.calculate_closest_player_to_ball(
+        team.team.calculate_closest_player_to_ball::<T, _>(
             &mut commands,
             ball.single().transform.translation.truncate(),
-            &players,
+            players.iter(),
             closest.optional_single().map(|x| x.entity),
         );
     }
@@ -213,7 +213,7 @@ pub fn Attacking_execute<T>(
                 &params,
                 team.color,
                 &mut support_calculator,
-                &opponents,
+                || opponents.iter(),
                 controller_transform,
                 support.optional_single().is_some(),
                 ball.single(),

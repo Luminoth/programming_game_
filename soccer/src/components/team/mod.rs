@@ -36,14 +36,15 @@ impl SoccerTeam {
         self.best_support_spot.unwrap()
     }
 
-    pub fn calculate_closest_player_to_ball<T>(
+    pub fn calculate_closest_player_to_ball<'a, T, P>(
         &self,
         commands: &mut Commands,
         ball_position: Vec2,
-        players: &Query<(Entity, &Transform), (With<SoccerPlayer>, With<T>)>,
+        players: P,
         closest: Option<Entity>,
     ) where
         T: TeamColorMarker,
+        P: Iterator<Item = (Entity, &'a Transform)>,
     {
         if let Some(closest) = closest {
             commands.entity(closest).remove::<ClosestPlayer>();
@@ -51,7 +52,7 @@ impl SoccerTeam {
 
         let mut closest_dist = f32::MAX;
         let mut closest_player = None;
-        for (entity, transform) in players.iter() {
+        for (entity, transform) in players {
             let position = transform.translation.truncate();
             let dist = position.distance_squared(ball_position);
             if dist < closest_dist {
@@ -121,18 +122,20 @@ impl SoccerTeam {
         }
     }
 
-    pub fn determine_best_supporting_position<T>(
+    pub fn determine_best_supporting_position<'a, T, O, F>(
         &mut self,
         params: &SimulationParams,
         team: &T,
         support_calculator: &mut SupportSpotCalculator,
-        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+        opponents: F,
         controller_transform: &Transform,
         have_support: bool,
         ball: (&Actor, &Physical),
         opponent_goal: (&Goal, &Transform),
     ) where
         T: TeamColorMarker,
+        F: Fn() -> O + Copy,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         info!(
             "updating support spot for controlling team {:?}",
@@ -149,12 +152,12 @@ impl SoccerTeam {
             spot.score = 1.0;
 
             // is it safe to pass to this spot?
-            if self.is_pass_safe_from_all_opponents(
+            if self.is_pass_safe_from_all_opponents::<T, O>(
                 params,
                 controller_position,
                 spot.position,
                 None,
-                opponents,
+                opponents(),
                 ball,
                 params.max_passing_force,
             ) {
@@ -163,7 +166,7 @@ impl SoccerTeam {
 
             // can we score a goal from this spot?
             if self
-                .can_shoot(
+                .can_shoot::<T, O, F>(
                     params,
                     spot.position,
                     opponent_goal,
@@ -198,20 +201,21 @@ impl SoccerTeam {
         self.best_support_spot = best_support_spot;
     }
 
-    fn is_pass_safe_from_all_opponents<T>(
+    fn is_pass_safe_from_all_opponents<'a, T, O>(
         &self,
         params: &SimulationParams,
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+        opponents: O,
         ball: (&Actor, &Physical),
         passing_force: f32,
     ) -> bool
     where
         T: TeamColorMarker,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
-        for opponent in opponents.iter() {
+        for opponent in opponents {
             if !self.is_pass_safe_from_opponent(
                 params,
                 from,
@@ -282,19 +286,22 @@ impl SoccerTeam {
         local_pos_opp.y.abs() >= reach
     }
 
-    pub fn determine_best_supporting_attacker<T>(
+    pub fn determine_best_supporting_attacker<'a, T, M>(
         &self,
         team: &SoccerTeam,
-        field_players: &Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery)>,
+        teammates: M,
         controlling: Entity,
     ) -> Option<Entity>
     where
         T: TeamColorMarker,
+        M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
     {
+        info!("finding supporting attacker");
+
         let mut closest = f32::MAX;
         let mut best_supporting = None;
 
-        for (entity, field_player, physical) in field_players.iter() {
+        for (entity, field_player, physical) in teammates {
             // only attackers can support
             if field_player.field_player.role != FieldPlayerRole::Attacker || entity == controlling
             {
@@ -312,17 +319,19 @@ impl SoccerTeam {
         best_supporting
     }
 
-    pub fn can_shoot<T>(
+    pub fn can_shoot<'a, T, O, F>(
         &self,
         params: &SimulationParams,
         from: Vec2,
         opponent_goal: (&Goal, &Transform),
         ball: (&Actor, &Physical),
-        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+        opponents: F,
         power: f32,
     ) -> (Vec2, bool)
     where
         T: TeamColorMarker,
+        F: Fn() -> O,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         let mut rng = rand::thread_rng();
 
@@ -341,8 +350,14 @@ impl SoccerTeam {
 
             let time = ball.1.time_to_cover_distance(params, from, target, power);
             if time >= 0.0
-                && self.is_pass_safe_from_all_opponents(
-                    params, from, target, None, opponents, ball, power,
+                && self.is_pass_safe_from_all_opponents::<T, O>(
+                    params,
+                    from,
+                    target,
+                    None,
+                    opponents(),
+                    ball,
+                    power,
                 )
             {
                 return (target, true);
@@ -355,14 +370,15 @@ impl SoccerTeam {
     }
 
     //TODO:
-    /*pub fn can_pass<T>(
+    /*pub fn can_pass<'a, T, M>(
         &self,
         passer: (Entity, &Transform),
-        players: &Query<(Entity, SoccerPlayerQuery<T>, PhysicalQuery)>,
+        teammates: O,
         min_passing_distance: f32,
     ) -> (Option<Entity>, Vec2)
     where
         T: TeamColorMarker,
+        M: Iterator<Item=(Entity, SoccerPlayerQuery<T>, PhysicalQuery)>,
     {
         let passer_position = passer.1.translation.truncate();
         let min_passing_distance_squared = min_passing_distance * min_passing_distance;
@@ -371,7 +387,7 @@ impl SoccerTeam {
         let mut target = Vec2::ZERO;
         let mut receiver = None;
 
-        for (entity, player, physical) in players.iter() {
+        for (entity, player, physical) in teammates {
             let position = physical.transform.translation.truncate();
             if passer.0 == entity
                 || passer_position.distance_squared(position) <= min_passing_distance_squared
@@ -407,23 +423,24 @@ impl SoccerTeam {
         intercept_range *= scaling_factor;
     }*/
 
-    pub fn request_pass<T>(
+    pub fn request_pass<'a, T, O>(
         &self,
         params: &SimulationParams,
         controller: Entity,
         controller_transform: &Transform,
         receiver: Entity,
         receiver_transform: &Transform,
-        opponents: &Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+        opponents: O,
         ball: (&Actor, &Physical),
         player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
     ) where
         T: TeamColorMarker,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         let controller_position = controller_transform.translation.truncate();
         let receiver_position = receiver_transform.translation.truncate();
 
-        if self.is_pass_safe_from_all_opponents(
+        if self.is_pass_safe_from_all_opponents::<T, O>(
             params,
             controller_position,
             receiver_position,

@@ -36,6 +36,24 @@ impl SoccerTeam {
         self.best_support_spot.unwrap()
     }
 
+    pub fn send_all_players_home<F>(
+        &self,
+        player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
+        goal_keeper_message_dispatcher: &mut GoalKeeperMessageDispatcher,
+        field_players: F,
+        goal_keeper: Entity,
+    ) where
+        F: Iterator<Item = Entity>,
+    {
+        for field_player in field_players {
+            player_message_dispatcher
+                .dispatch_message(Some(field_player), FieldPlayerMessage::GoHome);
+        }
+
+        goal_keeper_message_dispatcher
+            .dispatch_message(Some(goal_keeper), GoalKeeperMessage::GoHome);
+    }
+
     pub fn calculate_closest_player_to_ball<'a, T, P>(
         &self,
         commands: &mut Commands,
@@ -88,7 +106,6 @@ impl SoccerTeam {
         &self,
         pitch: &Pitch,
         field_players: &mut Query<FieldPlayerQueryMut<T>, Without<GoalKeeper>>,
-        goal_keeper: &mut GoalKeeperQueryMutItem<T>,
     ) where
         T: TeamColorMarker,
     {
@@ -107,18 +124,6 @@ impl SoccerTeam {
                     .position;
                 field_player.steering.target = target;
             }
-        }
-
-        if goal_keeper
-            .state_machine
-            .is_in_state(GoalKeeperState::ReturnHome)
-        {
-            let target = pitch
-                .regions
-                .get(goal_keeper.player.home_region)
-                .unwrap()
-                .position;
-            goal_keeper.steering.target = target;
         }
     }
 

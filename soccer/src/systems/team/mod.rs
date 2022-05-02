@@ -76,13 +76,12 @@ pub fn PrepareForKickOff_enter<T>(
         }
 
         // send players home
-        for field_player in field_players.iter() {
-            player_message_dispatcher
-                .dispatch_message(Some(field_player), FieldPlayerMessage::GoHome);
-        }
-
-        goal_keeper_message_dispatcher
-            .dispatch_message(Some(goal_keeper.single()), GoalKeeperMessage::GoHome);
+        team.team.send_all_players_home(
+            &mut player_message_dispatcher,
+            &mut goal_keeper_message_dispatcher,
+            field_players.iter(),
+            goal_keeper.single(),
+        );
     }
 }
 
@@ -147,7 +146,7 @@ pub fn Defending_enter<T>(
             .reset_player_home_regions(&mut field_players, &mut goal_keeper, home_regions);
 
         team.team
-            .update_targets_of_waiting_players(&pitch, &mut field_players, &mut goal_keeper);
+            .update_targets_of_waiting_players(&pitch, &mut field_players);
     }
 }
 
@@ -188,7 +187,7 @@ pub fn Attacking_enter<T>(
             .reset_player_home_regions(&mut field_players, &mut goal_keeper, home_regions);
 
         team.team
-            .update_targets_of_waiting_players(&pitch, &mut field_players, &mut goal_keeper);
+            .update_targets_of_waiting_players(&pitch, &mut field_players);
     }
 }
 
@@ -226,5 +225,16 @@ pub fn Attacking_execute<T>(
             team.state_machine
                 .change_state(&mut commands, entity, SoccerTeamState::Defending);
         }
+    }
+}
+
+pub fn Attacking_exit<T>(
+    mut commands: Commands,
+    support: Query<Entity, (With<SupportingPlayer>, With<T>)>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some(support) = support.optional_single() {
+        commands.entity(support).remove::<SupportingPlayer>();
     }
 }

@@ -236,6 +236,16 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateEnter)
                             .label(Systems::TeamStates),
                     )
+                    .with_system(
+                        systems::team::Attacking_exit::<RedTeam>
+                            .label(Systems::StateExit)
+                            .label(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::Attacking_exit::<BlueTeam>
+                            .label(Systems::StateExit)
+                            .label(Systems::TeamStates),
+                    )
                     // field player systems
                     .with_system(
                         systems::team::field_player::find_support_event_handler::<RedTeam>

@@ -29,7 +29,7 @@ pub struct SoccerTeam {
 }
 
 impl SoccerTeam {
-    pub fn get_best_support_spot(&self) -> Vec2 {
+    pub fn get_best_support_spot(&mut self) -> Vec2 {
         // TODO: if self.best_support_spot is None we should
         // calculate the best supporting spot
         // ... except we don't have the data available here
@@ -255,6 +255,7 @@ impl SoccerTeam {
         );
 
         // ignore opponents behind us
+        // TODO: this should be less than our negative bounding radius
         if local_pos_opp.x < 0.0 {
             return true;
         }
@@ -287,8 +288,7 @@ impl SoccerTeam {
     }
 
     pub fn determine_best_supporting_attacker<'a, T, M>(
-        &self,
-        team: &SoccerTeam,
+        &mut self,
         teammates: M,
         controlling: Entity,
     ) -> Option<Entity>
@@ -309,7 +309,7 @@ impl SoccerTeam {
             }
 
             let position = physical.transform.translation.truncate();
-            let dist = position.distance_squared(team.best_support_spot.unwrap());
+            let dist = position.distance_squared(self.get_best_support_spot());
             if dist < closest {
                 closest = dist;
                 best_supporting = Some(entity);

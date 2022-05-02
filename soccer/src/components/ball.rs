@@ -30,6 +30,8 @@ impl Ball {
     }
 
     pub fn kick(&self, physical: &mut Physical, direction: Vec2, force: f32) {
+        info!("BALL IS KICKED!");
+
         let direction = direction.normalize();
         physical.apply_force(direction * force);
     }

@@ -9,6 +9,7 @@ use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
+use crate::events::player::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
@@ -26,6 +27,38 @@ where
     }
 }
 
+pub fn find_support_event_handler<T>(
+    mut commands: Commands,
+    mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut events: EventReader<FindSupportEvent>,
+    players: Query<&SoccerPlayer, With<T>>,
+    mut team: Query<SoccerTeamQueryMut<T>>,
+    teammates: Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery)>,
+    supporting: Query<SupportingPlayerQuery<T>>,
+    controlling: Query<ControllingPlayerQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
+    let mut team = team.single_mut();
+
+    // TODO: if more than one event is directed
+    // at a single player then this will over-call find_support()
+    // we should do something to squash events so we only
+    // make the call once per-player
+    for event in events.iter() {
+        if let Ok(player) = players.get(event.0) {
+            player.find_support(
+                &mut commands,
+                &mut message_dispatcher,
+                &mut team.team,
+                teammates.iter(),
+                supporting.optional_single().map(|x| x.entity),
+                controlling.single().entity,
+            );
+        }
+    }
+}
+
 // TODO: the functionality here makes more sense as a physics update step
 // rather than being part of the state machine
 pub fn GlobalState_execute<T>(
@@ -39,9 +72,9 @@ pub fn GlobalState_execute<T>(
 {
     let params = params_assets.get(&params_asset.handle).unwrap();
 
-    for (entity, field_player, mut physical) in field_players.iter_mut() {
-        let ball_position = ball.single().translation.truncate();
+    let ball_position = ball.single().translation.truncate();
 
+    for (entity, field_player, mut physical) in field_players.iter_mut() {
         let mut max_speed = params.player_max_speed_without_ball;
 
         // reduce max speed when near the ball and in possession of it
@@ -67,13 +100,20 @@ pub fn GlobalState_on_message<T>(
     params_assets: ResMut<Assets<SimulationParams>>,
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut message_events: EventReader<FieldPlayerDispatchedMessageEvent>,
+    mut find_support_events: EventWriter<FindSupportEvent>,
     mut field_players: Query<(Entity, FieldPlayerQueryMut<T>, &Transform), Without<Ball>>,
-    team: Query<SoccerTeamQuery<T>>,
+    mut team: Query<SoccerTeamQueryMut<T>>,
+    receiving: Query<ReceivingPlayerQuery<T>>,
     mut ball: Query<(&Ball, PhysicalQueryMut)>,
 ) where
     T: TeamColorMarker,
 {
     let params = params_assets.get(&params_asset.handle).unwrap();
+
+    let mut team = team.single_mut();
+
+    let (ball, mut ball_physical) = ball.single_mut();
+    let ball_position = ball_physical.transform.translation.truncate();
 
     for event in message_events.iter() {
         if let Ok((entity, mut field_player, transform)) =
@@ -97,7 +137,13 @@ pub fn GlobalState_on_message<T>(
                         return;
                     }
 
-                    field_player.steering.target = team.single().team.get_best_support_spot();
+                    field_player.steering.target = team.team.get_best_support_spot();
+
+                    field_player.state_machine.change_state(
+                        &mut commands,
+                        entity,
+                        FieldPlayerState::SupportAttacker,
+                    );
                 }
                 FieldPlayerMessage::GoHome => {
                     field_player.player.home_region = field_player.player.default_region;
@@ -116,14 +162,25 @@ pub fn GlobalState_on_message<T>(
                     );
                 }
                 FieldPlayerMessage::PassToMe(receiver, receiver_position) => {
-                    let (ball, mut ball_physical) = ball.single_mut();
-                    let ball_position = ball_physical.transform.translation.truncate();
+                    info!(
+                        "player {} received request from {:?} to make pass",
+                        field_player.name, receiver
+                    );
 
-                    if !field_player.field_player.is_ball_within_kicking_range(
-                        &params,
-                        transform,
-                        ball_position,
-                    ) {
+                    // if the ball is not within range
+                    // or there is already a receiver
+                    // then the player cannot pass the ball
+                    if receiving.optional_single().is_some()
+                        || !field_player.field_player.is_ball_within_kicking_range(
+                            &params,
+                            transform,
+                            ball_position,
+                        )
+                    {
+                        warn!(
+                            "player {} cannot make request pass <cannot kick ball>",
+                            field_player.name
+                        );
                         return;
                     }
 
@@ -133,10 +190,24 @@ pub fn GlobalState_on_message<T>(
                         params.max_passing_force,
                     );
 
+                    info!(
+                        "player {} passed ball to requesting player {:?}",
+                        field_player.name, receiver
+                    );
+
+                    // let the receiver know the pass is incoming
                     message_dispatcher.dispatch_message(
                         Some(receiver),
                         FieldPlayerMessage::ReceiveBall(receiver_position),
                     );
+
+                    field_player.state_machine.change_state(
+                        &mut commands,
+                        entity,
+                        FieldPlayerState::Wait,
+                    );
+
+                    find_support_events.send(FindSupportEvent(entity));
                 }
             }
         }
@@ -150,6 +221,8 @@ pub fn ChaseBall_enter<T>(
     T: TeamColorMarker,
 {
     for (entity, field_player) in field_players.iter() {
+        info!("player {} enters chase state", field_player.name);
+
         field_player.agent.seek_on(&mut commands, entity);
     }
 }
@@ -169,15 +242,15 @@ pub fn ChaseBall_execute<T>(
 {
     let params = params_assets.get(&params_asset.handle).unwrap();
 
-    for (entity, mut field_player, transform) in field_players.iter_mut() {
-        let ball_position = ball_transform.single().translation.truncate();
+    let ball_position = ball_transform.single().translation.truncate();
 
+    for (entity, mut field_player, transform) in field_players.iter_mut() {
         // kick the ball if it's in range
         if field_player
             .field_player
             .is_ball_within_kicking_range(&params, transform, ball_position)
         {
-            info!("kicking ball!");
+            info!("transitioning from chasing to kicking ball state!");
 
             field_player.state_machine.change_state(
                 &mut commands,
@@ -197,7 +270,7 @@ pub fn ChaseBall_execute<T>(
             }
         }
 
-        info!("lost the ball, returning home");
+        info!("lost the ball while chasing, transitioning to return home state");
 
         // not closest, so go home
         field_player.state_machine.change_state(
@@ -216,6 +289,22 @@ pub fn ChaseBall_exit<T>(
 {
     for (entity, field_player) in field_players.iter() {
         field_player.agent.seek_off(&mut commands, entity);
+    }
+}
+
+pub fn Wait_enter<T>(
+    game_state: Res<GameState>,
+    pitch: Res<Pitch>,
+    mut field_players: Query<FieldPlayerQueryMut<T>, With<FieldPlayerStateWaitEnter>>,
+) where
+    T: TeamColorMarker,
+{
+    for mut field_player in field_players.iter_mut() {
+        info!("player {} enters wait state", field_player.name);
+
+        if !game_state.is_game_on() {
+            field_player.steering.target = field_player.player.get_home_region(&pitch).position;
+        }
     }
 }
 
@@ -246,6 +335,9 @@ pub fn Wait_execute<T>(
 {
     let params = params_assets.get(&params_asset.handle).unwrap();
 
+    let ball = ball.single();
+    let ball_position = ball.1.transform.translation.truncate();
+
     for (entity, mut field_player, mut physical, arrive) in field_players.iter_mut() {
         // get back to our home if we got bumped off it
         if !field_player
@@ -267,34 +359,32 @@ pub fn Wait_execute<T>(
         }
         physical.physical.velocity = Vec2::ZERO;
 
-        let ball = ball.single();
-        let ball_position = ball.1.transform.translation.truncate();
-
         physical.physical.track(ball_position);
 
         let mut controller_is_goalkeeper = false;
         if let Some((controller, transform, goal_keeper)) = controller.optional_single() {
             controller_is_goalkeeper = goal_keeper.is_some();
 
-            if entity != controller.entity {
-                // if we're farther up the field from the controller
-                // we should request a pass
-                if field_player.field_player.is_ahead_of_attacker(
+            // if we're not the controller
+            // and we're farther up the field from the controller
+            // we should request a pass
+            if entity != controller.entity
+                && field_player.field_player.is_ahead_of_attacker(
                     physical.transform,
                     transform,
                     opponent_goal.single(),
-                ) {
-                    team.single().team.request_pass::<T, _>(
-                        &params,
-                        controller.entity,
-                        transform,
-                        entity,
-                        physical.transform,
-                        opponents.iter(),
-                        (ball.0, ball.1.physical),
-                        &mut player_message_dispatcher,
-                    );
-                }
+                )
+            {
+                team.single().team.request_pass::<T, _>(
+                    &params,
+                    controller.entity,
+                    transform,
+                    entity,
+                    physical.transform,
+                    opponents.iter(),
+                    (ball.0, ball.1.physical),
+                    &mut player_message_dispatcher,
+                );
                 continue;
             }
         }
@@ -454,12 +544,16 @@ pub fn KickBall_enter<T>(
         commands.entity(entity).insert(ControllingPlayer);
 
         if !field_player.field_player.is_ready_for_next_kick() {
+            warn!("kick ball on cooldown!");
+
             field_player.state_machine.change_state(
                 &mut commands,
                 entity,
                 FieldPlayerState::ChaseBall,
             );
         }
+
+        info!("player {} enters kick state", field_player.name);
     }
 }
 
@@ -468,6 +562,7 @@ pub fn KickBall_execute<T>(
     params_asset: Res<SimulationParamsAsset>,
     params_assets: Res<Assets<SimulationParams>>,
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut find_support_events: EventWriter<FindSupportEvent>,
     mut field_player: Query<
         (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
         (With<FieldPlayerStateKickBallExecute>, Without<Ball>),
@@ -478,8 +573,7 @@ pub fn KickBall_execute<T>(
         Without<FieldPlayerStateKickBallExecute>,
     >,
     receiving: Query<ReceivingPlayerQuery<T>>,
-    supporting: Query<SupportingPlayerQuery<T>>,
-    controlling: Query<ControllingPlayerQuery<T>>,
+    controlling_goal_keeper: Query<ControllingPlayerQuery<T>, With<GoalKeeper>>,
     mut ball: Query<(&Ball, &Actor, PhysicalQueryMut), Without<SoccerPlayer>>,
     opponent_goal: Query<(&Goal, &Transform), Without<T>>,
     opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
@@ -496,10 +590,15 @@ pub fn KickBall_execute<T>(
         let to_ball = ball_position - position;
         let dot = physical.physical.heading.dot(to_ball.normalize_or_zero());
 
+        let have_receiver = receiving.optional_single().is_some();
+        let controller_is_goalkeeper = controlling_goal_keeper.optional_single().is_some();
+
         // can't kick the ball if there's a receiver, or the goal keeper has it, or it's behind us
-        // TODO: goal_keeper_has_ball ??
-        if receiving.optional_single().is_some() || /* !goal_keeper_has_ball ||*/ dot < 0.0 {
-            info!("chasing ball instead of kick");
+        if have_receiver || controller_is_goalkeeper || dot < -field_player.actor.bounding_radius {
+            info!(
+                "have a receiver already ({}) / goalie has ball ({}) / ball behind player ({})",
+                have_receiver, controller_is_goalkeeper, dot
+            );
             field_player.state_machine.change_state(
                 &mut commands,
                 entity,
@@ -533,14 +632,7 @@ pub fn KickBall_execute<T>(
                 .state_machine
                 .change_state(&mut commands, entity, FieldPlayerState::Wait);
 
-            field_player.player.find_support(
-                &mut commands,
-                &mut message_dispatcher,
-                &team.team,
-                teammates.iter(),
-                supporting.optional_single().map(|x| x.entity),
-                controlling.single().entity,
-            );
+            find_support_events.send(FindSupportEvent(entity));
             return;
         }
 
@@ -575,14 +667,7 @@ pub fn KickBall_execute<T>(
                     FieldPlayerState::Wait,
                 );
 
-                field_player.player.find_support(
-                    &mut commands,
-                    &mut message_dispatcher,
-                    &team.team,
-                    teammates.iter(),
-                    supporting.optional_single().map(|x| x.entity),
-                    controlling.single().entity,
-                );
+                find_support_events.send(FindSupportEvent(entity));
                 return;
             }
         }
@@ -593,14 +678,7 @@ pub fn KickBall_execute<T>(
             .state_machine
             .change_state(&mut commands, entity, FieldPlayerState::Dribble);
 
-        field_player.player.find_support(
-            &mut commands,
-            &mut message_dispatcher,
-            &team.team,
-            teammates.iter(),
-            supporting.optional_single().map(|x| x.entity),
-            controlling.single().entity,
-        );
+        find_support_events.send(FindSupportEvent(entity));
     }
 }
 
@@ -624,6 +702,8 @@ pub fn ReturnToHomeRegion_enter<T>(
         {
             field_player.steering.target = field_player.player.get_home_region(&pitch).position;
         }
+
+        info!("player {} enters ReturnToHome state", field_player.name);
     }
 }
 
@@ -649,13 +729,11 @@ pub fn ReturnToHomeRegion_execute<T>(
         if game_state.is_game_on() {
             if let Some(closest) = closest.optional_single() {
                 let have_receiver = receiving.optional_single().is_some();
+                let controller_is_goalkeeper = controlling_goal_keeper.optional_single().is_some();
 
                 // if we're the closest field player
                 // and no one's after the ball, chase it
-                if entity == closest.entity
-                    && !have_receiver
-                    && controlling_goal_keeper.optional_single().is_none()
-                {
+                if entity == closest.entity && !have_receiver && !controller_is_goalkeeper {
                     field_player.state_machine.change_state(
                         &mut commands,
                         entity,
@@ -672,6 +750,7 @@ pub fn ReturnToHomeRegion_execute<T>(
                 .is_inside_half(position)
             {
                 field_player.steering.target = position;
+
                 field_player.state_machine.change_state(
                     &mut commands,
                     entity,

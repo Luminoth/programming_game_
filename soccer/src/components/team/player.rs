@@ -95,7 +95,7 @@ impl SoccerPlayer {
         &self,
         commands: &mut Commands,
         message_dispatcher: &mut FieldPlayerMessageDispatcher,
-        team: &SoccerTeam,
+        team: &mut SoccerTeam,
         teammates: M,
         supporting: Option<Entity>,
         controlling: Entity,
@@ -106,7 +106,7 @@ impl SoccerPlayer {
         info!("looking for support");
 
         let best_supporting = team
-            .determine_best_supporting_attacker(team, teammates, controlling)
+            .determine_best_supporting_attacker(teammates, controlling)
             .unwrap();
         if let Some(supporting) = supporting {
             if best_supporting != supporting {

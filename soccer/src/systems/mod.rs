@@ -25,6 +25,7 @@ pub enum Systems {
     StateExit,
 
     TeamStates,
+    PlayerEvents,
     PlayerStates,
 
     TeamUpdate,

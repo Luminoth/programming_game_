@@ -476,7 +476,9 @@ pub fn KickBall_execute<T>(
         let dot = physical.physical.heading.dot(to_ball.normalize_or_zero());
 
         // can't kick the ball if there's a receiver, or the goal keeper has it, or it's behind us
-        if receiving.optional_single().is_none() || /* !goal_keeper_has_ball ||*/ dot < 0.0 {
+        // TODO: goal_keeper_has_ball ??
+        if receiving.optional_single().is_some() || /* !goal_keeper_has_ball ||*/ dot < 0.0 {
+            info!("chasing ball instead of kick");
             field_player.state_machine.change_state(
                 &mut commands,
                 entity,
@@ -486,15 +488,17 @@ pub fn KickBall_execute<T>(
         }
 
         let team = team.single();
+        let opponent_goal = opponent_goal.single();
 
         let mut rng = rand::thread_rng();
 
         // attempt a kick
+        info!("attempting a kick");
         let power = params.max_shooting_force * dot;
         let (mut ball_target, can_shoot) = team.team.can_shoot::<T, _, _>(
             &params,
             ball_position,
-            opponent_goal.single(),
+            opponent_goal,
             (ball_actor, &ball_physical.physical),
             || opponents.iter(),
             power,
@@ -520,7 +524,62 @@ pub fn KickBall_execute<T>(
         }
 
         // can't kick, attempt a pass
-        // TODO:
+        info!("attempting a pass");
+        let power = params.max_passing_force * dot;
+        if field_player
+            .player
+            .is_threatened(&params, &physical, opponents.iter())
+        {
+            let (receiver, mut ball_target) = team.team.can_pass::<T, _, _, _>(
+                &params,
+                (entity, physical.transform),
+                teammates.iter(),
+                || opponents.iter(),
+                opponent_goal.1,
+                (ball_actor, &ball_physical.physical, ball_physical.transform),
+                power,
+                params.min_pass_distance,
+            );
+            if let Some(receiver) = receiver {
+                ball_target = ball.add_noise_to_kick(&params, ball_physical.transform, ball_target);
+                let direction = ball_target - ball_position;
+                ball.kick(&mut ball_physical.physical, direction, power);
+
+                message_dispatcher
+                    .dispatch_message(Some(receiver), FieldPlayerMessage::ReceiveBall(ball_target));
+
+                field_player.state_machine.change_state(
+                    &mut commands,
+                    entity,
+                    FieldPlayerState::Wait,
+                );
+
+                field_player.player.find_support(
+                    &mut commands,
+                    &mut message_dispatcher,
+                    &team.team,
+                    teammates.iter(),
+                    supporting.optional_single().map(|x| x.entity),
+                    controlling.single().entity,
+                );
+                return;
+            }
+        }
+
+        // can't shoot or pass, so dribble up the field
+        info!("dribble dribble");
+        field_player
+            .state_machine
+            .change_state(&mut commands, entity, FieldPlayerState::Dribble);
+
+        field_player.player.find_support(
+            &mut commands,
+            &mut message_dispatcher,
+            &team.team,
+            teammates.iter(),
+            supporting.optional_single().map(|x| x.entity),
+            controlling.single().entity,
+        );
     }
 }
 

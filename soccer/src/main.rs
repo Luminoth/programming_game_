@@ -67,6 +67,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ball_max_speed: 1.0 * speed_tweaker,
 
         max_passing_force: 3.0,
+        min_pass_distance: 120.0,
         max_shooting_force: 6.0,
         max_dribble_force: 1.5,
 
@@ -78,6 +79,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ball_within_receiving_range_squared: 10.0 * 10.0,
         player_in_target_range_squared: 10.0 * 10.0,
         player_kicking_distance_squared: 10.0 * 10.0,
+        player_comfort_zone_squared: 60.0 * 60.0,
         keeper_in_ball_range_squared: 6.0 * 6.0,
         pass_threat_radius: 70.0,
 

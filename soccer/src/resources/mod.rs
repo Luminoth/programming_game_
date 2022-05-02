@@ -37,6 +37,7 @@ pub struct SimulationParams {
     pub ball_max_speed: f32,
 
     pub max_passing_force: f32,
+    pub min_pass_distance: f32,
     pub max_shooting_force: f32,
     pub max_dribble_force: f32,
 
@@ -49,6 +50,7 @@ pub struct SimulationParams {
     pub ball_within_receiving_range_squared: f32,
     pub player_in_target_range_squared: f32,
     pub player_kicking_distance_squared: f32,
+    pub player_comfort_zone_squared: f32,
     pub keeper_in_ball_range_squared: f32,
     pub pass_threat_radius: f32,
 

@@ -12,6 +12,30 @@ pub fn point_to_world_space(point: Vec2, heading: Vec2, side: Vec2, position: Ve
     transform.transform_point2(point)
 }
 
+pub fn get_tangent_points(c: Vec2, r: f32, p: Vec2) -> Option<(Vec2, Vec2)> {
+    let pmc = p - c;
+    let sqrlen = pmc.length_squared();
+    let rsqr = r * r;
+
+    if sqrlen <= rsqr {
+        return None;
+    }
+
+    let invsqrlen = 1.0 / sqrlen;
+    let root = (sqrlen - rsqr).abs().sqrt();
+
+    let t1 = Vec2::new(
+        c.x + r * (r * pmc.x - pmc.y * root) * invsqrlen,
+        c.y + r * (r * pmc.y + pmc.x * root) * invsqrlen,
+    );
+    let t2 = Vec2::new(
+        c.x + r * (r * pmc.x + pmc.y * root) * invsqrlen,
+        c.y + r * (r * pmc.y - pmc.x * root) * invsqrlen,
+    );
+
+    Some((t1, t2))
+}
+
 pub trait OptionalSingle<'s, Q>
 where
     Q: WorldQuery,

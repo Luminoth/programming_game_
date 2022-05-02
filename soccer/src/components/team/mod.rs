@@ -17,7 +17,7 @@ use crate::components::physics::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::SimulationParams;
-use crate::util::point_to_world_space;
+use crate::util::{get_tangent_points, point_to_world_space};
 
 use super::state::impl_state_machine;
 
@@ -369,59 +369,120 @@ impl SoccerTeam {
         (target, false)
     }
 
-    //TODO:
-    /*pub fn can_pass<'a, T, M>(
+    pub fn can_pass<'a, T, M, O, F>(
         &self,
+        params: &SimulationParams,
         passer: (Entity, &Transform),
-        teammates: O,
+        teammates: M,
+        opponents: F,
+        opponent_goal: &Transform,
+        ball: (&Actor, &Physical, &Transform),
+        power: f32,
         min_passing_distance: f32,
     ) -> (Option<Entity>, Vec2)
     where
         T: TeamColorMarker,
-        M: Iterator<Item=(Entity, SoccerPlayerQuery<T>, PhysicalQuery)>,
+        M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
+        F: Fn() -> O + Copy,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         let passer_position = passer.1.translation.truncate();
+        let opponent_goal_position = opponent_goal.translation.truncate();
         let min_passing_distance_squared = min_passing_distance * min_passing_distance;
 
-        let mut closest = f32::MAX;
-        let mut target = Vec2::ZERO;
+        let mut closest_goal = f32::MAX;
+        let mut pass_target = Vec2::ZERO;
         let mut receiver = None;
 
-        for (entity, player, physical) in teammates {
+        for (entity, _, physical) in teammates {
+            // make sure the receiver is not the passer and
+            // is further than the min passing distance
             let position = physical.transform.translation.truncate();
             if passer.0 == entity
                 || passer_position.distance_squared(position) <= min_passing_distance_squared
             {
                 continue;
             }
+
+            if let Some(target) = self.get_best_pass_to_receiver::<T, O, F>(
+                params,
+                &physical,
+                opponents,
+                opponent_goal,
+                ball,
+                power,
+            ) {
+                let dist_to_goal = (target.x - opponent_goal_position.x).abs();
+                if dist_to_goal < closest_goal {
+                    closest_goal = dist_to_goal;
+                    pass_target = target;
+                    receiver = Some(entity);
+                }
+            }
         }
 
-        (receiver, target)
+        (receiver, pass_target)
     }
 
-    fn get_best_pass_to_receiver(
+    fn get_best_pass_to_receiver<'a, T, O, F>(
         &self,
         params: &SimulationParams,
-        receiver: (&Physical, &Transform),
-        ball: (&Physical, &Transform),
+        receiver: &PhysicalQueryItem,
+        opponents: F,
+        opponent_goal: &Transform,
+        ball: (&Actor, &Physical, &Transform),
         power: f32,
-    ) -> Option<Vec2> {
-        let receiver_position = receiver.1.translation.truncate();
-        let ball_position = ball.1.translation.truncate();
+    ) -> Option<Vec2>
+    where
+        T: TeamColorMarker,
+        F: Fn() -> O + Copy,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+    {
+        let receiver_position = receiver.transform.translation.truncate();
+        let opponent_goal_position = opponent_goal.translation.truncate();
+        let ball_position = ball.2.translation.truncate();
 
         let time = ball
-            .0
+            .1
             .time_to_cover_distance(params, ball_position, receiver_position, power);
         if time < 0.0 {
             return None;
         }
 
-        let mut intercept_range = time * receiver.0.max_speed;
+        let mut intercept_range = time * receiver.physical.max_speed;
 
         // scale the intercept range
         let scaling_factor = 0.3;
         intercept_range *= scaling_factor;
-    }*/
+
+        let (ip1, ip2) =
+            get_tangent_points(receiver_position, intercept_range, ball_position).unwrap();
+
+        let passes = [ip1, receiver_position, ip2];
+
+        let mut closest_so_far = f32::MAX;
+        let mut target = None;
+
+        for pass in passes {
+            let dist = pass.x - opponent_goal_position.x;
+            if dist < closest_so_far
+                && self.is_pass_safe_from_all_opponents::<T, O>(
+                    params,
+                    ball_position,
+                    pass,
+                    Some(receiver.transform),
+                    opponents(),
+                    (ball.0, ball.1),
+                    power,
+                )
+            {
+                closest_so_far = dist;
+                target = Some(pass);
+            }
+        }
+
+        target
+    }
 
     pub fn request_pass<'a, T, O>(
         &self,

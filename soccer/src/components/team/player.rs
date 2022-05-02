@@ -59,6 +59,38 @@ impl SoccerPlayer {
         false
     }
 
+    fn is_position_on_front_of_player(&self, physical: &PhysicalQueryItem, position: Vec2) -> bool {
+        let player_position = physical.transform.translation.truncate();
+        let to_subject = position - player_position;
+        to_subject.dot(physical.physical.heading) > 0.0
+    }
+
+    pub fn is_threatened<'a, O>(
+        &self,
+        params: &SimulationParams,
+        physical: &PhysicalQueryItem,
+        opponents: O,
+    ) -> bool
+    where
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+    {
+        let position = physical.transform.translation.truncate();
+        for opponent in opponents {
+            let opponent_position = opponent.1.transform.translation.truncate();
+
+            // if the distance to the opponent is less than
+            // our comfort range and they're in front of us
+            // then we're threatened
+            if self.is_position_on_front_of_player(physical, opponent_position)
+                && position.distance_squared(opponent_position) < params.player_comfort_zone_squared
+            {
+                return true;
+            }
+        }
+
+        false
+    }
+
     pub fn find_support<'a, T, M>(
         &self,
         commands: &mut Commands,

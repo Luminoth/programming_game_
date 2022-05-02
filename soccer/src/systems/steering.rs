@@ -11,9 +11,12 @@ pub fn update(mut steering_behaviors: Query<SteeringQueryMut>) {
 }
 
 pub fn update_seek(
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut seeking: Query<(SeekQueryMut, PhysicalQuery)>,
 ) {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for (mut steering, physical) in seeking.iter_mut() {
         let force = steering.seek.force(&steering.steering, &physical);
         steering
@@ -23,9 +26,12 @@ pub fn update_seek(
 }
 
 pub fn update_arrive(
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut arriving: Query<(ArriveQueryMut, PhysicalQuery)>,
 ) {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for (mut steering, physical) in arriving.iter_mut() {
         let force = steering.arrive.force(&steering.steering, &physical);
         steering
@@ -35,10 +41,13 @@ pub fn update_arrive(
 }
 
 pub fn update_pursuit(
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut pursuing: Query<(PursuitQueryMut, PhysicalQuery)>,
     physicals: Query<PhysicalQuery>,
 ) {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for (mut steering, physical) in pursuing.iter_mut() {
         let force = steering
             .pursuit

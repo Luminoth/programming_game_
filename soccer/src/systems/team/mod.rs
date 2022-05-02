@@ -194,7 +194,8 @@ pub fn Attacking_enter<T>(
 
 pub fn Attacking_execute<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut teams: Query<
         (Entity, SoccerTeamQueryMut<T>, &mut SupportSpotCalculator),
         With<SoccerTeamStateAttackingExecute>,
@@ -208,6 +209,8 @@ pub fn Attacking_execute<T>(
     T: TeamColorMarker,
 {
     if let Some((entity, mut team, mut support_calculator)) = teams.optional_single_mut() {
+        let params = params_assets.get(&params_asset.handle).unwrap();
+
         if let Some(controller_transform) = controller.optional_single() {
             team.team.determine_best_supporting_position(
                 &params,

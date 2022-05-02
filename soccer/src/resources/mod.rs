@@ -3,8 +3,11 @@ pub mod messaging;
 pub mod pitch;
 
 use bevy::prelude::*;
+use bevy::reflect::TypeUuid;
+use serde::Deserialize;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Deserialize, TypeUuid)]
+#[uuid = "5f64bebb-c12f-4863-9282-e7cb6c70d88b"]
 pub struct SimulationParams {
     pub pitch_extents: Vec2,
     pub goal_extents: Vec2,
@@ -47,11 +50,26 @@ pub struct SimulationParams {
     pub chance_player_attempts_pot_shot: f32,
 
     // range checking
+    pub ball_within_receiving_range: f32,
+    #[serde(skip)]
     pub ball_within_receiving_range_squared: f32,
+
+    pub player_in_target_range: f32,
+    #[serde(skip)]
     pub player_in_target_range_squared: f32,
+
+    pub player_kicking_distance: f32,
+    #[serde(skip)]
     pub player_kicking_distance_squared: f32,
+
+    pub player_comfort_zone: f32,
+    #[serde(skip)]
     pub player_comfort_zone_squared: f32,
+
+    pub keeper_in_ball_range: f32,
+    #[serde(skip)]
     pub keeper_in_ball_range_squared: f32,
+
     pub pass_threat_radius: f32,
 
     // steering
@@ -64,6 +82,10 @@ pub struct SimulationParams {
 
     // debug
     pub debug_vis: bool,
+}
+
+pub struct SimulationParamsAsset {
+    pub handle: Handle<SimulationParams>,
 }
 
 #[derive(Debug, Default)]

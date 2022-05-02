@@ -14,6 +14,7 @@ mod util;
 use bevy::diagnostic::*;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
+use bevy_asset_ron::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::WorldInspectorParams;
@@ -21,7 +22,7 @@ use bevy_prototype_lyon::prelude::*;
 
 use plugins::debug::DebugPlugin;
 use plugins::states::StatesPlugins;
-use resources::SimulationParams;
+use resources::*;
 use states::GameState;
 
 pub const BALL_SORT: f32 = 2.0;
@@ -37,61 +38,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
     asset_server.watch_for_changes().unwrap();
 
-    let force_tweaker = 200.0;
-    let speed_tweaker = 125.0;
-
-    commands.insert_resource(SimulationParams {
-        pitch_extents: Vec2::new(900.0, 450.0),
-        goal_extents: Vec2::new(40.0, 90.0),
-
-        num_regions_horizontal: 6,
-        num_regions_vertical: 3,
-
-        num_support_spots_horizontal: 13,
-        num_support_spots_vertical: 6,
-
-        pass_safe_score: 2.0,
-        can_score_score: 1.0,
-        distance_from_controller_player_score: 2.0,
-
-        player_mass: 3.0,
-        player_max_force: 1.0 * force_tweaker,
-        player_max_speed_without_ball: 1.6 * speed_tweaker,
-        player_max_speed_with_ball: 1.2 * speed_tweaker,
-        player_max_turn_rate: 0.4,
-        player_kick_frequency: 8,
-        player_kick_accuracy: 0.99,
-
-        ball_mass: 1.0,
-        ball_max_force: 1.0 * force_tweaker,
-        ball_max_speed: 1.0 * speed_tweaker,
-
-        max_passing_force: 3.0,
-        min_pass_distance: 120.0,
-        max_shooting_force: 6.0,
-        max_dribble_force: 1.5,
-
-        num_attempts_to_find_valid_strike: 5,
-
-        chance_of_using_arrive_type_receive_behavior: 0.5,
-        chance_player_attempts_pot_shot: 0.005,
-
-        ball_within_receiving_range_squared: 10.0 * 10.0,
-        player_in_target_range_squared: 10.0 * 10.0,
-        player_kicking_distance_squared: 10.0 * 10.0,
-        player_comfort_zone_squared: 60.0 * 60.0,
-        keeper_in_ball_range_squared: 6.0 * 6.0,
-        pass_threat_radius: 70.0,
-
-        seek_weight: 1.0,
-        arrive_weight: 1.0,
-        pursuit_weight: 1.0,
-
-        // NOTE: this is negative in the example source
-        // so anywhere it's used, it needs to be negated
-        friction: 0.015,
-
-        debug_vis: false,
+    let params_handle: Handle<SimulationParams> = asset_server.load("simulation.params");
+    commands.insert_resource(SimulationParamsAsset {
+        handle: params_handle,
     });
 }
 
@@ -155,6 +104,9 @@ fn main() {
     .register_inspectable::<components::team::ClosestPlayer>()
     .register_inspectable::<components::team::ControllingPlayer>()
     .register_inspectable::<components::team::SupportingPlayer>();
+
+    // assets
+    app.add_plugin(RonAssetPlugin::<SimulationParams>::new(&["params"]));
 
     // plugins
     app.add_plugin(DebugPlugin).add_plugins(StatesPlugins);

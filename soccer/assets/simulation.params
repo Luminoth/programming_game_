@@ -1,0 +1,53 @@
+(
+    pitch_extents: (900.0, 450.0),
+    goal_extents: (40.0, 90.0),
+
+    num_regions_horizontal: 6,
+    num_regions_vertical: 3,
+
+    num_support_spots_horizontal: 13,
+    num_support_spots_vertical: 6,
+
+    pass_safe_score: 2.0,
+    can_score_score: 1.0,
+    distance_from_controller_player_score: 2.0,
+
+    player_mass: 3.0,
+    player_max_force: 1.0,
+    player_max_speed_without_ball: 1.6,
+    player_max_speed_with_ball: 1.2,
+    player_max_turn_rate: 0.4,
+    player_kick_frequency: 8,
+    player_kick_accuracy: 0.99,
+
+    ball_mass: 1.0,
+    ball_max_force: 1.0,
+    ball_max_speed: 1.0,
+
+    max_passing_force: 3.0,
+    min_pass_distance: 120.0,
+    max_shooting_force: 6.0,
+    max_dribble_force: 1.5,
+
+    num_attempts_to_find_valid_strike: 5,
+
+    chance_of_using_arrive_type_receive_behavior: 0.5,
+    chance_player_attempts_pot_shot: 0.005,
+
+    ball_within_receiving_range: 10.0,
+    player_in_target_range: 10.0,
+    player_kicking_distance: 10.0,
+    player_comfort_zone: 60.0,
+    keeper_in_ball_range: 6.0,
+    pass_threat_radius: 70.0,
+
+    seek_weight: 1.0,
+    arrive_weight: 1.0,
+    pursuit_weight: 1.0,
+
+    // NOTE: this is negative in the example source
+    // so anywhere it's used, it needs to be negated
+    friction: 0.015,
+
+    debug_vis: false,
+)

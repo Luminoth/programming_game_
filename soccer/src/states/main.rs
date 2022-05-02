@@ -10,8 +10,34 @@ use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
 
-pub fn setup(mut commands: Commands, params: Res<SimulationParams>) {
+pub fn setup(
+    mut commands: Commands,
+    params_asset: Res<SimulationParamsAsset>,
+    mut params_assets: ResMut<Assets<SimulationParams>>,
+) {
     debug!("entering main state");
+
+    // init the simulation params
+    let params = params_assets.get_mut(&params_asset.handle).unwrap();
+
+    let force_tweaker = 200.0;
+    let speed_tweaker = 125.0;
+
+    params.player_max_force *= force_tweaker;
+    params.player_max_speed_without_ball *= speed_tweaker;
+    params.player_max_speed_with_ball *= speed_tweaker;
+
+    params.ball_max_force *= force_tweaker;
+    params.ball_max_speed *= speed_tweaker;
+
+    params.ball_within_receiving_range_squared =
+        params.ball_within_receiving_range * params.ball_within_receiving_range;
+    params.player_in_target_range_squared =
+        params.player_in_target_range * params.player_in_target_range;
+    params.player_kicking_distance_squared =
+        params.player_kicking_distance * params.player_kicking_distance;
+    params.player_comfort_zone_squared = params.player_comfort_zone * params.player_comfort_zone;
+    params.keeper_in_ball_range_squared = params.keeper_in_ball_range * params.keeper_in_ball_range;
 
     // cameras
     commands.insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)));

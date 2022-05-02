@@ -29,13 +29,16 @@ where
 // TODO: the functionality here makes more sense as a physics update step
 // rather than being part of the state machine
 pub fn GlobalState_execute<T>(
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut field_players: Query<(Entity, FieldPlayerQuery<T>, PhysicalQueryMut), Without<Ball>>,
     ball: Query<&Transform, With<Ball>>,
     controlling: Query<ControllingPlayerQuery<T>>,
 ) where
     T: TeamColorMarker,
 {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for (entity, field_player, mut physical) in field_players.iter_mut() {
         let ball_position = ball.single().translation.truncate();
 
@@ -60,7 +63,8 @@ pub fn GlobalState_execute<T>(
 
 pub fn GlobalState_on_message<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut message_events: EventReader<FieldPlayerDispatchedMessageEvent>,
     mut field_players: Query<(Entity, FieldPlayerQueryMut<T>, &Transform), Without<Ball>>,
@@ -69,6 +73,8 @@ pub fn GlobalState_on_message<T>(
 ) where
     T: TeamColorMarker,
 {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for event in message_events.iter() {
         if let Ok((entity, mut field_player, transform)) =
             field_players.get_mut(event.receiver.unwrap())
@@ -150,7 +156,8 @@ pub fn ChaseBall_enter<T>(
 
 pub fn ChaseBall_execute<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut field_players: Query<
         (Entity, FieldPlayerQueryMut<T>, &Transform),
         With<FieldPlayerStateChaseBallExecute>,
@@ -160,6 +167,8 @@ pub fn ChaseBall_execute<T>(
 ) where
     T: TeamColorMarker,
 {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for (entity, mut field_player, transform) in field_players.iter_mut() {
         let ball_position = ball_transform.single().translation.truncate();
 
@@ -212,7 +221,8 @@ pub fn ChaseBall_exit<T>(
 
 pub fn Wait_execute<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     game_state: Res<GameState>,
     mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut field_players: Query<
@@ -234,6 +244,8 @@ pub fn Wait_execute<T>(
 ) where
     T: TeamColorMarker,
 {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for (entity, mut field_player, mut physical, arrive) in field_players.iter_mut() {
         // get back to our home if we got bumped off it
         if !field_player
@@ -308,7 +320,8 @@ pub fn Wait_execute<T>(
 
 pub fn ReceiveBall_enter<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: Res<Assets<SimulationParams>>,
     pitch: Res<Pitch>,
     field_player: Query<
         (Entity, FieldPlayerQuery<T>, &Transform),
@@ -323,6 +336,8 @@ pub fn ReceiveBall_enter<T>(
     T: TeamColorMarker,
 {
     if let Some((entity, field_player, transform)) = field_player.optional_single() {
+        let params = params_assets.get(&params_asset.handle).unwrap();
+
         if let Some(controlling) = controlling.optional_single() {
             commands
                 .entity(controlling.entity)
@@ -364,7 +379,8 @@ pub fn ReceiveBall_enter<T>(
 
 pub fn ReceiveBall_execute<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: Res<Assets<SimulationParams>>,
     mut field_player: Query<
         (
             Entity,
@@ -382,6 +398,8 @@ pub fn ReceiveBall_execute<T>(
     if let Some((entity, mut field_player, mut physical, pursuit)) =
         field_player.optional_single_mut()
     {
+        let params = params_assets.get(&params_asset.handle).unwrap();
+
         let ball_position = ball.single().translation.truncate();
 
         // chase the ball if it's close enough
@@ -447,7 +465,8 @@ pub fn KickBall_enter<T>(
 
 pub fn KickBall_execute<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: Res<Assets<SimulationParams>>,
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut field_player: Query<
         (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
@@ -468,6 +487,8 @@ pub fn KickBall_execute<T>(
     T: TeamColorMarker,
 {
     if let Some((entity, mut field_player, physical)) = field_player.optional_single_mut() {
+        let params = params_assets.get(&params_asset.handle).unwrap();
+
         let (ball, ball_actor, mut ball_physical) = ball.single_mut();
         let ball_position = ball_physical.transform.translation.truncate();
         let position = physical.transform.translation.truncate();
@@ -608,7 +629,8 @@ pub fn ReturnToHomeRegion_enter<T>(
 
 pub fn ReturnToHomeRegion_execute<T>(
     mut commands: Commands,
-    params: Res<SimulationParams>,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: Res<Assets<SimulationParams>>,
     game_state: Res<GameState>,
     pitch: Res<Pitch>,
     mut field_players: Query<
@@ -621,6 +643,8 @@ pub fn ReturnToHomeRegion_execute<T>(
 ) where
     T: TeamColorMarker,
 {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
     for (entity, mut field_player, transform) in field_players.iter_mut() {
         if game_state.is_game_on() {
             if let Some(closest) = closest.optional_single() {

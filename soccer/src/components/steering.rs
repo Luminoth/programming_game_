@@ -24,7 +24,6 @@ impl Steering {
             < params.player_in_target_range_squared
     }
 
-    #[allow(dead_code)]
     pub fn accumulate_force(&mut self, physical: &Physical, force: Vec2, weight: f32) {
         let force = force * weight;
 
@@ -34,12 +33,12 @@ impl Steering {
             return;
         }
 
-        let to_add = force.length();
-        self.accumulated_force += if to_add < mag_remain {
-            force
-        } else {
-            force.normalize_or_zero() * mag_remain
-        };
+        let mut to_add = force.length();
+        if to_add > mag_remain {
+            to_add = mag_remain;
+        }
+
+        self.accumulated_force += force.normalize_or_zero() * to_add;
     }
 
     pub fn update(&mut self, physical: &mut Physical) {
@@ -175,6 +174,43 @@ impl Pursuit {
 #[world_query(mutable, derive(Debug))]
 pub struct PursuitQueryMut<'w> {
     pub pursuit: &'w Pursuit,
+    pub steering: &'w mut Steering,
+}
+
+#[derive(Debug, Component, Inspectable)]
+#[component(storage = "SparseSet")]
+pub struct Interpose {
+    pub distance: f32,
+
+    #[inspectable(ignore)]
+    pub target: Entity,
+}
+
+impl SteeringBehavior for Interpose {}
+
+impl Interpose {
+    pub fn force(
+        &self,
+        steering: &Steering,
+        physical: &PhysicalQueryItem,
+        physicals: &Query<PhysicalQuery>,
+    ) -> Vec2 {
+        let target = physicals.get(self.target).unwrap();
+        let target_position = target.transform.translation.truncate();
+
+        let to_target = (target_position - steering.target).normalize_or_zero();
+        arrive_force(
+            steering.target + to_target * self.distance,
+            physical,
+            Deceleration::Normal,
+        )
+    }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct InterposeQueryMut<'w> {
+    pub interpose: &'w Interpose,
     pub steering: &'w mut Steering,
 }
 

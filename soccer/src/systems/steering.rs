@@ -57,3 +57,21 @@ pub fn update_pursuit(
             .accumulate_force(physical.physical, force, params.pursuit_weight);
     }
 }
+
+pub fn update_interpose(
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
+    mut interposing: Query<(InterposeQueryMut, PhysicalQuery)>,
+    physicals: Query<PhysicalQuery>,
+) {
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
+    for (mut steering, physical) in interposing.iter_mut() {
+        let force = steering
+            .interpose
+            .force(&steering.steering, &physical, &physicals);
+        steering
+            .steering
+            .accumulate_force(physical.physical, force, params.interpose_weight);
+    }
+}

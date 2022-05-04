@@ -89,14 +89,6 @@ macro_rules! impl_state_machine {
                         )*
                     };
                 }
-
-                fn insert_execute(&self, commands: &mut bevy::ecs::system::EntityCommands) {
-                    match self {
-                        $(
-                            Self::$states => commands.insert([<$name State $states Execute>]),
-                        )*
-                    };
-                }
             }
 
             // the state machine
@@ -121,12 +113,12 @@ macro_rules! impl_state_machine {
                     // insert the state machine
                     commands.insert(Self {
                         current_state: starting_state,
-                        previous_state: None,
+                        previous_state: Some(starting_state),
                         reenter_state
                     });
 
                     // insert the starting state component
-                    starting_state.insert_execute(commands);
+                    starting_state.insert_enter(commands);
                 }
 
                 #[allow(dead_code)]

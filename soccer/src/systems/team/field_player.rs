@@ -27,6 +27,19 @@ where
     }
 }
 
+pub fn update_physics<T>(mut field_players: Query<(FieldPlayerQuery<T>, PhysicalQueryMut)>)
+where
+    T: TeamColorMarker,
+{
+    for (field_player, mut physical) in field_players.iter_mut() {
+        // if no steering force is produced, decelerate the player
+        if field_player.steering.accumulated_force == Vec2::ZERO {
+            let braking_rate = 0.02;
+            physical.physical.velocity *= braking_rate;
+        }
+    }
+}
+
 pub fn find_support_event_handler<T>(
     mut commands: Commands,
     params_asset: Res<SimulationParamsAsset>,

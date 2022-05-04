@@ -20,16 +20,17 @@ pub enum Systems {
     GlobalStateExecute,
     StateExecute,
     GlobalStateOnMessage,
-    StateOnMessage,
     StateEnter,
     StateExit,
 
     TeamStates,
-    PlayerEvents,
-    PlayerStates,
+    FieldPlayerEvents,
+    FieldPlayerStates,
+    GoalKeeperStates,
 
     TeamUpdate,
-    PlayerUpdate,
+    FieldPlayerUpdate,
+    GoalKeeperUpdate,
 }
 
 pub fn facing(_time: Res<Time>, mut query: Query<PhysicalQueryUpdateMut>) {

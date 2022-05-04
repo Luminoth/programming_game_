@@ -56,7 +56,18 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::Physics)
                             .after(Systems::SteeringUpdatePhysics),
                     )
-                    .with_system(systems::facing.after(Systems::Physics)),
+                    .with_system(systems::facing.after(Systems::Physics))
+                    // field player systems
+                    .with_system(
+                        systems::team::field_player::update_physics::<RedTeam>
+                            .after(Systems::Steering)
+                            .before(Systems::SteeringUpdatePhysics),
+                    )
+                    .with_system(
+                        systems::team::field_player::update_physics::<BlueTeam>
+                            .after(Systems::Steering)
+                            .before(Systems::SteeringUpdatePhysics),
+                    ),
             )
             // agents (fixed timestep)
             .add_system_set(
@@ -114,85 +125,85 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::team::field_player::ChaseBall_execute::<RedTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ChaseBall_execute::<BlueTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Wait_execute::<RedTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Wait_execute::<BlueTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReceiveBall_execute::<RedTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReceiveBall_execute::<BlueTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::KickBall_execute::<RedTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::KickBall_execute::<BlueTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Dribble_execute::<RedTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Dribble_execute::<BlueTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::SupportAttacker_execute::<RedTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::SupportAttacker_execute::<BlueTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReturnToHomeRegion_execute::<RedTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReturnToHomeRegion_execute::<BlueTeam>
                             .label(Systems::StateExecute)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     ),
             )
@@ -255,23 +266,23 @@ impl Plugin for MainStatePlugin {
                     // field player systems
                     .with_system(
                         systems::team::field_player::update::<RedTeam>
-                            .label(Systems::PlayerUpdate)
+                            .label(Systems::FieldPlayerUpdate)
                             .after(Systems::TeamUpdate),
                     )
                     .with_system(
                         systems::team::field_player::update::<BlueTeam>
-                            .label(Systems::PlayerUpdate)
+                            .label(Systems::FieldPlayerUpdate)
                             .after(Systems::TeamUpdate),
                     )
                     .with_system(
                         systems::team::field_player::find_support_event_handler::<RedTeam>
-                            .label(Systems::PlayerEvents)
-                            .before(Systems::PlayerStates),
+                            .label(Systems::FieldPlayerEvents)
+                            .before(Systems::FieldPlayerStates),
                     )
                     .with_system(
                         systems::team::field_player::find_support_event_handler::<BlueTeam>
-                            .label(Systems::PlayerEvents)
-                            .before(Systems::PlayerStates),
+                            .label(Systems::FieldPlayerEvents)
+                            .before(Systems::FieldPlayerStates),
                     )
                     .with_system(
                         systems::team::field_player::GlobalState_on_message::<RedTeam>
@@ -284,133 +295,133 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::team::field_player::ChaseBall_enter::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ChaseBall_enter::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ChaseBall_exit::<RedTeam>
                             .label(Systems::StateExit)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ChaseBall_exit::<BlueTeam>
                             .label(Systems::StateExit)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Wait_enter::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Wait_enter::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReceiveBall_enter::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReceiveBall_enter::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReceiveBall_exit::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReceiveBall_exit::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::KickBall_enter::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::KickBall_enter::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Dribble_enter::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::Dribble_enter::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::SupportAttacker_enter::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::SupportAttacker_enter::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::SupportAttacker_exit::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::SupportAttacker_exit::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReturnToHomeRegion_enter::<RedTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReturnToHomeRegion_enter::<BlueTeam>
                             .label(Systems::StateEnter)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReturnToHomeRegion_exit::<RedTeam>
                             .label(Systems::StateExit)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     .with_system(
                         systems::team::field_player::ReturnToHomeRegion_exit::<BlueTeam>
                             .label(Systems::StateExit)
-                            .label(Systems::PlayerStates)
+                            .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
                     )
                     // goal keeper systems

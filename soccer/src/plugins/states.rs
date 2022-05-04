@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::components::physics::PHYSICS_STEP;
 use crate::components::team::*;
-use crate::events::player::*;
+use crate::events::*;
 use crate::game::team::*;
 use crate::states;
 use crate::states::*;
@@ -187,16 +187,6 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::team::update::<RedTeam>.label(Systems::TeamUpdate))
                     .with_system(systems::team::update::<BlueTeam>.label(Systems::TeamUpdate))
                     .with_system(
-                        systems::team::field_player::update::<RedTeam>
-                            .label(Systems::PlayerUpdate)
-                            .after(Systems::TeamUpdate),
-                    )
-                    .with_system(
-                        systems::team::field_player::update::<BlueTeam>
-                            .label(Systems::PlayerUpdate)
-                            .after(Systems::TeamUpdate),
-                    )
-                    .with_system(
                         systems::team::PrepareForKickOff_enter::<RedTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::TeamStates),
@@ -247,6 +237,16 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::TeamStates),
                     )
                     // field player systems
+                    .with_system(
+                        systems::team::field_player::update::<RedTeam>
+                            .label(Systems::PlayerUpdate)
+                            .after(Systems::TeamUpdate),
+                    )
+                    .with_system(
+                        systems::team::field_player::update::<BlueTeam>
+                            .label(Systems::PlayerUpdate)
+                            .after(Systems::TeamUpdate),
+                    )
                     .with_system(
                         systems::team::field_player::find_support_event_handler::<RedTeam>
                             .label(Systems::PlayerEvents)

@@ -9,7 +9,7 @@ use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::components::team::*;
-use crate::events::player::*;
+use crate::events::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
 use crate::resources::*;
@@ -29,17 +29,24 @@ where
 
 pub fn find_support_event_handler<T>(
     mut commands: Commands,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut events: EventReader<FindSupportEvent>,
     players: Query<&SoccerPlayer, With<T>>,
-    mut team: Query<SoccerTeamQueryMut<T>>,
+    mut team: Query<(SoccerTeamQueryMut<T>, &mut SupportSpotCalculator)>,
     teammates: Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery)>,
     supporting: Query<SupportingPlayerQuery<T>>,
-    controlling: Query<ControllingPlayerQuery<T>>,
+    controlling: Query<(ControllingPlayerQuery<T>, &Transform)>,
+    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+    ball: Query<(&Actor, &Physical), With<Ball>>,
+    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
 ) where
     T: TeamColorMarker,
 {
-    let mut team = team.single_mut();
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
+    let (mut team, mut support_calculator) = team.single_mut();
 
     // TODO: if more than one event is directed
     // at a single player then this will over-call find_support()
@@ -47,13 +54,20 @@ pub fn find_support_event_handler<T>(
     // make the call once per-player
     for event in events.iter() {
         if let Ok(player) = players.get(event.0) {
+            let controlling = controlling.single();
+
             player.find_support(
                 &mut commands,
+                &params,
                 &mut message_dispatcher,
-                &mut team.team,
+                &mut team,
+                &mut support_calculator,
                 teammates.iter(),
+                || opponents.iter(),
                 supporting.optional_single().map(|x| x.entity),
-                controlling.single().entity,
+                (controlling.0.entity, controlling.1),
+                ball.single(),
+                opponent_goal.single(),
             );
         }
     }
@@ -102,7 +116,7 @@ pub fn GlobalState_on_message<T>(
     mut message_events: EventReader<FieldPlayerDispatchedMessageEvent>,
     mut find_support_events: EventWriter<FindSupportEvent>,
     mut field_players: Query<(Entity, FieldPlayerQueryMut<T>, &Transform), Without<Ball>>,
-    mut team: Query<SoccerTeamQueryMut<T>>,
+    team: Query<SoccerTeamQueryMut<T>>,
     receiving: Query<ReceivingPlayerQuery<T>>,
     mut ball: Query<(&Ball, PhysicalQueryMut)>,
 ) where
@@ -110,7 +124,7 @@ pub fn GlobalState_on_message<T>(
 {
     let params = params_assets.get(&params_asset.handle).unwrap();
 
-    let mut team = team.single_mut();
+    let team = team.single();
 
     let (ball, mut ball_physical) = ball.single_mut();
     let ball_position = ball_physical.transform.translation.truncate();
@@ -137,7 +151,7 @@ pub fn GlobalState_on_message<T>(
                         return;
                     }
 
-                    field_player.steering.target = team.team.get_best_support_spot();
+                    field_player.steering.target = team.team.best_support_spot.unwrap();
 
                     field_player.state_machine.change_state(
                         &mut commands,

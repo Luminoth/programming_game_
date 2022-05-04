@@ -91,23 +91,42 @@ impl SoccerPlayer {
         false
     }
 
-    pub fn find_support<'a, T, M>(
+    pub fn find_support<'a, T, M, O, F>(
         &self,
         commands: &mut Commands,
+        params: &SimulationParams,
         message_dispatcher: &mut FieldPlayerMessageDispatcher,
-        team: &mut SoccerTeam,
+        team: &mut SoccerTeamQueryMutItem<T>,
+        support_calculator: &mut SupportSpotCalculator,
         teammates: M,
+        opponents: F,
         supporting: Option<Entity>,
-        controlling: Entity,
+        controller: (Entity, &Transform),
+        ball: (&Actor, &Physical),
+        opponent_goal: (&Goal, &Transform),
     ) where
         T: TeamColorMarker,
         M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
+        F: Fn() -> O + Copy,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         info!("looking for support");
 
         let best_supporting = team
-            .determine_best_supporting_attacker(teammates, controlling)
+            .team
+            .determine_best_supporting_attacker(
+                params,
+                team.color,
+                support_calculator,
+                teammates,
+                opponents,
+                controller,
+                supporting.is_some(),
+                ball,
+                opponent_goal,
+            )
             .unwrap();
+
         if let Some(supporting) = supporting {
             if best_supporting != supporting {
                 commands.entity(supporting).remove::<SupportingPlayer>();

@@ -25,17 +25,10 @@ impl_state_machine!(SoccerTeam, PrepareForKickOff, Defending, Attacking);
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct SoccerTeam {
-    best_support_spot: Option<Vec2>,
+    pub best_support_spot: Option<Vec2>,
 }
 
 impl SoccerTeam {
-    pub fn get_best_support_spot(&mut self) -> Vec2 {
-        // TODO: if self.best_support_spot is None we should
-        // calculate the best supporting spot
-        // ... except we don't have the data available here
-        self.best_support_spot.unwrap()
-    }
-
     pub fn send_all_players_home<F>(
         &self,
         player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
@@ -152,7 +145,6 @@ impl SoccerTeam {
         let controller_position = controller_transform.translation.truncate();
 
         let mut best_score = 0.0;
-        let mut best_support_spot = None;
         for spot in &mut support_calculator.spots {
             spot.score = 1.0;
 
@@ -199,11 +191,9 @@ impl SoccerTeam {
             // is this the best score?
             if spot.score > best_score {
                 best_score = spot.score;
-                best_support_spot = Some(spot.position);
+                self.best_support_spot = Some(spot.position);
             }
         }
-
-        self.best_support_spot = best_support_spot;
     }
 
     fn is_pass_safe_from_all_opponents<'a, T, O>(
@@ -292,29 +282,54 @@ impl SoccerTeam {
         local_pos_opp.y.abs() >= reach
     }
 
-    pub fn determine_best_supporting_attacker<'a, T, M>(
+    pub fn determine_best_supporting_attacker<'a, T, M, O, F>(
         &mut self,
+        params: &SimulationParams,
+        team: &T,
+        support_calculator: &mut SupportSpotCalculator,
         teammates: M,
-        controlling: Entity,
+        opponents: F,
+        controller: (Entity, &Transform),
+        have_support: bool,
+        ball: (&Actor, &Physical),
+        opponent_goal: (&Goal, &Transform),
     ) -> Option<Entity>
     where
         T: TeamColorMarker,
         M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
+        F: Fn() -> O + Copy,
+        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         info!("finding supporting attacker");
+
+        let best_support_spot = if let Some(best_support_spot) = self.best_support_spot {
+            best_support_spot
+        } else {
+            self.determine_best_supporting_position(
+                &params,
+                team,
+                support_calculator,
+                opponents,
+                controller.1,
+                have_support,
+                ball,
+                opponent_goal,
+            );
+            self.best_support_spot.unwrap()
+        };
 
         let mut closest = f32::MAX;
         let mut best_supporting = None;
 
         for (entity, field_player, physical) in teammates {
             // only attackers can support
-            if field_player.field_player.role != FieldPlayerRole::Attacker || entity == controlling
+            if field_player.field_player.role != FieldPlayerRole::Attacker || entity == controller.0
             {
                 continue;
             }
 
             let position = physical.transform.translation.truncate();
-            let dist = position.distance_squared(self.get_best_support_spot());
+            let dist = position.distance_squared(best_support_spot);
             if dist < closest {
                 closest = dist;
                 best_supporting = Some(entity);

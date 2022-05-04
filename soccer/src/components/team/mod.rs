@@ -355,16 +355,18 @@ impl SoccerTeam {
     {
         let mut rng = rand::thread_rng();
 
-        let goal_position = opponent_goal.1.translation.truncate();
+        let top = opponent_goal.0.get_top(opponent_goal.1);
+        let bottom = opponent_goal.0.get_bottom(opponent_goal.1);
+        let center = opponent_goal.0.get_score_center(opponent_goal.1);
 
         let mut target = Vec2::ZERO;
 
         let mut num_attempts = params.num_attempts_to_find_valid_strike;
         while num_attempts > 0 {
-            target = goal_position + opponent_goal.0.score_center;
+            target = center;
 
-            let min_y = goal_position.y + opponent_goal.0.bottom.y + ball.0.bounding_radius;
-            let max_y = goal_position.y + opponent_goal.0.top.y - ball.0.bounding_radius;
+            let min_y = bottom.y + ball.0.bounding_radius;
+            let max_y = top.y - ball.0.bounding_radius;
 
             target.y = rng.gen_range(min_y..=max_y);
 
@@ -395,7 +397,7 @@ impl SoccerTeam {
         passer: (Entity, &Transform),
         teammates: M,
         opponents: F,
-        opponent_goal: &Transform,
+        opponent_goal: (&Goal, &Transform),
         ball: (&Actor, &Physical, &Transform),
         power: f32,
         min_passing_distance: f32,
@@ -407,7 +409,7 @@ impl SoccerTeam {
         O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         let passer_position = passer.1.translation.truncate();
-        let opponent_goal_position = opponent_goal.translation.truncate();
+        let opponent_goal_center = opponent_goal.0.get_score_center(opponent_goal.1);
         let min_passing_distance_squared = min_passing_distance * min_passing_distance;
 
         let mut closest_goal = f32::MAX;
@@ -432,7 +434,7 @@ impl SoccerTeam {
                 ball,
                 power,
             ) {
-                let dist_to_goal = (target.x - opponent_goal_position.x).abs();
+                let dist_to_goal = (target.x - opponent_goal_center.x).abs();
                 if dist_to_goal < closest_goal {
                     closest_goal = dist_to_goal;
                     pass_target = target;
@@ -449,7 +451,7 @@ impl SoccerTeam {
         params: &SimulationParams,
         receiver: &PhysicalQueryItem,
         opponents: F,
-        opponent_goal: &Transform,
+        opponent_goal: (&Goal, &Transform),
         ball: (&Actor, &Physical, &Transform),
         power: f32,
     ) -> Option<Vec2>
@@ -459,7 +461,7 @@ impl SoccerTeam {
         O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
     {
         let receiver_position = receiver.transform.translation.truncate();
-        let opponent_goal_position = opponent_goal.translation.truncate();
+        let opponent_goal_center = opponent_goal.0.get_score_center(opponent_goal.1);
         let ball_position = ball.2.translation.truncate();
 
         let time = ball
@@ -484,7 +486,7 @@ impl SoccerTeam {
         let mut target = None;
 
         for pass in passes {
-            let dist = pass.x - opponent_goal_position.x;
+            let dist = pass.x - opponent_goal_center.x;
             if dist < closest_so_far
                 && self.is_pass_safe_from_all_opponents::<T, O>(
                     params,

@@ -14,6 +14,23 @@ pub struct Goal {
     pub score_center: Vec2,
 }
 
+impl Goal {
+    pub fn get_top(&self, transform: &Transform) -> Vec2 {
+        let position = transform.translation.truncate();
+        position + self.top
+    }
+
+    pub fn get_bottom(&self, transform: &Transform) -> Vec2 {
+        let position = transform.translation.truncate();
+        position + self.bottom
+    }
+
+    pub fn get_score_center(&self, transform: &Transform) -> Vec2 {
+        let position = transform.translation.truncate();
+        position + self.score_center
+    }
+}
+
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct GoalDebug;
 

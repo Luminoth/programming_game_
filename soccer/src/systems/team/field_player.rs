@@ -343,7 +343,7 @@ pub fn Wait_execute<T>(
     receiving: Query<ReceivingPlayerQuery<T>>,
     opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
     ball: Query<(&Actor, PhysicalQuery), With<Ball>>,
-    opponent_goal: Query<&Transform, (With<Goal>, Without<T>)>,
+    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
 ) where
     T: TeamColorMarker,
 {
@@ -434,7 +434,7 @@ pub fn ReceiveBall_enter<T>(
     controlling: Query<ControllingPlayerQuery<T>>,
     receiving: Query<ReceivingPlayerQuery<T>>,
     opponents: Query<&Transform, (With<SoccerPlayer>, Without<T>)>,
-    opponent_goal: Query<&Transform, (With<Goal>, Without<T>)>,
+    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
     ball: Query<Entity, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -472,8 +472,16 @@ pub fn ReceiveBall_enter<T>(
                 params.pass_threat_radius,
             )
         {
+            info!(
+                "player {} enters receive state (using arrive)",
+                field_player.name
+            );
             field_player.agent.arrive_on(&mut commands, entity);
         } else {
+            info!(
+                "player {} enters receive state (using pursuit)",
+                field_player.name
+            );
             field_player
                 .agent
                 .pursuit_on(&mut commands, entity, ball.single());
@@ -518,6 +526,7 @@ pub fn ReceiveBall_execute<T>(
                 entity,
                 FieldPlayerState::ChaseBall,
             );
+            return;
         }
 
         // update pursuit target
@@ -536,6 +545,25 @@ pub fn ReceiveBall_execute<T>(
             physical.physical.track(ball_position);
 
             physical.physical.velocity = Vec2::ZERO;
+        }
+    }
+}
+
+pub fn ReceiveBall_exit<T>(
+    mut commands: Commands,
+    field_player: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateReceiveBallExit>>,
+    receiving: Query<ReceivingPlayerQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, field_player)) = field_player.optional_single() {
+        field_player.agent.arrive_off(&mut commands, entity);
+        field_player.agent.pursuit_off(&mut commands, entity);
+
+        if let Some(receiving) = receiving.optional_single() {
+            commands
+                .entity(receiving.entity)
+                .remove::<ReceivingPlayer>();
         }
     }
 }
@@ -613,6 +641,7 @@ pub fn KickBall_execute<T>(
                 "have a receiver already ({}) / goalie has ball ({}) / ball behind player ({})",
                 have_receiver, controller_is_goalkeeper, dot
             );
+
             field_player.state_machine.change_state(
                 &mut commands,
                 entity,
@@ -627,7 +656,6 @@ pub fn KickBall_execute<T>(
         let mut rng = rand::thread_rng();
 
         // attempt a kick
-        info!("attempting a kick");
         let power = params.max_shooting_force * dot;
         let (mut ball_target, can_shoot) = team.team.can_shoot::<T, _, _>(
             &params,
@@ -638,6 +666,11 @@ pub fn KickBall_execute<T>(
             power,
         );
         if can_shoot || rng.gen::<f32>() < params.chance_player_attempts_pot_shot {
+            info!(
+                "player {} attempts a shot at {}",
+                field_player.name, ball_target
+            );
+
             ball_target = ball.add_noise_to_kick(&params, ball_physical.transform, ball_target);
             let direction = ball_target - ball_position;
             ball.kick(&mut ball_physical.physical, direction, power);
@@ -651,7 +684,6 @@ pub fn KickBall_execute<T>(
         }
 
         // can't kick, attempt a pass
-        info!("attempting a pass");
         let power = params.max_passing_force * dot;
         if field_player
             .player
@@ -662,7 +694,7 @@ pub fn KickBall_execute<T>(
                 (entity, physical.transform),
                 teammates.iter(),
                 || opponents.iter(),
-                opponent_goal.1,
+                opponent_goal,
                 (ball_actor, &ball_physical.physical, ball_physical.transform),
                 power,
                 params.min_pass_distance,
@@ -671,6 +703,11 @@ pub fn KickBall_execute<T>(
                 ball_target = ball.add_noise_to_kick(&params, ball_physical.transform, ball_target);
                 let direction = ball_target - ball_position;
                 ball.kick(&mut ball_physical.physical, direction, power);
+
+                info!(
+                    "player {} passes the ball with force {} to player {:?} target is {}",
+                    field_player.name, power, receiver, ball_target
+                );
 
                 message_dispatcher
                     .dispatch_message(Some(receiver), FieldPlayerMessage::ReceiveBall(ball_target));

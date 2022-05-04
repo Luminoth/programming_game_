@@ -72,14 +72,14 @@ impl FieldPlayer {
         &self,
         transform: &Transform,
         controller_transform: &Transform,
-        opponent_goal_transform: &Transform,
+        opponent_goal: (&Goal, &Transform),
     ) -> bool {
         let position = transform.translation.truncate();
         let controller_position = controller_transform.translation.truncate();
-        let opponent_goal_position = opponent_goal_transform.translation.truncate();
+        let opponent_goal_center = opponent_goal.0.get_score_center(opponent_goal.1);
 
-        (position.x - opponent_goal_position.x).abs()
-            < (controller_position.x - opponent_goal_position.x).abs()
+        (position.x - opponent_goal_center.x).abs()
+            < (controller_position.x - opponent_goal_center.x).abs()
     }
 }
 

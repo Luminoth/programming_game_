@@ -314,6 +314,18 @@ impl Plugin for MainStatePlugin {
                             .after(Systems::TeamStates),
                     )
                     .with_system(
+                        systems::team::field_player::ReceiveBall_exit::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::ReceiveBall_exit::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
                         systems::team::field_player::KickBall_enter::<RedTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::PlayerStates)

@@ -28,13 +28,13 @@ impl SoccerPlayer {
     pub fn is_in_hot_region(
         &self,
         transform: &Transform,
-        opponent_goal_transform: &Transform,
+        opponent_goal: (&Goal, &Transform),
         pitch: &Pitch,
     ) -> bool {
         let position = transform.translation.truncate();
-        let opponent_goal_position = opponent_goal_transform.translation.truncate();
+        let opponent_goal_center = opponent_goal.0.get_score_center(opponent_goal.1);
 
-        (position.y - opponent_goal_position.y).abs() < pitch.length() / 3.0
+        (position.y - opponent_goal_center.y).abs() < pitch.length() / 3.0
     }
 
     pub fn is_opponent_within_radius<'a, T, O>(

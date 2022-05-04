@@ -116,7 +116,7 @@ pub fn GlobalState_on_message<T>(
     mut message_events: EventReader<FieldPlayerDispatchedMessageEvent>,
     mut find_support_events: EventWriter<FindSupportEvent>,
     mut field_players: Query<(Entity, FieldPlayerQueryMut<T>, &Transform), Without<Ball>>,
-    team: Query<SoccerTeamQueryMut<T>>,
+    team: Query<SoccerTeamQuery<T>>,
     receiving: Query<ReceivingPlayerQuery<T>>,
     mut ball: Query<(&Ball, PhysicalQueryMut)>,
 ) where
@@ -734,7 +734,7 @@ pub fn KickBall_execute<T>(
 
 pub fn Dribble_enter<T>(
     mut commands: Commands,
-    field_player: Query<(Entity, FieldPlayerQueryMut<T>), With<FieldPlayerStateDribbleEnter>>,
+    field_player: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateDribbleEnter>>,
     controlling: Query<ControllingPlayerQuery<T>>,
 ) where
     T: TeamColorMarker,

@@ -27,8 +27,12 @@ pub fn setup(
     params.player_max_speed_without_ball *= speed_tweaker;
     params.player_max_speed_with_ball *= speed_tweaker;
 
-    params.ball_max_force *= force_tweaker;
-    params.ball_max_speed *= speed_tweaker;
+    //params.ball_max_force *= force_tweaker;
+    //params.ball_max_speed *= speed_tweaker;
+
+    params.max_passing_force *= force_tweaker * 10.0;
+    params.max_shooting_force *= force_tweaker * 10.0;
+    params.max_dribble_force *= force_tweaker * 10.0;
 
     params.ball_within_receiving_range_squared =
         params.ball_within_receiving_range * params.ball_within_receiving_range;

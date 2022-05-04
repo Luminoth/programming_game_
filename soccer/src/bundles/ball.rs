@@ -23,8 +23,8 @@ impl BallBundle {
         let mut bundle = commands.spawn_bundle(BallBundle {
             physical: Physical {
                 mass: params.ball_mass,
-                max_speed: params.ball_max_speed,
-                max_force: params.ball_max_force,
+                //max_speed: params.ball_max_speed,
+                //max_force: params.ball_max_force,
                 ..Default::default()
             },
             ..Default::default()

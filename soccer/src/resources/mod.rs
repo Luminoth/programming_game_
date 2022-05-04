@@ -36,9 +36,10 @@ pub struct SimulationParams {
 
     // ball
     pub ball_mass: f32,
-    pub ball_max_force: f32,
-    pub ball_max_speed: f32,
+    //pub ball_max_force: f32,
+    //pub ball_max_speed: f32,
 
+    // kicking
     pub max_passing_force: f32,
     pub min_pass_distance: f32,
     pub max_shooting_force: f32,

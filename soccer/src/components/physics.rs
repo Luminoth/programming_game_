@@ -35,8 +35,8 @@ impl Default for Physical {
             side,
 
             mass: 1.0,
-            max_speed: 1.0,
-            max_force: 1.0,
+            max_speed: f32::MAX,
+            max_force: f32::MAX,
             max_turn_rate: std::f32::consts::PI,
         }
     }

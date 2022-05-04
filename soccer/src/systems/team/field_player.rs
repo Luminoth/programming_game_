@@ -376,7 +376,8 @@ pub fn Wait_execute<T>(
         physical.physical.track(ball_position);
 
         let mut controller_is_goalkeeper = false;
-        if let Some((controller, transform, goal_keeper)) = controller.optional_single() {
+        if let Some((controller, controller_transform, goal_keeper)) = controller.optional_single()
+        {
             controller_is_goalkeeper = goal_keeper.is_some();
 
             // if we're not the controller
@@ -385,14 +386,14 @@ pub fn Wait_execute<T>(
             if entity != controller.entity
                 && field_player.field_player.is_ahead_of_attacker(
                     physical.transform,
-                    transform,
+                    controller_transform,
                     opponent_goal.single(),
                 )
             {
                 team.single().team.request_pass::<T, _>(
                     &params,
                     controller.entity,
-                    transform,
+                    controller_transform,
                     entity,
                     physical.transform,
                     opponents.iter(),
@@ -685,10 +686,12 @@ pub fn KickBall_execute<T>(
 
         // can't kick, attempt a pass
         let power = params.max_passing_force * dot;
-        if field_player
-            .player
-            .is_threatened(&params, &physical, opponents.iter())
-        {
+        if field_player.player.is_threatened(
+            &params,
+            physical.transform,
+            physical.physical,
+            opponents.iter(),
+        ) {
             let (receiver, mut ball_target) = team.team.can_pass::<T, _, _, _>(
                 &params,
                 (entity, physical.transform),
@@ -793,6 +796,147 @@ pub fn Dribble_execute<T>(
         field_player
             .state_machine
             .change_state(&mut commands, entity, FieldPlayerState::ChaseBall);
+    }
+}
+
+pub fn SupportAttacker_enter<T>(
+    mut commands: Commands,
+    mut field_player: Query<
+        (Entity, FieldPlayerQueryMut<T>),
+        With<FieldPlayerStateSupportAttackerEnter>,
+    >,
+    team: Query<SoccerTeamQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, mut field_player)) = field_player.optional_single_mut() {
+        let team = team.single();
+
+        field_player.agent.arrive_on(&mut commands, entity);
+
+        field_player.steering.target = team.team.best_support_spot.unwrap();
+
+        info!("player {} enters support state", field_player.name);
+    }
+}
+
+pub fn SupportAttacker_execute<T>(
+    mut commands: Commands,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: Res<Assets<SimulationParams>>,
+    mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut field_player: Query<
+        (Entity, FieldPlayerQueryMut<T>, PhysicalQueryMut),
+        With<FieldPlayerStateSupportAttackerExecute>,
+    >,
+    controller: Query<(ControllingPlayerQuery<T>, &Transform)>,
+    team: Query<SoccerTeamQuery<T>>,
+    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
+    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+    ball: Query<(&Actor, PhysicalQuery), (With<Ball>, Without<SoccerPlayer>)>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, mut field_player, mut physical)) = field_player.optional_single_mut() {
+        let params = params_assets.get(&params_asset.handle).unwrap();
+
+        // if we lost control, go back home
+        if controller.optional_single().is_none() {
+            field_player.state_machine.change_state(
+                &mut commands,
+                entity,
+                FieldPlayerState::ReturnToHomeRegion,
+            );
+            return;
+        }
+        let (controller, controller_transform) = controller.single();
+
+        let team = team.single();
+
+        // if the support target changed, move to the new location
+        let best_supporting_spot = team.team.best_support_spot.unwrap();
+        if field_player.steering.target != best_supporting_spot {
+            field_player.steering.target = best_supporting_spot;
+            field_player.agent.arrive_on(&mut commands, entity);
+        }
+
+        let (ball_actor, ball_physical) = ball.single();
+        let ball_position = ball_physical.transform.translation.truncate();
+
+        let opponent_goal = opponent_goal.single();
+
+        // if we can shoot, request a pass
+        let (_, can_shoot) = team.team.can_shoot::<T, _, _>(
+            &params,
+            ball_position,
+            opponent_goal,
+            (ball_actor, &ball_physical.physical),
+            || opponents.iter(),
+            params.max_shooting_force,
+        );
+        if can_shoot {
+            team.team.request_pass::<T, _>(
+                &params,
+                controller.entity,
+                controller_transform,
+                entity,
+                physical.transform,
+                opponents.iter(),
+                (ball_actor, ball_physical.physical),
+                &mut player_message_dispatcher,
+            );
+        }
+
+        if field_player
+            .steering
+            .is_at_target(&params, physical.transform)
+        {
+            field_player.agent.arrive_off(&mut commands, entity);
+
+            physical.physical.track(ball_position);
+
+            physical.physical.velocity = Vec2::ZERO;
+
+            // if we're not threatened by another player,
+            // and didn't already request one, request a pass
+            if !can_shoot
+                && !field_player.player.is_threatened(
+                    &params,
+                    physical.transform,
+                    &physical.physical,
+                    opponents.iter(),
+                )
+            {
+                team.team.request_pass::<T, _>(
+                    &params,
+                    controller.entity,
+                    controller_transform,
+                    entity,
+                    physical.transform,
+                    opponents.iter(),
+                    (ball_actor, ball_physical.physical),
+                    &mut player_message_dispatcher,
+                );
+            }
+        }
+    }
+}
+
+pub fn SupportAttacker_exit<T>(
+    mut commands: Commands,
+    field_player: Query<(Entity, FieldPlayerQuery<T>), With<FieldPlayerStateSupportAttackerExit>>,
+    supporting: Query<SupportingPlayerQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, field_player)) = field_player.optional_single() {
+        if let Some(supporting) = supporting.optional_single() {
+            commands
+                .entity(supporting.entity)
+                .remove::<SupportingPlayer>();
+        }
+
+        field_player.agent.arrive_off(&mut commands, entity);
     }
 }
 

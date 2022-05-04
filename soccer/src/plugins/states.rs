@@ -171,6 +171,18 @@ impl Plugin for MainStatePlugin {
                             .after(Systems::TeamStates),
                     )
                     .with_system(
+                        systems::team::field_player::SupportAttacker_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::SupportAttacker_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
                         systems::team::field_player::ReturnToHomeRegion_execute::<RedTeam>
                             .label(Systems::StateExecute)
                             .label(Systems::PlayerStates)
@@ -357,6 +369,30 @@ impl Plugin for MainStatePlugin {
                     )
                     .with_system(
                         systems::team::field_player::Dribble_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::SupportAttacker_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::SupportAttacker_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::SupportAttacker_exit::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::SupportAttacker_exit::<BlueTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),

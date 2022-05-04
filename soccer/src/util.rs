@@ -1,5 +1,6 @@
 use bevy::ecs::query::{Fetch, FilterFetch, WorldQuery};
 use bevy::ecs::system::QuerySingleError;
+use bevy::math::Mat2;
 use bevy::prelude::*;
 
 pub fn point_to_world_space(point: Vec2, heading: Vec2, side: Vec2, position: Vec2) -> Vec2 {
@@ -36,6 +37,11 @@ pub fn get_tangent_points(c: Vec2, r: f32, p: Vec2) -> Option<(Vec2, Vec2)> {
     Some((t1, t2))
 }
 
+pub fn rotate_around_origin(v: Vec2, angle: f32) -> Vec2 {
+    let transform = Mat2::from_angle(angle);
+    transform.mul_vec2(v)
+}
+
 pub trait OptionalSingle<'s, Q>
 where
     Q: WorldQuery,
@@ -67,6 +73,20 @@ where
             Err(QuerySingleError::MultipleEntities(_)) => {
                 panic!("multiple items from optional single query")
             }
+        }
+    }
+}
+
+pub trait Vec2Sign {
+    fn sign(&self, v2: Vec2) -> f32;
+}
+
+impl Vec2Sign for Vec2 {
+    fn sign(&self, v2: Vec2) -> f32 {
+        if self.y * v2.x > self.x * v2.y {
+            -1.0
+        } else {
+            1.0
         }
     }
 }

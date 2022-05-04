@@ -724,12 +724,75 @@ pub fn KickBall_execute<T>(
         }
 
         // can't shoot or pass, so dribble up the field
-        info!("dribble dribble");
         field_player
             .state_machine
             .change_state(&mut commands, entity, FieldPlayerState::Dribble);
 
         find_support_events.send(FindSupportEvent(entity));
+    }
+}
+
+pub fn Dribble_enter<T>(
+    mut commands: Commands,
+    field_player: Query<(Entity, FieldPlayerQueryMut<T>), With<FieldPlayerStateDribbleEnter>>,
+    controlling: Query<ControllingPlayerQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, field_player)) = field_player.optional_single() {
+        if let Some(controlling) = controlling.optional_single() {
+            commands
+                .entity(controlling.entity)
+                .remove::<ControllingPlayer>();
+        }
+
+        // this player is now the  controller
+        commands.entity(entity).insert(ControllingPlayer);
+
+        info!("player {} enters dribble state", field_player.name);
+    }
+}
+
+pub fn Dribble_execute<T>(
+    mut commands: Commands,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: Res<Assets<SimulationParams>>,
+    mut field_player: Query<
+        (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
+        With<FieldPlayerStateDribbleExecute>,
+    >,
+    goal: Query<(&Goal, &Transform), With<T>>,
+    mut ball: Query<(&Ball, PhysicalQueryMut), Without<SoccerPlayer>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, mut field_player, physical)) = field_player.optional_single_mut() {
+        let params = params_assets.get(&params_asset.handle).unwrap();
+
+        let goal = goal.single();
+        let (ball, mut ball_physical) = ball.single_mut();
+
+        // if the ball is between the player and their own goal
+        // then we have to bring the ball around to the other side
+        let dot = goal.0.facing.dot(physical.physical.heading);
+        if dot < -field_player.actor.bounding_radius {
+            let angle =
+                -std::f32::consts::FRAC_PI_4 * goal.0.facing.sign(physical.physical.heading);
+            let direction = rotate_around_origin(physical.physical.heading, angle);
+
+            let kicking_force = 0.8;
+            ball.kick(&mut ball_physical.physical, direction, kicking_force);
+        } else {
+            ball.kick(
+                &mut ball_physical.physical,
+                goal.0.facing,
+                params.max_dribble_force,
+            );
+        }
+
+        field_player
+            .state_machine
+            .change_state(&mut commands, entity, FieldPlayerState::ChaseBall);
     }
 }
 

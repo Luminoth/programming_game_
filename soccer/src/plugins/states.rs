@@ -159,6 +159,18 @@ impl Plugin for MainStatePlugin {
                             .after(Systems::TeamStates),
                     )
                     .with_system(
+                        systems::team::field_player::Dribble_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::Dribble_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
                         systems::team::field_player::ReturnToHomeRegion_execute::<RedTeam>
                             .label(Systems::StateExecute)
                             .label(Systems::PlayerStates)
@@ -333,6 +345,18 @@ impl Plugin for MainStatePlugin {
                     )
                     .with_system(
                         systems::team::field_player::KickBall_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::Dribble_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::PlayerStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::field_player::Dribble_enter::<BlueTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),

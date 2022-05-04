@@ -193,15 +193,6 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateExecute)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),
-                    )
-                    // goal keeper systems
-                    .with_system(
-                        systems::team::goal_keeper::GlobalState_execute::<RedTeam>
-                            .label(Systems::GlobalStateExecute),
-                    )
-                    .with_system(
-                        systems::team::goal_keeper::GlobalState_execute::<BlueTeam>
-                            .label(Systems::GlobalStateExecute),
                     ),
             )
             // per-frame systems
@@ -420,6 +411,15 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateExit)
                             .label(Systems::PlayerStates)
                             .after(Systems::TeamStates),
+                    )
+                    // goal keeper systems
+                    .with_system(
+                        systems::team::goal_keeper::GlobalState_on_message::<RedTeam>
+                            .label(Systems::GlobalStateOnMessage),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::GlobalState_on_message::<BlueTeam>
+                            .label(Systems::GlobalStateOnMessage),
                     ),
             )
             .add_system_set(

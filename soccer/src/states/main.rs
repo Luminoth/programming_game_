@@ -14,6 +14,7 @@ pub fn setup(
     mut commands: Commands,
     params_asset: Res<SimulationParamsAsset>,
     mut params_assets: ResMut<Assets<SimulationParams>>,
+    fonts: Res<Fonts>,
 ) {
     debug!("entering main state");
 
@@ -68,8 +69,8 @@ pub fn setup(
     BallBundle::spawn(&mut commands, &params, Vec2::ZERO);
 
     // teams
-    SoccerTeamBundle::<RedTeam>::spawn(&mut commands, &params, &pitch);
-    SoccerTeamBundle::<BlueTeam>::spawn(&mut commands, &params, &pitch);
+    SoccerTeamBundle::<RedTeam>::spawn(&mut commands, &params, &fonts, &pitch);
+    SoccerTeamBundle::<BlueTeam>::spawn(&mut commands, &params, &fonts, &pitch);
 
     commands.insert_resource(pitch);
 

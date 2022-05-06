@@ -9,7 +9,7 @@ use crate::components::team::*;
 use crate::game::PLAYER_RADIUS;
 use crate::resources::pitch::*;
 use crate::resources::*;
-use crate::PLAYER_SORT;
+use crate::{PLAYER_SORT, TEXT_SORT};
 
 use super::super::actor::*;
 use super::super::agent::*;
@@ -39,6 +39,7 @@ where
     pub fn spawn(
         commands: &mut Commands,
         params: &SimulationParams,
+        fonts: &Fonts,
         pitch: &Pitch,
         number: usize,
         home_region: usize,
@@ -98,6 +99,25 @@ where
                     Transform::default(),
                 ))
                 .insert(Name::new("Model"));
+
+            parent
+                .spawn_bundle(Text2dBundle {
+                    text: Text::with_section(
+                        format!("#{}", number),
+                        TextStyle {
+                            font: fonts.normal.clone(),
+                            font_size: 18.0,
+                            color: Color::BLACK,
+                        },
+                        TextAlignment {
+                            vertical: VerticalAlign::Center,
+                            horizontal: HorizontalAlign::Center,
+                        },
+                    ),
+                    transform: Transform::from_translation(Vec2::ZERO.extend(TEXT_SORT)),
+                    ..Default::default()
+                })
+                .insert(Name::new("Number"));
         });
 
         bundle.id()

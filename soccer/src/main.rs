@@ -31,6 +31,7 @@ pub const PITCH_SORT: f32 = 0.0;
 pub const BORDER_SORT: f32 = 3.0;
 pub const PLAYER_SORT: f32 = 2.0;
 pub const AGENT_UPDATE_STEP: f64 = 0.8;
+pub const TEXT_SORT: f32 = 50.0;
 pub const DEBUG_SORT: f32 = 100.0;
 pub const DEBUG_RADIUS: f32 = 5.0;
 
@@ -41,6 +42,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let params_handle: Handle<SimulationParams> = asset_server.load("simulation.params");
     commands.insert_resource(SimulationParamsAsset {
         handle: params_handle,
+    });
+
+    commands.insert_resource(Fonts {
+        normal: asset_server.load("fonts/FiraSans-Bold.ttf"),
     });
 }
 

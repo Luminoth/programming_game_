@@ -7,7 +7,7 @@ use bevy_prototype_lyon::prelude::*;
 use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
-use crate::resources::SimulationParams;
+use crate::resources::*;
 use crate::{DEBUG_RADIUS, DEBUG_SORT};
 
 use field_player::*;
@@ -31,7 +31,7 @@ impl<T> SoccerTeamBundle<T>
 where
     T: TeamColorMarker,
 {
-    pub fn spawn(commands: &mut Commands, params: &SimulationParams, pitch: &Pitch) {
+    pub fn spawn(commands: &mut Commands, params: &SimulationParams, fonts: &Fonts, pitch: &Pitch) {
         let color = T::default();
         let team_color = color.team_color();
 
@@ -81,13 +81,14 @@ where
         };
 
         // goal keeper
-        GoalKeeperBundle::<T>::spawn(commands, params, pitch, numbers[0], home_regions[0]);
+        GoalKeeperBundle::<T>::spawn(commands, params, fonts, pitch, numbers[0], home_regions[0]);
 
         // players
         for i in 1..TEAM_SIZE {
             FieldPlayerBundle::<T>::spawn(
                 commands,
                 params,
+                fonts,
                 pitch,
                 if i % 2 == 0 {
                     FieldPlayerRole::Attacker

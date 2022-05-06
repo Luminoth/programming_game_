@@ -18,6 +18,7 @@ pub fn update_debug(
     for (steering, transform, children) in agents.iter() {
         for &child in children.iter() {
             if let Ok(mut debug) = steering_debug.get_mut(child) {
+                // TODO: not super sure this is correct
                 debug.translation = steering.target.extend(DEBUG_SORT) - transform.translation;
             }
         }

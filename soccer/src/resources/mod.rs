@@ -107,3 +107,7 @@ impl GameState {
         self.red_team_ready && self.blue_team_ready
     }
 }
+
+pub struct Fonts {
+    pub normal: Handle<Font>,
+}

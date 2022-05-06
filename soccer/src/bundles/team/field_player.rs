@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::components::actor::*;
-use crate::components::agent::*;
 use crate::components::obstacle::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
@@ -13,6 +12,7 @@ use crate::resources::*;
 use crate::PLAYER_SORT;
 
 use super::super::actor::*;
+use super::super::agent::*;
 
 #[derive(Debug, Bundle)]
 pub struct FieldPlayerBundle<T>
@@ -25,8 +25,6 @@ where
 
     pub physical: Physical,
 
-    pub agent: Agent,
-    pub steering: Steering,
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
 }
@@ -71,13 +69,9 @@ where
                 max_turn_rate: params.player_max_turn_rate,
                 ..Default::default()
             },
-            agent: Agent::default(),
-            steering: Steering::default(),
             obstacle: Obstacle::default(),
             obstacle_avoidance: ObstacleAvoidance::default(),
         });
-
-        Agent::separation_on(&mut bundle);
 
         bundle.insert_bundle(ActorBundle {
             actor: Actor {
@@ -89,6 +83,8 @@ where
         });
 
         FieldPlayerStateMachine::insert(&mut bundle, FieldPlayerState::Wait, false);
+
+        AgentBundle::insert_with_separation(&mut bundle);
 
         bundle.with_children(|parent| {
             parent

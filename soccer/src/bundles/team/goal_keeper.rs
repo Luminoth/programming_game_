@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::components::actor::*;
-use crate::components::agent::*;
 use crate::components::obstacle::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
@@ -13,6 +12,7 @@ use crate::resources::*;
 use crate::PLAYER_SORT;
 
 use super::super::actor::*;
+use super::super::agent::*;
 
 #[derive(Debug, Default, Bundle)]
 pub struct GoalKeeperBundle<T>
@@ -25,8 +25,6 @@ where
 
     pub physical: Physical,
 
-    pub agent: Agent,
-    pub steering: Steering,
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
 }
@@ -79,6 +77,8 @@ where
         });
 
         GoalKeeperStateMachine::insert(&mut bundle, GoalKeeperState::TendGoal, false);
+
+        bundle.insert_bundle(AgentBundle::default());
 
         bundle.with_children(|parent| {
             parent

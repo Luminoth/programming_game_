@@ -77,6 +77,8 @@ where
             obstacle_avoidance: ObstacleAvoidance::default(),
         });
 
+        Agent::separation_on(&mut bundle);
+
         bundle.insert_bundle(ActorBundle {
             actor: Actor {
                 bounding_radius: PLAYER_RADIUS,

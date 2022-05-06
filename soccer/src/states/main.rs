@@ -42,6 +42,8 @@ pub fn setup(
         params.player_kicking_distance * params.player_kicking_distance;
     params.player_comfort_zone_squared = params.player_comfort_zone * params.player_comfort_zone;
     params.keeper_in_ball_range_squared = params.keeper_in_ball_range * params.keeper_in_ball_range;
+    params.goal_keeper_intercept_range_squared =
+        params.goal_keeper_intercept_range * params.goal_keeper_intercept_range;
 
     // cameras
     commands.insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)));

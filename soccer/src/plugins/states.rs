@@ -205,6 +205,19 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateExecute)
                             .label(Systems::FieldPlayerStates)
                             .after(Systems::TeamStates),
+                    )
+                    // goal keeper systems
+                    .with_system(
+                        systems::team::goal_keeper::TendGoal_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::TendGoal_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
                     ),
             )
             // per-frame systems
@@ -426,12 +439,46 @@ impl Plugin for MainStatePlugin {
                     )
                     // goal keeper systems
                     .with_system(
+                        systems::team::goal_keeper::update::<RedTeam>
+                            .label(Systems::GoalKeeperUpdate)
+                            .after(Systems::TeamUpdate),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::update::<BlueTeam>
+                            .label(Systems::GoalKeeperUpdate)
+                            .after(Systems::TeamUpdate),
+                    )
+                    .with_system(
                         systems::team::goal_keeper::GlobalState_on_message::<RedTeam>
                             .label(Systems::GlobalStateOnMessage),
                     )
                     .with_system(
                         systems::team::goal_keeper::GlobalState_on_message::<BlueTeam>
                             .label(Systems::GlobalStateOnMessage),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::TendGoal_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::TendGoal_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::TendGoal_exit::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::TendGoal_exit::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
                     ),
             )
             .add_system_set(

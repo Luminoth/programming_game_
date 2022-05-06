@@ -32,6 +32,46 @@ impl GoalKeeper {
         let ball_position = ball_transform.translation.truncate();
         position.distance_squared(ball_position) < params.keeper_in_ball_range_squared
     }
+
+    pub fn is_ball_within_range_for_intercept(
+        &self,
+        params: &SimulationParams,
+        goal: (&Goal, &Transform),
+        ball_transform: &Transform,
+    ) -> bool {
+        let ball_position = ball_transform.translation.truncate();
+        goal.0
+            .get_score_center(goal.1)
+            .distance_squared(ball_position)
+            <= params.goal_keeper_intercept_range_squared
+    }
+
+    pub fn is_too_far_from_goal_mouth(
+        &self,
+        params: &SimulationParams,
+        transform: &Transform,
+        goal: (&Goal, &Transform),
+        ball_transform: &Transform,
+    ) -> bool {
+        let position = transform.translation.truncate();
+        position.distance_squared(self.get_rear_interpose_target(params, goal, ball_transform))
+            > params.goal_keeper_intercept_range_squared
+    }
+
+    pub fn get_rear_interpose_target(
+        &self,
+        params: &SimulationParams,
+        goal: (&Goal, &Transform),
+        ball_transform: &Transform,
+    ) -> Vec2 {
+        let ball_position = ball_transform.translation.truncate();
+
+        let target_x = goal.0.get_score_center(goal.1).x;
+        let target_y = params.goal_extents.y * 0.5
+            + (ball_position.y * params.goal_extents.x) / params.pitch_extents.y;
+
+        Vec2::new(target_x, target_y)
+    }
 }
 
 #[derive(WorldQuery)]

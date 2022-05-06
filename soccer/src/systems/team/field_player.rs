@@ -190,7 +190,7 @@ pub fn GlobalState_on_message<T>(
                 }
                 FieldPlayerMessage::PassToMe(receiver, receiver_position) => {
                     info!(
-                        "player {} received request from {:?} to make pass",
+                        "{} received request from {:?} to make pass",
                         field_player.name, receiver
                     );
 
@@ -205,7 +205,7 @@ pub fn GlobalState_on_message<T>(
                         )
                     {
                         warn!(
-                            "player {} cannot make request pass <cannot kick ball>",
+                            "{} cannot make request pass <cannot kick ball>",
                             field_player.name
                         );
                         return;
@@ -218,7 +218,7 @@ pub fn GlobalState_on_message<T>(
                     );
 
                     info!(
-                        "player {} passed ball to requesting player {:?}",
+                        "{} passed ball to requesting player {:?}",
                         field_player.name, receiver
                     );
 
@@ -248,7 +248,7 @@ pub fn ChaseBall_enter<T>(
     T: TeamColorMarker,
 {
     for (entity, field_player) in field_players.iter() {
-        info!("player {} enters chase state", field_player.name);
+        info!("{} enters chase state", field_player.name);
 
         field_player.agent.seek_on(&mut commands, entity);
     }
@@ -327,7 +327,7 @@ pub fn Wait_enter<T>(
     T: TeamColorMarker,
 {
     for mut field_player in field_players.iter_mut() {
-        info!("player {} enters wait state", field_player.name);
+        info!("{} enters wait state", field_player.name);
 
         if !game_state.is_game_on() {
             field_player.steering.target = field_player.player.get_home_region(&pitch).position;
@@ -486,16 +486,10 @@ pub fn ReceiveBall_enter<T>(
                 params.pass_threat_radius,
             )
         {
-            info!(
-                "player {} enters receive state (using arrive)",
-                field_player.name
-            );
+            info!("{} enters receive state (using arrive)", field_player.name);
             field_player.agent.arrive_on(&mut commands, entity);
         } else {
-            info!(
-                "player {} enters receive state (using pursuit)",
-                field_player.name
-            );
+            info!("{} enters receive state (using pursuit)", field_player.name);
             field_player
                 .agent
                 .pursuit_on(&mut commands, entity, ball.single());
@@ -609,7 +603,7 @@ pub fn KickBall_enter<T>(
             );
         }
 
-        info!("player {} enters kick state", field_player.name);
+        info!("{} enters kick state", field_player.name);
     }
 }
 
@@ -680,10 +674,7 @@ pub fn KickBall_execute<T>(
             power,
         );
         if can_shoot || rng.gen::<f32>() < params.chance_player_attempts_pot_shot {
-            info!(
-                "player {} attempts a shot at {}",
-                field_player.name, ball_target
-            );
+            info!("{} attempts a shot at {}", field_player.name, ball_target);
 
             ball_target = ball.add_noise_to_kick(&params, ball_physical.transform, ball_target);
             let direction = ball_target - ball_position;
@@ -721,7 +712,7 @@ pub fn KickBall_execute<T>(
                 ball.kick(&mut ball_physical.physical, direction, power);
 
                 info!(
-                    "player {} passes the ball with force {} to player {:?} target is {}",
+                    "{} passes the ball with force {} to player {:?} target is {}",
                     field_player.name, power, receiver, ball_target
                 );
 
@@ -762,10 +753,10 @@ pub fn Dribble_enter<T>(
                 .remove::<ControllingPlayer>();
         }
 
-        // this player is now the  controller
+        // this player is now the controller
         commands.entity(entity).insert(ControllingPlayer);
 
-        info!("player {} enters dribble state", field_player.name);
+        info!("{} enters dribble state", field_player.name);
     }
 }
 
@@ -829,7 +820,7 @@ pub fn SupportAttacker_enter<T>(
 
         field_player.steering.target = team.team.best_support_spot.unwrap();
 
-        info!("player {} enters support state", field_player.name);
+        info!("{} enters support state", field_player.name);
     }
 }
 
@@ -974,7 +965,7 @@ pub fn ReturnToHomeRegion_enter<T>(
             field_player.steering.target = field_player.player.get_home_region(&pitch).position;
         }
 
-        info!("player {} enters ReturnToHome state", field_player.name);
+        info!("{} enters ReturnToHome state", field_player.name);
     }
 }
 

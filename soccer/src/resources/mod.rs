@@ -67,9 +67,15 @@ pub struct SimulationParams {
     #[serde(skip)]
     pub player_comfort_zone_squared: f32,
 
+    pub goal_keeper_tending_distance: f32,
+
     pub keeper_in_ball_range: f32,
     #[serde(skip)]
     pub keeper_in_ball_range_squared: f32,
+
+    pub goal_keeper_intercept_range: f32,
+    #[serde(skip)]
+    pub goal_keeper_intercept_range_squared: f32,
 
     pub pass_threat_radius: f32,
 

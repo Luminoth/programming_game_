@@ -1,3 +1,4 @@
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
 use crate::components::steering::*;
@@ -6,6 +7,15 @@ use crate::components::steering::*;
 pub struct Agent;
 
 impl Agent {
+    pub fn separation_on(commands: &mut EntityCommands) {
+        // TODO:
+    }
+
+    #[allow(dead_code)]
+    pub fn separation_off(&self, commands: &mut Commands, entity: Entity) {
+        // TODO:
+    }
+
     pub fn seek_on(&self, commands: &mut Commands, entity: Entity) {
         commands.entity(entity).insert(Seek);
     }

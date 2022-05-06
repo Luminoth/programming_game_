@@ -38,7 +38,9 @@
     player_in_target_range: 10.0,
     player_kicking_distance: 10.0,
     player_comfort_zone: 60.0,
+    goal_keeper_tending_distance: 20.0,
     keeper_in_ball_range: 6.0,
+    goal_keeper_intercept_range: 100.0,
     pass_threat_radius: 70.0,
 
     seek_weight: 1.0,

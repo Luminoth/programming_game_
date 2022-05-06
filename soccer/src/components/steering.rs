@@ -54,6 +54,9 @@ pub struct SteeringQueryMut<'w> {
     pub physical: &'w mut Physical,
 }
 
+#[derive(Debug, Default, Component)]
+pub struct SteeringTargetDebug;
+
 fn seek_force(target: Vec2, physical: &PhysicalQueryItem) -> Vec2 {
     let position = physical.transform.translation.truncate();
 

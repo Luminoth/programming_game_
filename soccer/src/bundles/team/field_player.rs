@@ -25,6 +25,9 @@ where
 
     pub physical: Physical,
 
+    #[bundle]
+    pub actor: ActorBundle,
+
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
 }
@@ -69,22 +72,23 @@ where
                 max_turn_rate: params.player_max_turn_rate,
                 ..Default::default()
             },
+            actor: ActorBundle {
+                actor: Actor {
+                    bounding_radius: PLAYER_RADIUS,
+                },
+                transform: TransformBundle::from_transform(Transform::from_translation(
+                    position.extend(PLAYER_SORT),
+                )),
+                name: Name::new(format!("#{} {:?} Field Player", number, team_color)),
+                ..Default::default()
+            },
             obstacle: Obstacle::default(),
             obstacle_avoidance: ObstacleAvoidance::default(),
         });
 
-        bundle.insert_bundle(ActorBundle {
-            actor: Actor {
-                bounding_radius: PLAYER_RADIUS,
-            },
-            transform: Transform::from_translation(position.extend(PLAYER_SORT)),
-            name: Name::new(format!("#{} {:?} Field Player", number, team_color)),
-            ..Default::default()
-        });
-
         FieldPlayerStateMachine::insert(&mut bundle, FieldPlayerState::Wait, false);
 
-        AgentBundle::insert_with_separation(&mut bundle);
+        AgentBundle::insert_with_separation(params, &mut bundle);
 
         bundle.with_children(|parent| {
             parent

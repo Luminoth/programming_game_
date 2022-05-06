@@ -23,8 +23,8 @@ where
 
     pub support_spots: SupportSpotCalculator,
 
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
+    #[bundle]
+    pub transform: TransformBundle,
 }
 
 impl<T> SoccerTeamBundle<T>
@@ -48,8 +48,7 @@ where
             team: SoccerTeam::default(),
             color,
             support_spots,
-            transform: Transform::default(),
-            global_transform: GlobalTransform::default(),
+            transform: TransformBundle::default(),
         });
 
         SoccerTeamStateMachine::insert(&mut bundle, SoccerTeamState::PrepareForKickOff, false);

@@ -25,6 +25,9 @@ where
 
     pub physical: Physical,
 
+    #[bundle]
+    pub actor: ActorBundle,
+
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
 }
@@ -64,21 +67,22 @@ where
                 max_turn_rate: params.player_max_turn_rate,
                 ..Default::default()
             },
-            ..Default::default()
-        });
-
-        bundle.insert_bundle(ActorBundle {
-            actor: Actor {
-                bounding_radius: PLAYER_RADIUS,
+            actor: ActorBundle {
+                actor: Actor {
+                    bounding_radius: PLAYER_RADIUS,
+                },
+                transform: TransformBundle::from_transform(Transform::from_translation(
+                    position.extend(PLAYER_SORT),
+                )),
+                name: Name::new(format!("#{} {:?} Goal Keeper", number, team_color)),
+                ..Default::default()
             },
-            transform: Transform::from_translation(position.extend(PLAYER_SORT)),
-            name: Name::new(format!("#{} {:?} Goal Keeper", number, team_color)),
             ..Default::default()
         });
 
         GoalKeeperStateMachine::insert(&mut bundle, GoalKeeperState::TendGoal, false);
 
-        bundle.insert_bundle(AgentBundle::default());
+        AgentBundle::insert(params, &mut bundle);
 
         bundle.with_children(|parent| {
             parent

@@ -14,6 +14,9 @@ use super::actor::*;
 pub struct BallBundle {
     pub ball: Ball,
     pub physical: Physical,
+
+    #[bundle]
+    pub actor: ActorBundle,
 }
 
 impl BallBundle {
@@ -27,15 +30,16 @@ impl BallBundle {
                 //max_force: params.ball_max_force,
                 ..Default::default()
             },
-            ..Default::default()
-        });
-
-        bundle.insert_bundle(ActorBundle {
-            actor: Actor {
-                bounding_radius: BALL_RADIUS,
+            actor: ActorBundle {
+                actor: Actor {
+                    bounding_radius: BALL_RADIUS,
+                },
+                name: Name::new("Ball"),
+                transform: TransformBundle::from_transform(Transform::from_translation(
+                    position.extend(BALL_SORT),
+                )),
+                ..Default::default()
             },
-            name: Name::new("Ball"),
-            transform: Transform::from_translation(position.extend(BALL_SORT)),
             ..Default::default()
         });
 

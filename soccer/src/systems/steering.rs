@@ -3,10 +3,24 @@ use bevy::prelude::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
 use crate::resources::*;
+use crate::DEBUG_SORT;
 
 pub fn update(mut steering_behaviors: Query<SteeringQueryMut>) {
     for mut steering in steering_behaviors.iter_mut() {
         steering.steering.update(&mut steering.physical);
+    }
+}
+
+pub fn update_debug(
+    agents: Query<(&Steering, &Transform, &Children), Without<SteeringTargetDebug>>,
+    mut steering_debug: Query<&mut Transform, With<SteeringTargetDebug>>,
+) {
+    for (steering, transform, children) in agents.iter() {
+        for &child in children.iter() {
+            if let Ok(mut debug) = steering_debug.get_mut(child) {
+                debug.translation = steering.target.extend(DEBUG_SORT) - transform.translation;
+            }
+        }
     }
 }
 

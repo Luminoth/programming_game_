@@ -17,8 +17,8 @@ where
     pub goal: Goal,
     pub team: T,
 
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
+    #[bundle]
+    pub transform: TransformBundle,
 }
 
 impl<T> GoalBundle<T>
@@ -55,7 +55,9 @@ where
                 score_center,
             },
             team,
-            transform: Transform::from_translation(position.extend(GOAL_SORT)),
+            transform: TransformBundle::from_transform(Transform::from_translation(
+                position.extend(GOAL_SORT),
+            )),
             ..Default::default()
         });
 

@@ -56,7 +56,7 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::Physics)
                             .after(Systems::SteeringUpdatePhysics),
                     )
-                    .with_system(systems::facing.after(Systems::Physics))
+                    .with_system(systems::physics::facing.after(Systems::Physics))
                     // field player systems
                     .with_system(
                         systems::team::field_player::update_physics::<RedTeam>
@@ -223,6 +223,8 @@ impl Plugin for MainStatePlugin {
             // per-frame systems
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
+                    // steering
+                    .with_system(systems::steering::update_debug)
                     // team systems
                     .with_system(systems::team::update::<RedTeam>.label(Systems::TeamUpdate))
                     .with_system(systems::team::update::<BlueTeam>.label(Systems::TeamUpdate))

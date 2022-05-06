@@ -13,8 +13,8 @@ struct PitchBorderBundle {
     pub border: PitchBorder,
     pub wall: Wall,
 
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
+    #[bundle]
+    pub transform: TransformBundle,
 }
 
 impl PitchBorderBundle {
@@ -29,7 +29,9 @@ impl PitchBorderBundle {
             .spawn_bundle(PitchBorderBundle {
                 border: PitchBorder::default(),
                 wall: Wall { extents, facing },
-                transform: Transform::from_translation(position.extend(BORDER_SORT)),
+                transform: TransformBundle::from_transform(Transform::from_translation(
+                    position.extend(BORDER_SORT),
+                )),
                 ..Default::default()
             })
             .insert(Name::new(format!("{} Border", name.as_ref())))
@@ -53,8 +55,8 @@ impl PitchBorderBundle {
 
 #[derive(Debug, Bundle)]
 pub struct PitchBundle {
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
+    #[bundle]
+    pub transform: TransformBundle,
 }
 
 impl PitchBundle {
@@ -68,8 +70,9 @@ impl PitchBundle {
         };
 
         let mut bundle = commands.spawn_bundle(PitchBundle {
-            transform: Transform::from_translation(Vec2::ZERO.extend(PITCH_SORT)),
-            global_transform: GlobalTransform::default(),
+            transform: TransformBundle::from_transform(Transform::from_translation(
+                Vec2::ZERO.extend(PITCH_SORT),
+            )),
         });
 
         bundle.insert(Name::new("Pitch"));

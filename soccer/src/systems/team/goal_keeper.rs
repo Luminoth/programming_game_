@@ -7,6 +7,7 @@ use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::components::team::*;
 use crate::game::team::*;
+use crate::resources::pitch::*;
 use crate::resources::*;
 use crate::util::*;
 
@@ -99,7 +100,7 @@ pub fn TendGoal_execute<T>(
         (With<GoalKeeperStateTendGoalExecute>, Without<Ball>),
     >,
     goal: Query<(&Goal, &Transform), With<T>>,
-    mut ball: Query<(Entity, PhysicalQueryMut), With<Ball>>,
+    mut ball: Query<PhysicalQueryMut, With<Ball>>,
     controlling: Query<ControllingPlayerQuery<T>>,
 ) where
     T: TeamColorMarker,
@@ -107,7 +108,7 @@ pub fn TendGoal_execute<T>(
     let params = params_assets.get(&params_asset.handle).unwrap();
 
     if let Some((entity, mut goal_keeper, physical)) = goal_keeper.optional_single_mut() {
-        let (ball, mut ball_physical) = ball.single_mut();
+        let mut ball_physical = ball.single_mut();
         let goal = goal.single();
 
         // update interpose target as the ball moves
@@ -187,5 +188,59 @@ pub fn TendGoal_exit<T>(
 {
     if let Some((entity, goal_keeper)) = goal_keeper.optional_single() {
         goal_keeper.agent.interpose_off(&mut commands, entity);
+    }
+}
+
+pub fn ReturnHome_enter<T>(
+    mut commands: Commands,
+    goal_keeper: Query<(Entity, GoalKeeperQuery<T>), With<GoalKeeperStateReturnHomeEnter>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, goal_keeper)) = goal_keeper.optional_single() {
+        goal_keeper.agent.arrive_on(&mut commands, entity);
+
+        info!("{} enters return home state", goal_keeper.name);
+    }
+}
+
+pub fn ReturnHome_execute<T>(
+    mut commands: Commands,
+    pitch: Res<Pitch>,
+    mut goal_keeper: Query<
+        (Entity, GoalKeeperQueryMut<T>, &Transform),
+        With<GoalKeeperStateReturnHomeExecute>,
+    >,
+    controlling: Query<ControllingPlayerQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, mut goal_keeper, transform)) = goal_keeper.optional_single_mut() {
+        goal_keeper.steering.target = goal_keeper.player.get_home_region(&pitch).position;
+
+        let position = transform.translation.truncate();
+        if goal_keeper
+            .player
+            .get_home_region(&pitch)
+            .is_inside(position)
+            && controlling.optional_single().is_some()
+        {
+            goal_keeper.state_machine.change_state(
+                &mut commands,
+                entity,
+                GoalKeeperState::TendGoal,
+            );
+        }
+    }
+}
+
+pub fn ReturnHome_exit<T>(
+    mut commands: Commands,
+    goal_keeper: Query<(Entity, GoalKeeperQuery<T>), With<GoalKeeperStateReturnHomeExit>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, goal_keeper)) = goal_keeper.optional_single() {
+        goal_keeper.agent.arrive_off(&mut commands, entity);
     }
 }

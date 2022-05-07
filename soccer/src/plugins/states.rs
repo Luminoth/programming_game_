@@ -218,6 +218,18 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateExecute)
                             .label(Systems::GoalKeeperStates)
                             .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::ReturnHome_execute::<RedTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::ReturnHome_execute::<BlueTeam>
+                            .label(Systems::StateExecute)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
                     ),
             )
             // per-frame systems
@@ -478,6 +490,30 @@ impl Plugin for MainStatePlugin {
                     )
                     .with_system(
                         systems::team::goal_keeper::TendGoal_exit::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::ReturnHome_enter::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::ReturnHome_enter::<BlueTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::ReturnHome_exit::<RedTeam>
+                            .label(Systems::StateEnter)
+                            .label(Systems::GoalKeeperStates)
+                            .after(Systems::TeamStates),
+                    )
+                    .with_system(
+                        systems::team::goal_keeper::ReturnHome_exit::<BlueTeam>
                             .label(Systems::StateEnter)
                             .label(Systems::GoalKeeperStates)
                             .after(Systems::TeamStates),

@@ -244,3 +244,118 @@ pub fn ReturnHome_exit<T>(
         goal_keeper.agent.arrive_off(&mut commands, entity);
     }
 }
+
+pub fn InterceptBall_enter<T>(
+    mut commands: Commands,
+    goal_keeper: Query<(Entity, GoalKeeperQuery<T>), With<GoalKeeperStateInterceptBallEnter>>,
+    ball: Query<Entity, With<Ball>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, goal_keeper)) = goal_keeper.optional_single() {
+        goal_keeper
+            .agent
+            .pursuit_on(&mut commands, entity, ball.single());
+
+        info!("{} enters intercept ball state", goal_keeper.name);
+    }
+}
+
+pub fn InterceptBall_execute<T>(
+    mut commands: Commands,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
+    mut goal_keeper: Query<
+        (
+            Entity,
+            GoalKeeperQueryMut<T>,
+            PhysicalQuery,
+            Option<&ClosestPlayer>,
+        ),
+        (With<GoalKeeperStateInterceptBallExecute>, Without<Ball>),
+    >,
+    controlling: Query<ControllingPlayerQuery<T>>,
+    closest_opponent: Query<&Transform, (With<ClosestPlayer>, Without<T>)>,
+    goal: Query<(&Goal, &Transform), With<T>>,
+    mut ball: Query<PhysicalQueryMut, With<Ball>>,
+) where
+    T: TeamColorMarker,
+{
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
+    if let Some((entity, mut goal_keeper, physical, closest)) = goal_keeper.optional_single_mut() {
+        let mut ball_physical = ball.single_mut();
+        let ball_position = ball_physical.transform.translation.truncate();
+        let goal = goal.single();
+
+        let is_closest_player = if closest.is_some() {
+            if let Some(closest_opponent) = closest_opponent.optional_single() {
+                let position = physical.transform.translation.truncate();
+                let dist_to_ball = position.distance_squared(ball_position);
+
+                let opponent_position = closest_opponent.translation.truncate();
+                let opponent_distance_to_ball = opponent_position.distance_squared(ball_position);
+                dist_to_ball < opponent_distance_to_ball
+            } else {
+                true
+            }
+        } else {
+            false
+        };
+
+        // if the keeper moved too far out, move back towards the goal
+        // unless they're the closest player to the ball
+        if goal_keeper.goal_keeper.is_too_far_from_goal_mouth(
+            &params,
+            physical.transform,
+            goal,
+            ball_physical.transform,
+        ) && !is_closest_player
+        {
+            goal_keeper.state_machine.change_state(
+                &mut commands,
+                entity,
+                GoalKeeperState::ReturnHome,
+            );
+
+            return;
+        }
+
+        // if the ball comes in range, trap it and put it back in play
+        if goal_keeper.goal_keeper.is_ball_within_keeper_range(
+            &params,
+            physical.transform,
+            ball_physical.transform,
+        ) {
+            ball_physical.physical.velocity = Vec2::ZERO;
+
+            if let Some(controlling) = controlling.optional_single() {
+                commands
+                    .entity(controlling.entity)
+                    .remove::<ControllingPlayer>();
+            }
+
+            // goal keeper is now the controller
+            commands.entity(entity).insert(ControllingPlayer);
+
+            goal_keeper.state_machine.change_state(
+                &mut commands,
+                entity,
+                GoalKeeperState::PutBallBackInPlay,
+            );
+
+            return;
+        }
+    }
+}
+
+pub fn InterceptBall_exit<T>(
+    mut commands: Commands,
+    goal_keeper: Query<(Entity, GoalKeeperQuery<T>), With<GoalKeeperStateInterceptBallExit>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, goal_keeper)) = goal_keeper.optional_single() {
+        goal_keeper.agent.pursuit_off(&mut commands, entity);
+    }
+}

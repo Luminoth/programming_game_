@@ -37,14 +37,12 @@ pub fn update<T>(
 pub fn PrepareForKickOff_enter<T>(
     mut commands: Commands,
     mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
-    mut goal_keeper_message_dispatcher: ResMut<GoalKeeperMessageDispatcher>,
     teams: Query<SoccerTeamQuery<T>, With<SoccerTeamStatePrepareForKickOffEnter>>,
     receiving: Query<ReceivingPlayerQuery<T>>,
     closest: Query<ClosestPlayerQuery<T>>,
     controlling: Query<ControllingPlayerQuery<T>>,
     supporting: Query<SupportingPlayerQuery<T>>,
     field_players: Query<Entity, (With<FieldPlayer>, With<T>)>,
-    goal_keeper: Query<Entity, (With<GoalKeeper>, With<T>)>,
 ) where
     T: TeamColorMarker,
 {
@@ -75,12 +73,10 @@ pub fn PrepareForKickOff_enter<T>(
                 .remove::<SupportingPlayer>();
         }
 
-        // send players home
-        team.team.send_all_players_home(
+        // send field players home
+        SoccerTeam::send_all_field_players_home(
             &mut player_message_dispatcher,
-            &mut goal_keeper_message_dispatcher,
             field_players.iter(),
-            goal_keeper.single(),
         );
     }
 }

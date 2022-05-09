@@ -29,12 +29,9 @@ pub struct SoccerTeam {
 }
 
 impl SoccerTeam {
-    pub fn send_all_players_home<F>(
-        &self,
+    pub fn send_all_field_players_home<F>(
         player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
-        goal_keeper_message_dispatcher: &mut GoalKeeperMessageDispatcher,
         field_players: F,
-        goal_keeper: Entity,
     ) where
         F: Iterator<Item = Entity>,
     {
@@ -42,9 +39,6 @@ impl SoccerTeam {
             player_message_dispatcher
                 .dispatch_message(Some(field_player), FieldPlayerMessage::GoHome);
         }
-
-        goal_keeper_message_dispatcher
-            .dispatch_message(Some(goal_keeper), GoalKeeperMessage::GoHome);
     }
 
     pub fn calculate_closest_player_to_ball<'a, T, P>(
@@ -391,7 +385,7 @@ impl SoccerTeam {
         (target, false)
     }
 
-    pub fn can_pass<'a, T, M, O, F>(
+    pub fn find_pass<'a, T, M, O, F>(
         &self,
         params: &SimulationParams,
         passer: (Entity, &Transform),

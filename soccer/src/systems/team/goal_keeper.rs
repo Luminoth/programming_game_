@@ -2,6 +2,7 @@
 
 use bevy::prelude::*;
 
+use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
@@ -357,5 +358,100 @@ pub fn InterceptBall_exit<T>(
 {
     if let Some((entity, goal_keeper)) = goal_keeper.optional_single() {
         goal_keeper.agent.pursuit_off(&mut commands, entity);
+    }
+}
+
+pub fn PutBallBackInPlay_enter<T>(
+    mut commands: Commands,
+    mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    goal_keeper: Query<(Entity, GoalKeeperQuery<T>), With<GoalKeeperStatePutBallBackInPlayEnter>>,
+    field_players: Query<Entity, With<FieldPlayer>>,
+    controlling: Query<ControllingPlayerQuery<T>>,
+) where
+    T: TeamColorMarker,
+{
+    if let Some((entity, goal_keeper)) = goal_keeper.optional_single() {
+        if let Some(controlling) = controlling.optional_single() {
+            commands
+                .entity(controlling.entity)
+                .remove::<ControllingPlayer>();
+        }
+
+        // goal keeper is now the controller
+        commands.entity(entity).insert(ControllingPlayer);
+
+        // send all the field players home
+        SoccerTeam::send_all_field_players_home(
+            &mut player_message_dispatcher,
+            field_players.iter(),
+        );
+
+        info!("{} enters put ball back in play state", goal_keeper.name);
+    }
+}
+
+pub fn PutBallBackInPlay_execute<T>(
+    mut commands: Commands,
+    params_asset: Res<SimulationParamsAsset>,
+    params_assets: ResMut<Assets<SimulationParams>>,
+    mut field_player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
+    mut goal_keeper: Query<
+        (Entity, GoalKeeperQueryMut<T>, PhysicalQueryMut),
+        (With<GoalKeeperStatePutBallBackInPlayExecute>, Without<Ball>),
+    >,
+    team: Query<SoccerTeamQuery<T>>,
+    teammates: Query<
+        (Entity, FieldPlayerQuery<T>, PhysicalQuery),
+        Without<GoalKeeperStatePutBallBackInPlayExecute>,
+    >,
+    mut ball: Query<(&Ball, &Actor, PhysicalQueryMut), Without<SoccerPlayer>>,
+    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
+    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+) where
+    T: TeamColorMarker,
+{
+    let params = params_assets.get(&params_asset.handle).unwrap();
+
+    if let Some((entity, mut goal_keeper, mut physical)) = goal_keeper.optional_single_mut() {
+        let team = team.single();
+        let opponent_goal = opponent_goal.single();
+
+        let (ball, ball_actor, mut ball_physical) = ball.single_mut();
+        let ball_position = ball_physical.transform.translation.truncate();
+
+        // try to find a safe player to pass to
+        let (receiver, ball_target) = team.team.find_pass::<T, _, _, _>(
+            &params,
+            (entity, physical.transform),
+            teammates.iter(),
+            || opponents.iter(),
+            opponent_goal,
+            (ball_actor, &ball_physical.physical, ball_physical.transform),
+            params.max_passing_force,
+            params.goal_keeper_min_pass_distance,
+        );
+        if let Some(receiver) = receiver {
+            let direction = ball_target - ball_position;
+            ball.kick(
+                &mut ball_physical.physical,
+                direction,
+                params.max_passing_force,
+            );
+
+            commands.entity(entity).remove::<ControllingPlayer>();
+
+            field_player_message_dispatcher
+                .dispatch_message(Some(receiver), FieldPlayerMessage::ReceiveBall(ball_target));
+
+            goal_keeper.state_machine.change_state(
+                &mut commands,
+                entity,
+                GoalKeeperState::TendGoal,
+            );
+
+            return;
+        }
+
+        physical.physical.velocity = Vec2::ZERO;
     }
 }

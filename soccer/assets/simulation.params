@@ -26,6 +26,7 @@
 
     max_passing_force: 3.0,
     min_pass_distance: 120.0,
+    goal_keeper_min_pass_distance: 50.0,
     max_shooting_force: 6.0,
     max_dribble_force: 1.5,
 

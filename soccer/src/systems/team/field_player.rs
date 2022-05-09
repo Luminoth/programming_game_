@@ -696,7 +696,7 @@ pub fn KickBall_execute<T>(
             physical.physical,
             opponents.iter(),
         ) {
-            let (receiver, mut ball_target) = team.team.can_pass::<T, _, _, _>(
+            let (receiver, mut ball_target) = team.team.find_pass::<T, _, _, _>(
                 &params,
                 (entity, physical.transform),
                 teammates.iter(),

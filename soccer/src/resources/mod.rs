@@ -42,6 +42,7 @@ pub struct SimulationParams {
     // kicking
     pub max_passing_force: f32,
     pub min_pass_distance: f32,
+    pub goal_keeper_min_pass_distance: f32,
     pub max_shooting_force: f32,
     pub max_dribble_force: f32,
 

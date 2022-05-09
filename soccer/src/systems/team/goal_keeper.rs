@@ -26,20 +26,20 @@ pub fn update<T>(
 }
 
 pub fn GlobalState_on_message<T>(
-    mut commands: Commands,
+    mut _commands: Commands,
     mut message_events: EventReader<GoalKeeperDispatchedMessageEvent>,
     mut goal_keeper: Query<(Entity, GoalKeeperQueryMut<T>)>,
 ) where
     T: TeamColorMarker,
 {
     for event in message_events.iter() {
-        if let Some((entity, mut goal_keeper)) = goal_keeper.optional_single_mut() {
+        if let Some((entity, mut _goal_keeper)) = goal_keeper.optional_single_mut() {
             if entity != event.receiver.unwrap() {
                 continue;
             }
 
             match event.message {
-                GoalKeeperMessage::GoHome => {
+                /*GoalKeeperMessage::GoHome => {
                     goal_keeper.player.home_region = goal_keeper.player.default_region;
 
                     goal_keeper.state_machine.change_state(
@@ -47,14 +47,14 @@ pub fn GlobalState_on_message<T>(
                         entity,
                         GoalKeeperState::ReturnHome,
                     );
-                }
-                GoalKeeperMessage::ReceiveBall => {
+                }*/
+                /*GoalKeeperMessage::ReceiveBall => {
                     goal_keeper.state_machine.change_state(
                         &mut commands,
                         entity,
                         GoalKeeperState::InterceptBall,
                     );
-                }
+                }*/
             }
         }
     }
@@ -83,7 +83,7 @@ pub fn TendGoal_enter<T>(
         );
 
         goal_keeper.steering.target = goal_keeper.goal_keeper.get_rear_interpose_target(
-            &params,
+            params,
             goal.single(),
             ball_transform,
         );
@@ -114,14 +114,14 @@ pub fn TendGoal_execute<T>(
 
         // update interpose target as the ball moves
         goal_keeper.steering.target = goal_keeper.goal_keeper.get_rear_interpose_target(
-            &params,
+            params,
             goal,
             ball_physical.transform,
         );
 
         // if the ball comes in range, trap it and put it back in play
         if goal_keeper.goal_keeper.is_ball_within_keeper_range(
-            &params,
+            params,
             physical.transform,
             ball_physical.transform,
         ) {
@@ -147,7 +147,7 @@ pub fn TendGoal_execute<T>(
 
         // if the ball is close, move out to try and intercept it
         if goal_keeper.goal_keeper.is_ball_within_range_for_intercept(
-            &params,
+            params,
             goal,
             ball_physical.transform,
         ) {
@@ -164,7 +164,7 @@ pub fn TendGoal_execute<T>(
 
         // if the keeper moved too far out, move back towards the goal
         if goal_keeper.goal_keeper.is_too_far_from_goal_mouth(
-            &params,
+            params,
             physical.transform,
             goal,
             ball_physical.transform,
@@ -175,8 +175,6 @@ pub fn TendGoal_execute<T>(
                 entity,
                 GoalKeeperState::ReturnHome,
             );
-
-            return;
         }
     }
 }
@@ -307,7 +305,7 @@ pub fn InterceptBall_execute<T>(
         // if the keeper moved too far out, move back towards the goal
         // unless they're the closest player to the ball
         if goal_keeper.goal_keeper.is_too_far_from_goal_mouth(
-            &params,
+            params,
             physical.transform,
             goal,
             ball_physical.transform,
@@ -324,7 +322,7 @@ pub fn InterceptBall_execute<T>(
 
         // if the ball comes in range, trap it and put it back in play
         if goal_keeper.goal_keeper.is_ball_within_keeper_range(
-            &params,
+            params,
             physical.transform,
             ball_physical.transform,
         ) {
@@ -344,8 +342,6 @@ pub fn InterceptBall_execute<T>(
                 entity,
                 GoalKeeperState::PutBallBackInPlay,
             );
-
-            return;
         }
     }
 }
@@ -421,7 +417,7 @@ pub fn PutBallBackInPlay_execute<T>(
 
         // try to find a safe player to pass to
         let (receiver, ball_target) = team.team.find_pass::<T, _, _, _>(
-            &params,
+            params,
             (entity, physical.transform),
             teammates.iter(),
             || opponents.iter(),

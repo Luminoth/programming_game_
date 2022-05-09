@@ -58,7 +58,6 @@ where
             transform: TransformBundle::from_transform(Transform::from_translation(
                 position.extend(GOAL_SORT),
             )),
-            ..Default::default()
         });
 
         bundle.insert(Name::new(format!("{:?} Goal", team_color)));

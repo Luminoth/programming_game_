@@ -9,7 +9,7 @@ pub enum FieldPlayerMessage {
     GoHome,
     ReceiveBall(Vec2),
     PassToMe(Entity, Vec2),
-    Wait,
+    //Wait,
 }
 
 impl Eq for FieldPlayerMessage {}

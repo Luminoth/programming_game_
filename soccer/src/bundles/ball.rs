@@ -38,7 +38,6 @@ impl BallBundle {
                 transform: TransformBundle::from_transform(Transform::from_translation(
                     position.extend(BALL_SORT),
                 )),
-                ..Default::default()
             },
             ..Default::default()
         });

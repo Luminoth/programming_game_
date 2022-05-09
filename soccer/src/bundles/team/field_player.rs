@@ -81,7 +81,6 @@ where
                     position.extend(PLAYER_SORT),
                 )),
                 name: Name::new(format!("#{} {:?} Field Player", number, team_color)),
-                ..Default::default()
             },
             obstacle: Obstacle::default(),
             obstacle_avoidance: ObstacleAvoidance::default(),

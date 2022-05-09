@@ -71,7 +71,7 @@ pub fn find_support_event_handler<T>(
 
             player.find_support(
                 &mut commands,
-                &params,
+                params,
                 &mut message_dispatcher,
                 &mut team,
                 &mut support_calculator,
@@ -108,7 +108,7 @@ pub fn GlobalState_execute<T>(
         if let Some(controlling) = controlling.optional_single() {
             if controlling.entity == entity
                 && field_player.field_player.is_ball_within_receiving_range(
-                    &params,
+                    params,
                     physical.transform,
                     ball_position,
                 )
@@ -181,13 +181,13 @@ pub fn GlobalState_on_message<T>(
                         FieldPlayerState::ReturnToHomeRegion,
                     );
                 }
-                FieldPlayerMessage::Wait => {
+                /*FieldPlayerMessage::Wait => {
                     field_player.state_machine.change_state(
                         &mut commands,
                         entity,
                         FieldPlayerState::Wait,
                     );
-                }
+                }*/
                 FieldPlayerMessage::PassToMe(receiver, receiver_position) => {
                     info!(
                         "{} received request from {:?} to make pass",
@@ -199,7 +199,7 @@ pub fn GlobalState_on_message<T>(
                     // then the player cannot pass the ball
                     if receiving.optional_single().is_some()
                         || !field_player.field_player.is_ball_within_kicking_range(
-                            &params,
+                            params,
                             transform,
                             ball_position,
                         )
@@ -275,7 +275,7 @@ pub fn ChaseBall_execute<T>(
         // kick the ball if it's in range
         if field_player
             .field_player
-            .is_ball_within_kicking_range(&params, transform, ball_position)
+            .is_ball_within_kicking_range(params, transform, ball_position)
         {
             info!("transitioning from chasing to kicking ball state!");
 
@@ -369,7 +369,7 @@ pub fn Wait_execute<T>(
         // get back to our home if we got bumped off it
         if !field_player
             .steering
-            .is_at_target(&params, physical.transform)
+            .is_at_target(params, physical.transform)
         {
             if arrive.is_none() {
                 info!("heading back home");
@@ -404,7 +404,7 @@ pub fn Wait_execute<T>(
                 )
             {
                 team.single().team.request_pass::<T, _>(
-                    &params,
+                    params,
                     controller.entity,
                     controller_transform,
                     entity,
@@ -524,7 +524,7 @@ pub fn ReceiveBall_execute<T>(
 
         // chase the ball if it's close enough
         if field_player.field_player.is_ball_within_receiving_range(
-            &params,
+            params,
             physical.transform,
             ball_position,
         ) || controlling.optional_single().is_none()
@@ -545,7 +545,7 @@ pub fn ReceiveBall_execute<T>(
         // stop if we've arrived
         if field_player
             .steering
-            .is_at_target(&params, physical.transform)
+            .is_at_target(params, physical.transform)
         {
             field_player.agent.arrive_off(&mut commands, entity);
             field_player.agent.pursuit_off(&mut commands, entity);
@@ -666,7 +666,7 @@ pub fn KickBall_execute<T>(
         // attempt a kick
         let power = params.max_shooting_force * dot;
         let (mut ball_target, can_shoot) = team.team.can_shoot::<T, _, _>(
-            &params,
+            params,
             ball_position,
             opponent_goal,
             (ball_actor, &ball_physical.physical),
@@ -676,7 +676,7 @@ pub fn KickBall_execute<T>(
         if can_shoot || rng.gen::<f32>() < params.chance_player_attempts_pot_shot {
             info!("{} attempts a shot at {}", field_player.name, ball_target);
 
-            ball_target = ball.add_noise_to_kick(&params, ball_physical.transform, ball_target);
+            ball_target = ball.add_noise_to_kick(params, ball_physical.transform, ball_target);
             let direction = ball_target - ball_position;
             ball.kick(&mut ball_physical.physical, direction, power);
 
@@ -691,13 +691,13 @@ pub fn KickBall_execute<T>(
         // can't kick, attempt a pass
         let power = params.max_passing_force * dot;
         if field_player.player.is_threatened(
-            &params,
+            params,
             physical.transform,
             physical.physical,
             opponents.iter(),
         ) {
             let (receiver, mut ball_target) = team.team.find_pass::<T, _, _, _>(
-                &params,
+                params,
                 (entity, physical.transform),
                 teammates.iter(),
                 || opponents.iter(),
@@ -707,7 +707,7 @@ pub fn KickBall_execute<T>(
                 params.min_pass_distance,
             );
             if let Some(receiver) = receiver {
-                ball_target = ball.add_noise_to_kick(&params, ball_physical.transform, ball_target);
+                ball_target = ball.add_noise_to_kick(params, ball_physical.transform, ball_target);
                 let direction = ball_target - ball_position;
                 ball.kick(&mut ball_physical.physical, direction, power);
 
@@ -871,16 +871,16 @@ pub fn SupportAttacker_execute<T>(
 
         // if we can shoot, request a pass
         let (_, can_shoot) = team.team.can_shoot::<T, _, _>(
-            &params,
+            params,
             ball_position,
             opponent_goal,
-            (ball_actor, &ball_physical.physical),
+            (ball_actor, ball_physical.physical),
             || opponents.iter(),
             params.max_shooting_force,
         );
         if can_shoot {
             team.team.request_pass::<T, _>(
-                &params,
+                params,
                 controller.entity,
                 controller_transform,
                 entity,
@@ -893,7 +893,7 @@ pub fn SupportAttacker_execute<T>(
 
         if field_player
             .steering
-            .is_at_target(&params, physical.transform)
+            .is_at_target(params, physical.transform)
         {
             field_player.agent.arrive_off(&mut commands, entity);
 
@@ -905,14 +905,14 @@ pub fn SupportAttacker_execute<T>(
             // and didn't already request one, request a pass
             if !can_shoot
                 && !field_player.player.is_threatened(
-                    &params,
+                    params,
                     physical.transform,
                     &physical.physical,
                     opponents.iter(),
                 )
             {
                 team.team.request_pass::<T, _>(
-                    &params,
+                    params,
                     controller.entity,
                     controller_transform,
                     entity,
@@ -1019,7 +1019,7 @@ pub fn ReturnToHomeRegion_execute<T>(
                     FieldPlayerState::Wait,
                 );
             }
-        } else if field_player.steering.is_at_target(&params, transform) {
+        } else if field_player.steering.is_at_target(params, transform) {
             field_player
                 .state_machine
                 .change_state(&mut commands, entity, FieldPlayerState::Wait);

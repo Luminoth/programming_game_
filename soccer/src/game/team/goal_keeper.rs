@@ -3,8 +3,8 @@ use crate::resources::messaging::*;
 
 #[derive(Debug, PartialEq)]
 pub enum GoalKeeperMessage {
-    GoHome,
-    ReceiveBall,
+    //GoHome,
+//ReceiveBall,
 }
 
 impl Eq for GoalKeeperMessage {}

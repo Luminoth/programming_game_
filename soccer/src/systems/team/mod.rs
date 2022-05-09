@@ -208,7 +208,7 @@ pub fn Attacking_execute<T>(
 
         if let Some(controller_transform) = controller.optional_single() {
             team.team.determine_best_supporting_position(
-                &params,
+                params,
                 team.color,
                 &mut support_calculator,
                 || opponents.iter(),

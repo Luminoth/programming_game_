@@ -76,7 +76,6 @@ where
                     position.extend(PLAYER_SORT),
                 )),
                 name: Name::new(format!("#{} {:?} Goal Keeper", number, team_color)),
-                ..Default::default()
             },
             ..Default::default()
         });

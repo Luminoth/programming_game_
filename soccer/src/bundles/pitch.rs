@@ -32,7 +32,6 @@ impl PitchBorderBundle {
                 transform: TransformBundle::from_transform(Transform::from_translation(
                     position.extend(BORDER_SORT),
                 )),
-                ..Default::default()
             })
             .insert(Name::new(format!("{} Border", name.as_ref())))
             .with_children(|parent| {

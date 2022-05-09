@@ -300,7 +300,7 @@ impl SoccerTeam {
             best_support_spot
         } else {
             self.determine_best_supporting_position(
-                &params,
+                params,
                 team,
                 support_calculator,
                 opponents,

@@ -56,21 +56,21 @@ pub fn setup(
     // game state
     commands.insert_resource(GameState::default());
 
-    let pitch = Pitch::new(&params);
+    let pitch = Pitch::new(params);
 
     // pitch
-    PitchBundle::spawn(&mut commands, &params, &pitch);
+    PitchBundle::spawn(&mut commands, params, &pitch);
 
     // goals
-    GoalBundle::spawn(&mut commands, &params, RedTeam, &pitch);
-    GoalBundle::spawn(&mut commands, &params, BlueTeam, &pitch);
+    GoalBundle::spawn(&mut commands, params, RedTeam, &pitch);
+    GoalBundle::spawn(&mut commands, params, BlueTeam, &pitch);
 
     // ball
-    BallBundle::spawn(&mut commands, &params, Vec2::ZERO);
+    BallBundle::spawn(&mut commands, params, Vec2::ZERO);
 
     // teams
-    SoccerTeamBundle::<RedTeam>::spawn(&mut commands, &params, &fonts, &pitch);
-    SoccerTeamBundle::<BlueTeam>::spawn(&mut commands, &params, &fonts, &pitch);
+    SoccerTeamBundle::<RedTeam>::spawn(&mut commands, params, &fonts, &pitch);
+    SoccerTeamBundle::<BlueTeam>::spawn(&mut commands, params, &fonts, &pitch);
 
     commands.insert_resource(pitch);
 

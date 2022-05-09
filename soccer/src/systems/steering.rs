@@ -66,7 +66,7 @@ pub fn update_pursuit(
     for (mut steering, physical) in pursuing.iter_mut() {
         let force = steering
             .pursuit
-            .force(&params, &steering.steering, &physical, &physicals);
+            .force(params, &steering.steering, &physical, &physicals);
         steering
             .steering
             .accumulate_force(physical.physical, force, params.pursuit_weight);

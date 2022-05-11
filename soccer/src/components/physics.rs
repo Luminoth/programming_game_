@@ -1,8 +1,10 @@
 use bevy::ecs::query::WorldQuery;
+use bevy::math::Mat2;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
 use crate::resources::SimulationParams;
+use crate::util::*;
 
 // 50hz, the same as Unity
 pub const PHYSICS_STEP: f32 = 0.02;
@@ -47,8 +49,28 @@ impl Physical {
         self.velocity.length()
     }
 
-    pub fn track(&mut self, position: Vec2) {
-        // TODO: RotateHeadingToFacePosition(position);
+    pub fn track(&mut self, transform: &Transform, target: Vec2) {
+        let position = transform.translation.truncate();
+        let to_target = target - position;
+
+        let dot = self.heading.dot(to_target).clamp(-1.0, 1.0);
+        let mut angle = dot.acos();
+
+        // if we're already facing the target, we're done
+        if angle < 0.00001 {
+            return;
+        }
+
+        // clamp the turn rate
+        if angle > self.max_turn_rate {
+            angle = self.max_turn_rate;
+        }
+
+        let rotation = Mat2::from_angle(angle * self.heading.sign(to_target));
+        self.heading = rotation.mul_vec2(self.heading);
+        self.velocity = rotation.mul_vec2(self.velocity);
+
+        self.side = self.heading.perp();
     }
 
     pub fn future_position(

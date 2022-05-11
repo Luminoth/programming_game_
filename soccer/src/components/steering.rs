@@ -217,6 +217,57 @@ pub struct InterposeQueryMut<'w> {
     pub steering: &'w mut Steering,
 }
 
+#[derive(Debug, Component, Inspectable)]
+#[component(storage = "SparseSet")]
+pub struct SoccerPlayerSeparation;
+
+impl SteeringBehavior for SoccerPlayerSeparation {}
+
+impl SoccerPlayerSeparation {
+    pub fn force<'a, P>(
+        &self,
+        params: &SimulationParams,
+        entity: Entity,
+        transform: &Transform,
+        players: P,
+    ) -> Vec2
+    where
+        P: Iterator<Item = (Entity, &'a Transform)>,
+    {
+        let position = transform.translation.truncate();
+        let view_distance_squared = params.view_distance * params.view_distance;
+
+        let mut force = Vec2::default();
+        for (player, player_transform) in players {
+            if player == entity {
+                continue;
+            }
+
+            let player_position = player_transform.translation.truncate();
+
+            // is this a neighbor of ours?
+            let to_agent = position - player_position;
+            if to_agent.length_squared() >= view_distance_squared {
+                continue;
+            }
+
+            let distance = to_agent.length();
+            if distance != 0.0 {
+                force += to_agent.normalize_or_zero() / distance;
+            }
+        }
+
+        force
+    }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct SoccerPlayerSeparationQueryMut<'w> {
+    pub separation: &'w SoccerPlayerSeparation,
+    pub steering: &'w mut Steering,
+}
+
 #[derive(Debug, Default, Component, Inspectable)]
 #[component(storage = "SparseSet")]
 pub struct ObstacleAvoidance {

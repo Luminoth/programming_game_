@@ -85,6 +85,8 @@ pub struct SimulationParams {
     pub arrive_weight: f32,
     pub pursuit_weight: f32,
     pub interpose_weight: f32,
+    pub separation_weight: f32,
+    pub view_distance: f32,
 
     // physics
     pub friction: f32,

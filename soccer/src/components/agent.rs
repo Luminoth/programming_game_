@@ -8,12 +8,12 @@ pub struct Agent;
 
 impl Agent {
     pub fn separation_on(commands: &mut EntityCommands) {
-        // TODO:
+        commands.insert(SoccerPlayerSeparation);
     }
 
     #[allow(dead_code)]
     pub fn separation_off(&self, commands: &mut Commands, entity: Entity) {
-        // TODO:
+        commands.entity(entity).remove::<SoccerPlayerSeparation>();
     }
 
     pub fn seek_on(&self, commands: &mut Commands, entity: Entity) {

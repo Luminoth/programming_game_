@@ -50,6 +50,7 @@ impl Plugin for MainStatePlugin {
                             .after(Systems::Steering),
                     )
                     .with_system(systems::steering::update_interpose.label(Systems::Steering))
+                    .with_system(systems::steering::update_separation.label(Systems::Steering))
                     // physics
                     .with_system(
                         systems::physics::update

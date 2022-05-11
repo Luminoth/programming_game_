@@ -48,6 +48,8 @@
     arrive_weight: 1.0,
     pursuit_weight: 1.0,
     interpose_weight: 1.0,
+    separation_weight: 10.0,
+    view_distance: 30.0,
 
     // NOTE: this is negative in the example source
     // so anywhere it's used, it needs to be negated

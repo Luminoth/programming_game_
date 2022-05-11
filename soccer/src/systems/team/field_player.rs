@@ -386,7 +386,7 @@ pub fn Wait_execute<T>(
         }
         physical.physical.velocity = Vec2::ZERO;
 
-        physical.physical.track(ball_position);
+        physical.physical.track(physical.transform, ball_position);
 
         let mut controller_is_goalkeeper = false;
         if let Some((controller, controller_transform, goal_keeper)) = controller.optional_single()
@@ -550,7 +550,7 @@ pub fn ReceiveBall_execute<T>(
             field_player.agent.arrive_off(&mut commands, entity);
             field_player.agent.pursuit_off(&mut commands, entity);
 
-            physical.physical.track(ball_position);
+            physical.physical.track(physical.transform, ball_position);
 
             physical.physical.velocity = Vec2::ZERO;
         }
@@ -897,7 +897,7 @@ pub fn SupportAttacker_execute<T>(
         {
             field_player.agent.arrive_off(&mut commands, entity);
 
-            physical.physical.track(ball_position);
+            physical.physical.track(physical.transform, ball_position);
 
             physical.physical.velocity = Vec2::ZERO;
 

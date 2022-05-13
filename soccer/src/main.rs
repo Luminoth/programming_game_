@@ -22,6 +22,7 @@ use bevy_prototype_lyon::prelude::*;
 
 use plugins::debug::DebugPlugin;
 use plugins::states::StatesPlugins;
+use resources::ui::*;
 use resources::*;
 use states::GameState;
 
@@ -117,7 +118,7 @@ fn main() {
     app.add_plugin(DebugPlugin).add_plugins(StatesPlugins);
 
     // initial game state
-    app.add_state(GameState::Main);
+    app.add_state(GameState::Intro);
 
     // main setup
     app.add_startup_system(setup);

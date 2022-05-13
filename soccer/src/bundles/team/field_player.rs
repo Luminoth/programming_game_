@@ -8,6 +8,7 @@ use crate::components::steering::*;
 use crate::components::team::*;
 use crate::game::PLAYER_RADIUS;
 use crate::resources::pitch::*;
+use crate::resources::ui::*;
 use crate::resources::*;
 use crate::{PLAYER_SORT, TEXT_SORT};
 

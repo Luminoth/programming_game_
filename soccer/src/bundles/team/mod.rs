@@ -7,6 +7,7 @@ use bevy_prototype_lyon::prelude::*;
 use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
+use crate::resources::ui::*;
 use crate::resources::*;
 use crate::{DEBUG_RADIUS, DEBUG_SORT};
 

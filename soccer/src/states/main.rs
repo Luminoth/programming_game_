@@ -8,6 +8,7 @@ use crate::components::camera::*;
 use crate::components::team::*;
 use crate::game::team::*;
 use crate::resources::pitch::*;
+use crate::resources::ui::*;
 use crate::resources::*;
 
 pub fn setup(

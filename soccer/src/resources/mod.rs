@@ -1,6 +1,7 @@
 pub mod debug;
 pub mod messaging;
 pub mod pitch;
+pub mod ui;
 
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
@@ -109,8 +110,4 @@ impl GameState {
     pub fn is_game_on(&self) -> bool {
         self.red_team_ready && self.blue_team_ready
     }
-}
-
-pub struct Fonts {
-    pub normal: Handle<Font>,
 }

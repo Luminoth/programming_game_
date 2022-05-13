@@ -34,7 +34,7 @@ where
     for (field_player, mut physical) in field_players.iter_mut() {
         // if no steering force is produced, decelerate the player
         if field_player.steering.accumulated_force == Vec2::ZERO {
-            let braking_rate = 0.02;
+            let braking_rate = 0.8;
             physical.physical.velocity *= braking_rate;
         }
     }
@@ -248,9 +248,9 @@ pub fn ChaseBall_enter<T>(
     T: TeamColorMarker,
 {
     for (entity, field_player) in field_players.iter() {
-        info!("{} enters chase state", field_player.name);
-
         field_player.agent.seek_on(&mut commands, entity);
+
+        info!("{} enters chase state", field_player.name);
     }
 }
 
@@ -277,7 +277,10 @@ pub fn ChaseBall_execute<T>(
             .field_player
             .is_ball_within_kicking_range(params, transform, ball_position)
         {
-            info!("transitioning from chasing to kicking ball state!");
+            info!(
+                "{} transitioning from chasing to kicking ball state!",
+                field_player.name
+            );
 
             field_player.state_machine.change_state(
                 &mut commands,
@@ -290,14 +293,17 @@ pub fn ChaseBall_execute<T>(
         // keep chasing the ball if we're the closest to it
         if let Some(closest) = closest.optional_single() {
             if entity == closest.entity {
-                info!("continue chasing ball");
+                info!("{} continues chasing ball", field_player.name);
 
                 field_player.steering.target = ball_position;
                 continue;
             }
         }
 
-        info!("lost the ball while chasing, transitioning to return home state");
+        info!(
+            "{} lost the ball while chasing, transitioning to return home state",
+            field_player.name
+        );
 
         // not closest, so go home
         field_player.state_machine.change_state(
@@ -327,11 +333,11 @@ pub fn Wait_enter<T>(
     T: TeamColorMarker,
 {
     for mut field_player in field_players.iter_mut() {
-        info!("{} enters wait state", field_player.name);
-
         if !game_state.is_game_on() {
             field_player.steering.target = field_player.player.get_home_region(&pitch).position;
         }
+
+        info!("{} enters wait state", field_player.name);
     }
 }
 
@@ -372,7 +378,7 @@ pub fn Wait_execute<T>(
             .is_at_target(params, physical.transform)
         {
             if arrive.is_none() {
-                info!("heading back home");
+                info!("{} heading back home", field_player.name);
 
                 field_player.agent.arrive_on(&mut commands, entity);
             }
@@ -380,7 +386,7 @@ pub fn Wait_execute<T>(
         }
 
         if arrive.is_some() {
-            info!("arrived back home");
+            info!("{} arrived back home", field_player.name);
 
             field_player.agent.arrive_off(&mut commands, entity);
         }
@@ -594,7 +600,7 @@ pub fn KickBall_enter<T>(
         commands.entity(entity).insert(ControllingPlayer);
 
         if !field_player.field_player.is_ready_for_next_kick() {
-            warn!("kick ball on cooldown!");
+            warn!("{} kick ball on cooldown!", field_player.name);
 
             field_player.state_machine.change_state(
                 &mut commands,
@@ -646,8 +652,8 @@ pub fn KickBall_execute<T>(
         // can't kick the ball if there's a receiver, or the goal keeper has it, or it's behind us
         if have_receiver || controller_is_goalkeeper || dot < -field_player.actor.bounding_radius {
             info!(
-                "have a receiver already ({}) / goalie has ball ({}) / ball behind player ({})",
-                have_receiver, controller_is_goalkeeper, dot
+                "{} have a receiver already ({}) / goalie has ball ({}) / ball behind player ({})",
+                field_player.name, have_receiver, controller_is_goalkeeper, dot
             );
 
             field_player.state_machine.change_state(

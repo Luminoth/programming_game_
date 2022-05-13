@@ -616,7 +616,9 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::StateEnter)
                             .label(Systems::GoalKeeperStates)
                             .after(Systems::TeamStates),
-                    ),
+                    )
+                    // goals and stuff
+                    .with_system(systems::goal::update),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

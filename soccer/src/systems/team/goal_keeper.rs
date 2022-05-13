@@ -13,15 +13,21 @@ use crate::resources::*;
 use crate::util::*;
 
 pub fn update<T>(
-    mut goal_keeper: Query<GoalKeeperQueryMut<T>>,
+    mut goal_keeper: Query<(GoalKeeperQuery<T>, PhysicalQueryMut)>,
+    controller: Query<&ControllingPlayer, (With<T>, With<GoalKeeper>)>,
     ball_transform: Query<&Transform, With<Ball>>,
 ) where
     T: TeamColorMarker,
 {
     let ball_transform = ball_transform.single();
 
-    if let Some(mut goal_keeper) = goal_keeper.optional_single_mut() {
-        // TODO: look at the ball
+    if let Some((_, mut physical)) = goal_keeper.optional_single_mut() {
+        // track the ball if we aren't controlling it
+        if controller.optional_single().is_none() {
+            physical
+                .physical
+                .track(physical.transform, ball_transform.translation.truncate());
+        }
     }
 }
 

@@ -53,6 +53,7 @@ where
                 top,
                 bottom,
                 score_center,
+                ..Default::default()
             },
             team,
             transform: TransformBundle::from_transform(Transform::from_translation(

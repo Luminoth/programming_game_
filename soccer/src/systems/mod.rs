@@ -1,4 +1,5 @@
 pub mod debug;
+pub mod goal;
 pub mod messaging;
 pub mod physics;
 pub mod steering;

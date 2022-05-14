@@ -97,18 +97,19 @@ pub trait TransformUtils {
 
 impl TransformUtils for Transform {
     fn set_world_translation(&mut self, global_transform: &GlobalTransform, world_position: Vec3) {
-        // TODO: this is exploding on floating point overflow :(
-
-        /*info!(
+        /*println!(
             "before global: {}, local: {} to world_position: {}",
             global_transform.translation, self.translation, world_position
         );*/
 
         let parent_position = global_transform.translation - self.translation;
-        let local_position = world_position - parent_position;
-        self.translation = local_position;
+        //println!("parent: {}", parent_position);
 
-        //info!("after local: {}", self.translation);
+        let local_position = world_position - parent_position;
+        if self.translation.distance_squared(local_position) > f32::EPSILON * f32::EPSILON {
+            self.translation = local_position;
+        }
+        //println!("after local: {}", self.translation);
     }
 }
 

@@ -47,6 +47,7 @@ impl Plugin for MainStatePlugin {
 
         // events
         app.add_event::<FindSupportEvent>()
+            .add_event::<GoalScoredEvent>()
             .add_event::<FieldPlayerDispatchedMessageEvent>()
             .add_event::<GoalKeeperDispatchedMessageEvent>();
 
@@ -621,7 +622,9 @@ impl Plugin for MainStatePlugin {
                     )
                     // everything else
                     .with_system(systems::ball::update)
-                    .with_system(systems::goal::update),
+                    .with_system(systems::goal::update::<RedTeam>.label(Systems::GoalUpdate))
+                    .with_system(systems::goal::update::<BlueTeam>.label(Systems::GoalUpdate))
+                    .with_system(systems::goal_scored_event_handler.after(Systems::GoalUpdate)),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

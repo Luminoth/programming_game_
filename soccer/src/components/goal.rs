@@ -12,8 +12,6 @@ pub struct Goal {
     pub top: Vec2,
     pub bottom: Vec2,
     pub score_center: Vec2,
-
-    pub goals_scored: usize,
 }
 
 impl Goal {
@@ -32,14 +30,13 @@ impl Goal {
         position + self.score_center
     }
 
-    pub fn check_for_score(&mut self, transform: &Transform, ball_transform: &Transform) -> bool {
+    pub fn check_for_score(&self, transform: &Transform, ball_transform: &Transform) -> bool {
         let top = self.get_top(transform);
         let bottom = self.get_bottom(transform);
 
         let ball_position = ball_transform.translation.truncate();
-        // TODO:
+        // TODO: this is not correct at all
         /*if ball_position.x > top.x && ball_position.y < top.y && ball_position.y > bottom.y {
-            self.goals_scored += 1;
             return true;
         }*/
 

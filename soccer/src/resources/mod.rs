@@ -104,6 +104,9 @@ pub struct SimulationParamsAsset {
 pub struct GameState {
     pub red_team_ready: bool,
     pub blue_team_ready: bool,
+
+    pub red_team_score: usize,
+    pub blue_team_score: usize,
 }
 
 impl GameState {

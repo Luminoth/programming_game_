@@ -36,6 +36,7 @@ pub fn update<T>(
 
 pub fn PrepareForKickOff_enter<T>(
     mut commands: Commands,
+    mut game_state: ResMut<GameState>,
     mut player_message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     teams: Query<SoccerTeamQuery<T>, With<SoccerTeamStatePrepareForKickOffEnter>>,
     receiving: Query<ReceivingPlayerQuery<T>>,
@@ -48,6 +49,11 @@ pub fn PrepareForKickOff_enter<T>(
 {
     if let Some(team) = teams.optional_single() {
         info!("{:?} team preparing for kick off", team.color.team_color());
+
+        match team.color.team_color() {
+            TeamColor::Red => game_state.red_team_ready = false,
+            TeamColor::Blue => game_state.blue_team_ready = false,
+        }
 
         // reset player positions
 

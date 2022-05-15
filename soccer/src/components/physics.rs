@@ -49,6 +49,14 @@ impl Physical {
         self.velocity.length()
     }
 
+    #[allow(dead_code)]
+    pub fn teleport(&mut self, transform: &mut Transform, position: Vec2) {
+        transform.translation = position.extend(transform.translation.z);
+
+        self.acceleration = Vec2::ZERO;
+        self.velocity = Vec2::ZERO;
+    }
+
     pub fn track(&mut self, transform: &Transform, target: Vec2) {
         let position = transform.translation.truncate();
         let to_target = target - position;

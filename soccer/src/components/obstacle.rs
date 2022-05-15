@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
@@ -12,6 +13,13 @@ pub struct ObstacleDebug;
 pub struct Wall {
     pub extents: Vec2,
     pub facing: Vec2,
+}
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct WallQuery<'w> {
+    pub wall: &'w Wall,
+    pub transform: &'w Transform,
 }
 
 #[derive(Debug, Default, Component)]

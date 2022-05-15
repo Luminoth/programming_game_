@@ -95,7 +95,9 @@ impl Plugin for MainStatePlugin {
                         systems::team::field_player::update_physics::<BlueTeam>
                             .after(Systems::Steering)
                             .before(Systems::SteeringUpdatePhysics),
-                    ),
+                    )
+                    // everything else
+                    .with_system(systems::ball::update_physics),
             )
             // agents (fixed timestep)
             .add_system_set(
@@ -617,7 +619,8 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::GoalKeeperStates)
                             .after(Systems::TeamStates),
                     )
-                    // goals and stuff
+                    // everything else
+                    .with_system(systems::ball::update)
                     .with_system(systems::goal::update),
             )
             .add_system_set(

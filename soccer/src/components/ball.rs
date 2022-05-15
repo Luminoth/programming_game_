@@ -4,6 +4,7 @@ use bevy_inspector_egui::*;
 use rand::Rng;
 
 use crate::components::actor::*;
+use crate::components::obstacle::*;
 use crate::resources::*;
 
 use super::physics::Physical;
@@ -12,6 +13,13 @@ use super::physics::Physical;
 pub struct Ball;
 
 impl Ball {
+    pub fn test_collision_with_walls<'a, W>(&self, walls: W)
+    where
+        W: Iterator<Item = WallQueryItem<'a>>,
+    {
+        // TODO:
+    }
+
     pub fn add_noise_to_kick(
         &self,
         params: &SimulationParams,

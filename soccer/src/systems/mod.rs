@@ -1,3 +1,4 @@
+pub mod ball;
 pub mod debug;
 pub mod goal;
 pub mod messaging;

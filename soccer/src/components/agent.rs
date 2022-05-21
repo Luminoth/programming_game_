@@ -1,9 +1,10 @@
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+use bevy_inspector_egui::*;
 
 use crate::components::steering::*;
 
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Inspectable)]
 pub struct Agent;
 
 impl Agent {

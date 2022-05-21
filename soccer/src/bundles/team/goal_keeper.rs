@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::components::actor::*;
 use crate::components::obstacle::*;
 use crate::components::physics::*;
 use crate::components::steering::*;
@@ -25,6 +24,7 @@ where
     pub team: T,
 
     pub physical: Physical,
+    pub bounds: BoundingCircle,
 
     #[bundle]
     pub actor: ActorBundle,
@@ -69,14 +69,13 @@ where
                 max_turn_rate: params.player_max_turn_rate,
                 ..Default::default()
             },
+            bounds: BoundingCircle::from_radius(PLAYER_RADIUS),
             actor: ActorBundle {
-                actor: Actor {
-                    bounding_radius: PLAYER_RADIUS,
-                },
+                name: Name::new(format!("#{} {:?} Goal Keeper", number, team_color)),
                 transform: TransformBundle::from_transform(Transform::from_translation(
                     position.extend(PLAYER_SORT),
                 )),
-                name: Name::new(format!("#{} {:?} Goal Keeper", number, team_color)),
+                ..Default::default()
             },
             ..Default::default()
         });

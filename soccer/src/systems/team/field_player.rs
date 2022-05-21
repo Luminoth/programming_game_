@@ -3,7 +3,6 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
@@ -51,15 +50,18 @@ pub fn find_support_event_handler<T>(
     teammates: Query<(Entity, FieldPlayerQuery<T>, PhysicalQuery)>,
     supporting: Query<SupportingPlayerQuery<T>>,
     controlling: Query<(ControllingPlayerQuery<T>, &Transform)>,
-    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
-    ball: Query<(&Actor, &Physical), With<Ball>>,
-    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
+    opponents: Query<(PhysicalQuery, &BoundingCircle), (With<SoccerPlayer>, Without<T>)>,
+    ball: Query<(&Physical, &BoundingCircle), With<Ball>>,
+    opponent_goal: Query<GoalQuery, Without<T>>,
 ) where
     T: TeamColorMarker,
 {
     let params = params_assets.get(&params_asset.handle).unwrap();
 
     let (mut team, mut support_calculator) = team.single_mut();
+
+    let ball = ball.single();
+    let opponent_goal = opponent_goal.single();
 
     // TODO: if more than one event is directed
     // at a single player then this will over-call find_support()
@@ -79,8 +81,8 @@ pub fn find_support_event_handler<T>(
                 || opponents.iter(),
                 supporting.optional_single().map(|x| x.entity),
                 (controlling.0.entity, controlling.1),
-                ball.single(),
-                opponent_goal.single(),
+                ball,
+                &opponent_goal,
             );
         }
     }
@@ -360,16 +362,16 @@ pub fn Wait_execute<T>(
     controller: Query<(ControllingPlayerQuery<T>, &Transform, Option<&GoalKeeper>)>,
     closest: Query<ClosestPlayerQuery<T>>,
     receiving: Query<ReceivingPlayerQuery<T>>,
-    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
-    ball: Query<(&Actor, PhysicalQuery), With<Ball>>,
-    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
+    opponents: Query<(PhysicalQuery, &BoundingCircle), (With<SoccerPlayer>, Without<T>)>,
+    ball: Query<(PhysicalQuery, &BoundingCircle), With<Ball>>,
+    opponent_goal: Query<GoalQuery, Without<T>>,
 ) where
     T: TeamColorMarker,
 {
     let params = params_assets.get(&params_asset.handle).unwrap();
 
     let ball = ball.single();
-    let ball_position = ball.1.transform.translation.truncate();
+    let ball_position = ball.0.transform.translation.truncate();
 
     for (entity, mut field_player, mut physical, arrive) in field_players.iter_mut() {
         // get back to our home if we got bumped off it
@@ -416,7 +418,7 @@ pub fn Wait_execute<T>(
                     entity,
                     physical.transform,
                     opponents.iter(),
-                    (ball.0, ball.1.physical),
+                    (ball.0.physical, ball.1),
                     &mut player_message_dispatcher,
                 );
                 continue;
@@ -454,7 +456,7 @@ pub fn ReceiveBall_enter<T>(
     controlling: Query<ControllingPlayerQuery<T>>,
     receiving: Query<ReceivingPlayerQuery<T>>,
     opponents: Query<&Transform, (With<SoccerPlayer>, Without<T>)>,
-    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
+    opponent_goal: Query<GoalQuery, Without<T>>,
     ball: Query<Entity, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -482,9 +484,11 @@ pub fn ReceiveBall_enter<T>(
             .insert(ReceivingPlayer)
             .insert(ControllingPlayer);
 
+        let opponent_goal = opponent_goal.single();
+
         if field_player
             .player
-            .is_in_hot_region(transform, opponent_goal.single(), &pitch)
+            .is_in_hot_region(transform, &opponent_goal, &pitch)
             && rng.gen::<f32>() < params.chance_of_using_arrive_type_receive_behavior
             && !field_player.player.is_opponent_within_radius::<T, _>(
                 transform,
@@ -620,7 +624,12 @@ pub fn KickBall_execute<T>(
     mut message_dispatcher: ResMut<FieldPlayerMessageDispatcher>,
     mut find_support_events: EventWriter<FindSupportEvent>,
     mut field_player: Query<
-        (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
+        (
+            Entity,
+            FieldPlayerQueryMut<T>,
+            PhysicalQuery,
+            &BoundingCircle,
+        ),
         (With<FieldPlayerStateKickBallExecute>, Without<Ball>),
     >,
     team: Query<SoccerTeamQuery<T>>,
@@ -630,16 +639,16 @@ pub fn KickBall_execute<T>(
     >,
     receiving: Query<ReceivingPlayerQuery<T>>,
     controlling_goal_keeper: Query<ControllingPlayerQuery<T>, With<GoalKeeper>>,
-    mut ball: Query<(&Ball, &Actor, PhysicalQueryMut), Without<SoccerPlayer>>,
-    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
-    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+    mut ball: Query<(&Ball, PhysicalQueryMut, &BoundingCircle), Without<SoccerPlayer>>,
+    opponent_goal: Query<GoalQuery, Without<T>>,
+    opponents: Query<(PhysicalQuery, &BoundingCircle), (With<SoccerPlayer>, Without<T>)>,
 ) where
     T: TeamColorMarker,
 {
-    if let Some((entity, mut field_player, physical)) = field_player.optional_single_mut() {
+    if let Some((entity, mut field_player, physical, bounds)) = field_player.optional_single_mut() {
         let params = params_assets.get(&params_asset.handle).unwrap();
 
-        let (ball, ball_actor, mut ball_physical) = ball.single_mut();
+        let (ball, mut ball_physical, ball_bounds) = ball.single_mut();
         let ball_position = ball_physical.transform.translation.truncate();
         let position = physical.transform.translation.truncate();
 
@@ -650,7 +659,7 @@ pub fn KickBall_execute<T>(
         let controller_is_goalkeeper = controlling_goal_keeper.optional_single().is_some();
 
         // can't kick the ball if there's a receiver, or the goal keeper has it, or it's behind us
-        if have_receiver || controller_is_goalkeeper || dot < -field_player.actor.bounding_radius {
+        if have_receiver || controller_is_goalkeeper || dot < -bounds.radius {
             info!(
                 "{} have a receiver already ({}) / goalie has ball ({}) / ball behind player ({})",
                 field_player.name, have_receiver, controller_is_goalkeeper, dot
@@ -674,8 +683,8 @@ pub fn KickBall_execute<T>(
         let (mut ball_target, can_shoot) = team.team.can_shoot::<T, _, _>(
             params,
             ball_position,
-            opponent_goal,
-            (ball_actor, &ball_physical.physical),
+            &opponent_goal,
+            (&ball_physical.physical, ball_bounds),
             || opponents.iter(),
             power,
         );
@@ -707,8 +716,12 @@ pub fn KickBall_execute<T>(
                 (entity, physical.transform),
                 teammates.iter(),
                 || opponents.iter(),
-                opponent_goal,
-                (ball_actor, &ball_physical.physical, ball_physical.transform),
+                &opponent_goal,
+                (
+                    &ball_physical.physical,
+                    ball_physical.transform,
+                    ball_bounds,
+                ),
                 power,
                 params.min_pass_distance,
             );
@@ -771,15 +784,20 @@ pub fn Dribble_execute<T>(
     params_asset: Res<SimulationParamsAsset>,
     params_assets: Res<Assets<SimulationParams>>,
     mut field_player: Query<
-        (Entity, FieldPlayerQueryMut<T>, PhysicalQuery),
+        (
+            Entity,
+            FieldPlayerQueryMut<T>,
+            PhysicalQuery,
+            &BoundingCircle,
+        ),
         With<FieldPlayerStateDribbleExecute>,
     >,
-    goal: Query<(&Goal, &Transform), With<T>>,
+    goal: Query<TeamGoalQuery<T>>,
     mut ball: Query<(&Ball, PhysicalQueryMut), Without<SoccerPlayer>>,
 ) where
     T: TeamColorMarker,
 {
-    if let Some((entity, mut field_player, physical)) = field_player.optional_single_mut() {
+    if let Some((entity, mut field_player, physical, bounds)) = field_player.optional_single_mut() {
         let params = params_assets.get(&params_asset.handle).unwrap();
 
         let goal = goal.single();
@@ -787,10 +805,10 @@ pub fn Dribble_execute<T>(
 
         // if the ball is between the player and their own goal
         // then we have to bring the ball around to the other side
-        let dot = goal.0.facing.dot(physical.physical.heading);
-        if dot < -field_player.actor.bounding_radius {
+        let dot = goal.goal.facing.dot(physical.physical.heading);
+        if dot < -bounds.radius {
             let angle =
-                -std::f32::consts::FRAC_PI_4 * goal.0.facing.sign(physical.physical.heading);
+                -std::f32::consts::FRAC_PI_4 * goal.goal.facing.sign(physical.physical.heading);
             let direction = rotate_around_origin(physical.physical.heading, angle);
 
             let kicking_force = 0.8;
@@ -798,7 +816,7 @@ pub fn Dribble_execute<T>(
         } else {
             ball.kick(
                 &mut ball_physical.physical,
-                goal.0.facing,
+                goal.goal.facing,
                 params.max_dribble_force,
             );
         }
@@ -841,9 +859,9 @@ pub fn SupportAttacker_execute<T>(
     >,
     controller: Query<(ControllingPlayerQuery<T>, &Transform)>,
     team: Query<SoccerTeamQuery<T>>,
-    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
-    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
-    ball: Query<(&Actor, PhysicalQuery), (With<Ball>, Without<SoccerPlayer>)>,
+    opponent_goal: Query<GoalQuery, Without<T>>,
+    opponents: Query<(PhysicalQuery, &BoundingCircle), (With<SoccerPlayer>, Without<T>)>,
+    ball: Query<(PhysicalQuery, &BoundingCircle), (With<Ball>, Without<SoccerPlayer>)>,
 ) where
     T: TeamColorMarker,
 {
@@ -870,7 +888,7 @@ pub fn SupportAttacker_execute<T>(
             field_player.agent.arrive_on(&mut commands, entity);
         }
 
-        let (ball_actor, ball_physical) = ball.single();
+        let (ball_physical, ball_bounds) = ball.single();
         let ball_position = ball_physical.transform.translation.truncate();
 
         let opponent_goal = opponent_goal.single();
@@ -879,8 +897,8 @@ pub fn SupportAttacker_execute<T>(
         let (_, can_shoot) = team.team.can_shoot::<T, _, _>(
             params,
             ball_position,
-            opponent_goal,
-            (ball_actor, ball_physical.physical),
+            &opponent_goal,
+            (ball_physical.physical, ball_bounds),
             || opponents.iter(),
             params.max_shooting_force,
         );
@@ -892,7 +910,7 @@ pub fn SupportAttacker_execute<T>(
                 entity,
                 physical.transform,
                 opponents.iter(),
-                (ball_actor, ball_physical.physical),
+                (ball_physical.physical, ball_bounds),
                 &mut player_message_dispatcher,
             );
         }
@@ -924,7 +942,7 @@ pub fn SupportAttacker_execute<T>(
                     entity,
                     physical.transform,
                     opponents.iter(),
-                    (ball_actor, ball_physical.physical),
+                    (ball_physical.physical, ball_bounds),
                     &mut player_message_dispatcher,
                 );
             }

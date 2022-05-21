@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::components::goal::*;
+use crate::components::physics::*;
 use crate::components::team::*;
 use crate::game::team::TeamColor;
 use crate::game::GOAL_BAR_WIDTH;
@@ -16,6 +17,8 @@ where
 {
     pub goal: Goal,
     pub team: T,
+
+    pub bounds: BoundingRect,
 
     #[bundle]
     pub transform: TransformBundle,
@@ -46,6 +49,11 @@ where
         let top = Vec2::new(score_center.x, score_center.y + goal_half_extents.y);
         let bottom = Vec2::new(score_center.x, score_center.y - goal_half_extents.y);
 
+        info!(
+            "goal scoring points for team {:?}: center={}, top={}, bottom={}",
+            team_color, score_center, top, bottom
+        );
+
         let mut bundle = commands.spawn_bundle(GoalBundle {
             goal: Goal {
                 facing: sign * Vec2::X,
@@ -56,6 +64,14 @@ where
                 ..Default::default()
             },
             team,
+            bounds: BoundingRect {
+                rect: Rect {
+                    left: score_center.x - goal_half_extents.x,
+                    right: score_center.x + goal_half_extents.x,
+                    top: score_center.y + goal_half_extents.y,
+                    bottom: score_center.y - goal_half_extents.y,
+                },
+            },
             transform: TransformBundle::from_transform(Transform::from_translation(
                 position.extend(GOAL_SORT),
             )),

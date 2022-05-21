@@ -174,3 +174,58 @@ pub struct PhysicalQueryUpdateMut<'w> {
     pub transform: &'w mut Transform,
     pub physical: &'w mut Physical,
 }
+
+#[derive(Debug, Component, Inspectable)]
+pub struct BoundingRect {
+    pub rect: Rect<f32>,
+}
+
+impl Default for BoundingRect {
+    fn default() -> Self {
+        Self {
+            rect: Rect {
+                left: -0.5,
+                right: 0.5,
+                top: 0.5,
+                bottom: -0.5,
+            },
+        }
+    }
+}
+
+impl BoundingRect {
+    pub fn contains(&self, transform: &Transform, point: Vec2) -> bool {
+        self.rect.contains(transform, point)
+    }
+}
+
+#[derive(Debug, Component, Inspectable)]
+pub struct BoundingCircle {
+    pub center: Vec2,
+    pub radius: f32,
+}
+
+impl Default for BoundingCircle {
+    fn default() -> Self {
+        Self {
+            center: Vec2::default(),
+            radius: 1.0,
+        }
+    }
+}
+
+impl BoundingCircle {
+    pub fn from_radius(radius: f32) -> Self {
+        Self {
+            radius,
+            ..Default::default()
+        }
+    }
+
+    pub fn contains(&self, transform: &Transform, point: Vec2) -> bool {
+        let center = transform.translation.truncate() + self.center;
+
+        let d = center.distance_squared(point);
+        d < self.radius * self.radius
+    }
+}

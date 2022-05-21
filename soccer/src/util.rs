@@ -91,6 +91,23 @@ impl Vec2Utils for Vec2 {
     }
 }
 
+pub trait RectUtils {
+    fn contains(&self, transform: &Transform, point: Vec2) -> bool;
+}
+
+impl RectUtils for Rect<f32> {
+    fn contains(&self, transform: &Transform, point: Vec2) -> bool {
+        let center = transform.translation.truncate();
+
+        let left = center.x + self.left;
+        let right = center.x + self.right;
+        let bottom = center.y + self.bottom;
+        let top = center.y + self.top;
+
+        point.x > left && point.x < right && point.y > bottom && point.y < top
+    }
+}
+
 pub trait TransformUtils {
     fn set_world_translation(&mut self, global_transform: &GlobalTransform, world_position: Vec3);
 }

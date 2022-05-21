@@ -11,7 +11,6 @@ use bevy::prelude::*;
 use bevy_inspector_egui::*;
 use rand::Rng;
 
-use crate::components::actor::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
 use crate::game::team::*;
@@ -122,12 +121,12 @@ impl SoccerTeam {
         opponents: F,
         controller_transform: &Transform,
         have_support: bool,
-        ball: (&Actor, &Physical),
-        opponent_goal: (&Goal, &Transform),
+        ball: (&Physical, &BoundingCircle),
+        opponent_goal: &GoalQueryItem,
     ) where
         T: TeamColorMarker,
         F: Fn() -> O + Copy,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         info!(
             "updating support spot for controlling team {:?}",
@@ -197,12 +196,12 @@ impl SoccerTeam {
         target: Vec2,
         receiver: Option<&Transform>,
         opponents: O,
-        ball: (&Actor, &Physical),
+        ball: (&Physical, &BoundingCircle),
         passing_force: f32,
     ) -> bool
     where
         T: TeamColorMarker,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         for opponent in opponents {
             if !self.is_pass_safe_from_opponent(
@@ -227,11 +226,11 @@ impl SoccerTeam {
         from: Vec2,
         target: Vec2,
         receiver: Option<&Transform>,
-        opponent: (&Actor, PhysicalQueryItem),
-        ball: (&Actor, &Physical),
+        opponent: (PhysicalQueryItem, &BoundingCircle),
+        ball: (&Physical, &BoundingCircle),
         passing_force: f32,
     ) -> bool {
-        let opponent_position = opponent.1.transform.translation.truncate();
+        let opponent_position = opponent.0.transform.translation.truncate();
 
         let to_target = target - from;
         let to_target_norm = to_target.normalize_or_zero();
@@ -262,7 +261,7 @@ impl SoccerTeam {
             }
         }
 
-        let time_for_ball = ball.1.time_to_cover_distance(
+        let time_for_ball = ball.0.time_to_cover_distance(
             params,
             Vec2::ZERO,
             Vec2::new(local_pos_opp.x, 0.0),
@@ -270,9 +269,8 @@ impl SoccerTeam {
         );
 
         // can the opponent intercept the ball in flight?
-        let reach = opponent.1.physical.max_speed * time_for_ball
-            + ball.0.bounding_radius
-            + opponent.0.bounding_radius;
+        let reach =
+            opponent.0.physical.max_speed * time_for_ball + ball.1.radius + opponent.1.radius;
         local_pos_opp.y.abs() >= reach
     }
 
@@ -285,14 +283,14 @@ impl SoccerTeam {
         opponents: F,
         controller: (Entity, &Transform),
         have_support: bool,
-        ball: (&Actor, &Physical),
-        opponent_goal: (&Goal, &Transform),
+        ball: (&Physical, &BoundingCircle),
+        opponent_goal: &GoalQueryItem,
     ) -> Option<Entity>
     where
         T: TeamColorMarker,
         M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
         F: Fn() -> O + Copy,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         info!("finding supporting attacker");
 
@@ -337,21 +335,21 @@ impl SoccerTeam {
         &self,
         params: &SimulationParams,
         from: Vec2,
-        opponent_goal: (&Goal, &Transform),
-        ball: (&Actor, &Physical),
+        opponent_goal: &GoalQueryItem,
+        ball: (&Physical, &BoundingCircle),
         opponents: F,
         power: f32,
     ) -> (Vec2, bool)
     where
         T: TeamColorMarker,
         F: Fn() -> O,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         let mut rng = rand::thread_rng();
 
-        let top = opponent_goal.0.get_top(opponent_goal.1);
-        let bottom = opponent_goal.0.get_bottom(opponent_goal.1);
-        let center = opponent_goal.0.get_score_center(opponent_goal.1);
+        let top = opponent_goal.goal.get_top(opponent_goal.transform);
+        let bottom = opponent_goal.goal.get_bottom(opponent_goal.transform);
+        let center = opponent_goal.goal.get_score_center(opponent_goal.transform);
 
         let mut target = Vec2::ZERO;
 
@@ -359,12 +357,12 @@ impl SoccerTeam {
         while num_attempts > 0 {
             target = center;
 
-            let min_y = bottom.y + ball.0.bounding_radius;
-            let max_y = top.y - ball.0.bounding_radius;
+            let min_y = bottom.y + ball.1.radius;
+            let max_y = top.y - ball.1.radius;
 
             target.y = rng.gen_range(min_y..=max_y);
 
-            let time = ball.1.time_to_cover_distance(params, from, target, power);
+            let time = ball.0.time_to_cover_distance(params, from, target, power);
             if time >= 0.0
                 && self.is_pass_safe_from_all_opponents::<T, O>(
                     params,
@@ -391,8 +389,8 @@ impl SoccerTeam {
         passer: (Entity, &Transform),
         teammates: M,
         opponents: F,
-        opponent_goal: (&Goal, &Transform),
-        ball: (&Actor, &Physical, &Transform),
+        opponent_goal: &GoalQueryItem,
+        ball: (&Physical, &Transform, &BoundingCircle),
         power: f32,
         min_passing_distance: f32,
     ) -> (Option<Entity>, Vec2)
@@ -400,10 +398,10 @@ impl SoccerTeam {
         T: TeamColorMarker,
         M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
         F: Fn() -> O + Copy,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         let passer_position = passer.1.translation.truncate();
-        let opponent_goal_center = opponent_goal.0.get_score_center(opponent_goal.1);
+        let opponent_goal_center = opponent_goal.goal.get_score_center(opponent_goal.transform);
         let min_passing_distance_squared = min_passing_distance * min_passing_distance;
 
         let mut closest_goal = f32::MAX;
@@ -445,21 +443,21 @@ impl SoccerTeam {
         params: &SimulationParams,
         receiver: &PhysicalQueryItem,
         opponents: F,
-        opponent_goal: (&Goal, &Transform),
-        ball: (&Actor, &Physical, &Transform),
+        opponent_goal: &GoalQueryItem,
+        ball: (&Physical, &Transform, &BoundingCircle),
         power: f32,
     ) -> Option<Vec2>
     where
         T: TeamColorMarker,
         F: Fn() -> O + Copy,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         let receiver_position = receiver.transform.translation.truncate();
-        let opponent_goal_center = opponent_goal.0.get_score_center(opponent_goal.1);
-        let ball_position = ball.2.translation.truncate();
+        let opponent_goal_center = opponent_goal.goal.get_score_center(opponent_goal.transform);
+        let ball_position = ball.1.translation.truncate();
 
         let time = ball
-            .1
+            .0
             .time_to_cover_distance(params, ball_position, receiver_position, power);
         if time < 0.0 {
             return None;
@@ -488,7 +486,7 @@ impl SoccerTeam {
                     pass,
                     Some(receiver.transform),
                     opponents(),
-                    (ball.0, ball.1),
+                    (ball.0, ball.2),
                     power,
                 )
             {
@@ -508,11 +506,11 @@ impl SoccerTeam {
         receiver: Entity,
         receiver_transform: &Transform,
         opponents: O,
-        ball: (&Actor, &Physical),
+        ball: (&Physical, &BoundingCircle),
         player_message_dispatcher: &mut FieldPlayerMessageDispatcher,
     ) where
         T: TeamColorMarker,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         let controller_position = controller_transform.translation.truncate();
         let receiver_position = receiver_transform.translation.truncate();

@@ -2,7 +2,6 @@
 
 use bevy::prelude::*;
 
-use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
@@ -71,7 +70,7 @@ pub fn TendGoal_enter<T>(
     params_asset: Res<SimulationParamsAsset>,
     params_assets: ResMut<Assets<SimulationParams>>,
     mut goal_keeper: Query<(Entity, GoalKeeperQueryMut<T>), With<GoalKeeperStateTendGoalEnter>>,
-    goal: Query<(&Goal, &Transform), With<T>>,
+    goal: Query<TeamGoalQuery<T>>,
     ball: Query<(Entity, &Transform), With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -79,6 +78,7 @@ pub fn TendGoal_enter<T>(
     let params = params_assets.get(&params_asset.handle).unwrap();
 
     if let Some((entity, mut goal_keeper)) = goal_keeper.optional_single_mut() {
+        let goal = goal.single();
         let (ball, ball_transform) = ball.single();
 
         goal_keeper.agent.interpose_on(
@@ -88,11 +88,10 @@ pub fn TendGoal_enter<T>(
             params.goal_keeper_tending_distance,
         );
 
-        goal_keeper.steering.target = goal_keeper.goal_keeper.get_rear_interpose_target(
-            params,
-            goal.single(),
-            ball_transform,
-        );
+        goal_keeper.steering.target =
+            goal_keeper
+                .goal_keeper
+                .get_rear_interpose_target(params, &goal, ball_transform);
 
         info!("{} enters tend goal state", goal_keeper.name);
     }
@@ -106,7 +105,7 @@ pub fn TendGoal_execute<T>(
         (Entity, GoalKeeperQueryMut<T>, PhysicalQuery),
         (With<GoalKeeperStateTendGoalExecute>, Without<Ball>),
     >,
-    goal: Query<(&Goal, &Transform), With<T>>,
+    goal: Query<TeamGoalQuery<T>>,
     mut ball: Query<PhysicalQueryMut, With<Ball>>,
     controlling: Query<ControllingPlayerQuery<T>>,
 ) where
@@ -121,7 +120,7 @@ pub fn TendGoal_execute<T>(
         // update interpose target as the ball moves
         goal_keeper.steering.target = goal_keeper.goal_keeper.get_rear_interpose_target(
             params,
-            goal,
+            &goal,
             ball_physical.transform,
         );
 
@@ -154,7 +153,7 @@ pub fn TendGoal_execute<T>(
         // if the ball is close, move out to try and intercept it
         if goal_keeper.goal_keeper.is_ball_within_range_for_intercept(
             params,
-            goal,
+            &goal,
             ball_physical.transform,
         ) {
             goal_keeper.state_machine.change_state(
@@ -172,7 +171,7 @@ pub fn TendGoal_execute<T>(
         if goal_keeper.goal_keeper.is_too_far_from_goal_mouth(
             params,
             physical.transform,
-            goal,
+            &goal,
             ball_physical.transform,
         ) && is_team_controlling
         {
@@ -281,7 +280,7 @@ pub fn InterceptBall_execute<T>(
     >,
     controlling: Query<ControllingPlayerQuery<T>>,
     closest_opponent: Query<&Transform, (With<ClosestPlayer>, Without<T>)>,
-    goal: Query<(&Goal, &Transform), With<T>>,
+    goal: Query<TeamGoalQuery<T>>,
     mut ball: Query<PhysicalQueryMut, With<Ball>>,
 ) where
     T: TeamColorMarker,
@@ -313,7 +312,7 @@ pub fn InterceptBall_execute<T>(
         if goal_keeper.goal_keeper.is_too_far_from_goal_mouth(
             params,
             physical.transform,
-            goal,
+            &goal,
             ball_physical.transform,
         ) && !is_closest_player
         {
@@ -406,9 +405,9 @@ pub fn PutBallBackInPlay_execute<T>(
         (Entity, FieldPlayerQuery<T>, PhysicalQuery),
         Without<GoalKeeperStatePutBallBackInPlayExecute>,
     >,
-    mut ball: Query<(&Ball, &Actor, PhysicalQueryMut), Without<SoccerPlayer>>,
-    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
-    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+    mut ball: Query<(&Ball, PhysicalQueryMut, &BoundingCircle), Without<SoccerPlayer>>,
+    opponent_goal: Query<GoalQuery, Without<T>>,
+    opponents: Query<(PhysicalQuery, &BoundingCircle), (With<SoccerPlayer>, Without<T>)>,
 ) where
     T: TeamColorMarker,
 {
@@ -418,7 +417,7 @@ pub fn PutBallBackInPlay_execute<T>(
         let team = team.single();
         let opponent_goal = opponent_goal.single();
 
-        let (ball, ball_actor, mut ball_physical) = ball.single_mut();
+        let (ball, mut ball_physical, ball_bounds) = ball.single_mut();
         let ball_position = ball_physical.transform.translation.truncate();
 
         // try to find a safe player to pass to
@@ -427,8 +426,12 @@ pub fn PutBallBackInPlay_execute<T>(
             (entity, physical.transform),
             teammates.iter(),
             || opponents.iter(),
-            opponent_goal,
-            (ball_actor, &ball_physical.physical, ball_physical.transform),
+            &opponent_goal,
+            (
+                &ball_physical.physical,
+                ball_physical.transform,
+                ball_bounds,
+            ),
             params.max_passing_force,
             params.goal_keeper_min_pass_distance,
         );

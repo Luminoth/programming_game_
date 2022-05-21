@@ -2,6 +2,7 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::*;
 
+use crate::components::physics::*;
 use crate::components::team::*;
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -30,17 +31,14 @@ impl Goal {
         position + self.score_center
     }
 
-    pub fn check_for_score(&self, transform: &Transform, ball_transform: &Transform) -> bool {
-        let top = self.get_top(transform);
-        let bottom = self.get_bottom(transform);
-
+    pub fn check_for_score(
+        &self,
+        transform: &Transform,
+        bounds: &BoundingRect,
+        ball_transform: &Transform,
+    ) -> bool {
         let ball_position = ball_transform.translation.truncate();
-        // TODO: this is not correct at all
-        /*if ball_position.x > top.x && ball_position.y < top.y && ball_position.y > bottom.y {
-            return true;
-        }*/
-
-        false
+        bounds.contains(transform, ball_position)
     }
 }
 
@@ -49,12 +47,19 @@ pub struct GoalDebug;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct GoalQuery<'w, T>
+pub struct TeamGoalQuery<'w, T>
 where
     T: TeamColorMarker,
 {
     pub goal: &'w Goal,
     pub team: &'w T,
 
+    pub transform: &'w Transform,
+}
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct GoalQuery<'w> {
+    pub goal: &'w Goal,
     pub transform: &'w Transform,
 }

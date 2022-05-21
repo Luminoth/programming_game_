@@ -4,9 +4,7 @@ use bevy_inspector_egui::prelude::*;
 
 // rename of the book's BaseGameEntity
 #[derive(Debug, Default, Component, Inspectable)]
-pub struct Actor {
-    pub bounding_radius: f32,
-}
+pub struct Actor;
 
 // this doesn't include a transform because
 // most of the time the PhysicalQuery captures that

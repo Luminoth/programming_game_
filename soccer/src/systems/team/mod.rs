@@ -5,7 +5,6 @@ pub mod goal_keeper;
 
 use bevy::prelude::*;
 
-use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::goal::*;
 use crate::components::physics::*;
@@ -201,16 +200,19 @@ pub fn Attacking_execute<T>(
         (Entity, SoccerTeamQueryMut<T>, &mut SupportSpotCalculator),
         With<SoccerTeamStateAttackingExecute>,
     >,
-    opponents: Query<(&Actor, PhysicalQuery), (With<SoccerPlayer>, Without<T>)>,
+    opponents: Query<(PhysicalQuery, &BoundingCircle), (With<SoccerPlayer>, Without<T>)>,
     controller: Query<&Transform, (With<T>, With<ControllingPlayer>)>,
     support: Query<SupportingPlayerQuery<T>>,
-    ball: Query<(&Actor, &Physical), With<Ball>>,
-    opponent_goal: Query<(&Goal, &Transform), Without<T>>,
+    ball: Query<(&Physical, &BoundingCircle), With<Ball>>,
+    opponent_goal: Query<GoalQuery, Without<T>>,
 ) where
     T: TeamColorMarker,
 {
     if let Some((entity, mut team, mut support_calculator)) = teams.optional_single_mut() {
         let params = params_assets.get(&params_asset.handle).unwrap();
+
+        let ball = ball.single();
+        let opponent_goal = opponent_goal.single();
 
         if let Some(controller_transform) = controller.optional_single() {
             team.team.determine_best_supporting_position(
@@ -220,8 +222,8 @@ pub fn Attacking_execute<T>(
                 || opponents.iter(),
                 controller_transform,
                 support.optional_single().is_some(),
-                ball.single(),
-                opponent_goal.single(),
+                ball,
+                &opponent_goal,
             );
         } else {
             team.state_machine

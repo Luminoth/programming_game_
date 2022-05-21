@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::components::actor::*;
 use crate::components::ball::*;
 use crate::components::physics::*;
 use crate::game::BALL_RADIUS;
@@ -14,6 +13,7 @@ use super::actor::*;
 pub struct BallBundle {
     pub ball: Ball,
     pub physical: Physical,
+    pub bounds: BoundingCircle,
 
     #[bundle]
     pub actor: ActorBundle,
@@ -30,14 +30,13 @@ impl BallBundle {
                 //max_force: params.ball_max_force,
                 ..Default::default()
             },
+            bounds: BoundingCircle::from_radius(BALL_RADIUS),
             actor: ActorBundle {
-                actor: Actor {
-                    bounding_radius: BALL_RADIUS,
-                },
                 name: Name::new("Ball"),
                 transform: TransformBundle::from_transform(Transform::from_translation(
                     position.extend(BALL_SORT),
                 )),
+                ..Default::default()
             },
             ..Default::default()
         });

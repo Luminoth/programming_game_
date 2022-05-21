@@ -33,40 +33,49 @@ impl GoalKeeper {
         position.distance_squared(ball_position) < params.keeper_in_ball_range_squared
     }
 
-    pub fn is_ball_within_range_for_intercept(
+    pub fn is_ball_within_range_for_intercept<T>(
         &self,
         params: &SimulationParams,
-        goal: (&Goal, &Transform),
+        goal: &TeamGoalQueryItem<T>,
         ball_transform: &Transform,
-    ) -> bool {
+    ) -> bool
+    where
+        T: TeamColorMarker,
+    {
         let ball_position = ball_transform.translation.truncate();
-        goal.0
-            .get_score_center(goal.1)
+        goal.goal
+            .get_score_center(goal.transform)
             .distance_squared(ball_position)
             <= params.goal_keeper_intercept_range_squared
     }
 
-    pub fn is_too_far_from_goal_mouth(
+    pub fn is_too_far_from_goal_mouth<T>(
         &self,
         params: &SimulationParams,
         transform: &Transform,
-        goal: (&Goal, &Transform),
+        goal: &TeamGoalQueryItem<T>,
         ball_transform: &Transform,
-    ) -> bool {
+    ) -> bool
+    where
+        T: TeamColorMarker,
+    {
         let position = transform.translation.truncate();
         position.distance_squared(self.get_rear_interpose_target(params, goal, ball_transform))
             > params.goal_keeper_intercept_range_squared
     }
 
-    pub fn get_rear_interpose_target(
+    pub fn get_rear_interpose_target<T>(
         &self,
         params: &SimulationParams,
-        goal: (&Goal, &Transform),
+        goal: &TeamGoalQueryItem<T>,
         ball_transform: &Transform,
-    ) -> Vec2 {
+    ) -> Vec2
+    where
+        T: TeamColorMarker,
+    {
         let ball_position = ball_transform.translation.truncate();
 
-        let target_x = goal.0.get_score_center(goal.1).x;
+        let target_x = goal.goal.get_score_center(goal.transform).x;
         let target_y = params.goal_extents.y * 0.5
             + (ball_position.y * params.goal_extents.x) / params.pitch_extents.y;
 

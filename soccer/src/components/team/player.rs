@@ -28,11 +28,11 @@ impl SoccerPlayer {
     pub fn is_in_hot_region(
         &self,
         transform: &Transform,
-        opponent_goal: (&Goal, &Transform),
+        opponent_goal: &GoalQueryItem,
         pitch: &Pitch,
     ) -> bool {
         let position = transform.translation.truncate();
-        let opponent_goal_center = opponent_goal.0.get_score_center(opponent_goal.1);
+        let opponent_goal_center = opponent_goal.goal.get_score_center(opponent_goal.transform);
 
         (position.y - opponent_goal_center.y).abs() < pitch.length() / 3.0
     }
@@ -78,11 +78,11 @@ impl SoccerPlayer {
         opponents: O,
     ) -> bool
     where
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         let position = transform.translation.truncate();
         for opponent in opponents {
-            let opponent_position = opponent.1.transform.translation.truncate();
+            let opponent_position = opponent.0.transform.translation.truncate();
 
             // if the distance to the opponent is less than
             // our comfort range and they're in front of us
@@ -108,13 +108,13 @@ impl SoccerPlayer {
         opponents: F,
         supporting: Option<Entity>,
         controller: (Entity, &Transform),
-        ball: (&Actor, &Physical),
-        opponent_goal: (&Goal, &Transform),
+        ball: (&Physical, &BoundingCircle),
+        opponent_goal: &GoalQueryItem,
     ) where
         T: TeamColorMarker,
         M: Iterator<Item = (Entity, FieldPlayerQueryItem<'a, T>, PhysicalQueryItem<'a>)>,
         F: Fn() -> O + Copy,
-        O: Iterator<Item = (&'a Actor, PhysicalQueryItem<'a>)>,
+        O: Iterator<Item = (PhysicalQueryItem<'a>, &'a BoundingCircle)>,
     {
         info!("looking for support");
 

@@ -7,4 +7,5 @@ members = [
     "west-world-bevy",
     "soccer",
     "state-test",
+    "lua-tour",
 ]

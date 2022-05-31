@@ -39,14 +39,14 @@ fn book_example() -> anyhow::Result<()> {
     let lua = Lua::new();
 
     lua.load(chunk! {
-        name = "Bilbo Baggins"
+        local name = "Bilbo Baggins"
 
-        print("name = "..name)
+        print("name = " .. name)
 
-        x,y,z = 1,2
+        local x,y,z = 1,2
         print(x,y,z)
 
-        x,y,z = 1,2,3,4,5
+        local x,y,z = 1,2,3,4,5
         print(x,y,z)
     })
     .exec()?;

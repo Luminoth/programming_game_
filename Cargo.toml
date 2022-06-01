@@ -9,4 +9,5 @@ members = [
     "state-test",
     "lua-tour",
     "rock-paper-scissors",
+    "west-world-lua",
 ]

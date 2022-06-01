@@ -3629,6 +3629,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "west-world-lua"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "mlua",
+]
+
+[[package]]
 name = "wgpu"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

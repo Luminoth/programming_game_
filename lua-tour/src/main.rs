@@ -1,5 +1,5 @@
 use mlua::prelude::*;
-use mlua::{chunk, MetaMethod, UserData, UserDataMethods};
+use mlua::{chunk, UserData, UserDataMethods};
 
 fn main() -> anyhow::Result<()> {
     println!("Basic Example:");

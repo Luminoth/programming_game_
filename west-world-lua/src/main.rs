@@ -9,9 +9,9 @@ fn main() -> anyhow::Result<()> {
 
     lua.load(include_str!("../state_machine.lua")).exec()?;
 
-    let bob = miner::Miner::new("Bob", &lua)?;
+    let bob = miner::Miner::new("Bob")?;
 
     loop {
-        bob.update()?;
+        bob.update(&lua)?;
     }
 }

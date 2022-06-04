@@ -1,5 +1,5 @@
 use mlua::prelude::*;
-use mlua::{chunk, UserData, UserDataMethods};
+use mlua::{chunk, Function, UserData, UserDataMethods};
 
 fn main() -> anyhow::Result<()> {
     println!("Basic Example:");
@@ -16,6 +16,10 @@ fn main() -> anyhow::Result<()> {
 
     println!("UserData Example:");
     userdata_example()?;
+    println!();
+
+    println!("Shared UserData Example:");
+    shared_userdata_example()?;
     println!();
 
     Ok(())
@@ -114,6 +118,55 @@ fn userdata_example() -> anyhow::Result<()> {
         cat:speak();
     })
     .exec()?;
+
+    Ok(())
+}
+
+#[derive(Debug, Default, Clone)]
+struct SharedUserData {
+    val: usize,
+}
+
+impl SharedUserData {
+    fn get_val(&self) -> usize {
+        self.val
+    }
+
+    fn incr_val(&mut self) {
+        self.val += 1
+    }
+}
+
+impl UserData for SharedUserData {
+    fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("get_val", |_, this, ()| Ok(this.get_val()));
+        methods.add_method_mut("incr_val", |_, this, ()| {
+            this.incr_val();
+            Ok(())
+        });
+    }
+}
+
+// TODO: this example doesn't actually do what it's supposed to
+fn shared_userdata_example() -> anyhow::Result<()> {
+    let lua = Lua::new();
+
+    let data = SharedUserData::default();
+
+    lua.load(chunk! {
+    function incr(data)
+        print("[Lua]: Before = " .. data:get_val());
+        data:incr_val();
+        print("[Lua]: After = " .. data:get_val());
+    end
+    })
+    .exec()?;
+
+    println!("[Rust]: Before = {}", data.get_val());
+    lua.globals()
+        .get::<_, Function>("incr")?
+        .call::<_, ()>(data.clone())?;
+    println!("[Rust]: After = {}", data.get_val());
 
     Ok(())
 }

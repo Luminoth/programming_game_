@@ -36,5 +36,7 @@ pub fn teardown(mut commands: Commands, entities: Query<Entity>) {
         commands.entity(entity).despawn_recursive();
     }
 
+    commands.remove_resource::<NavGraph>();
+    commands.remove_resource::<Map>();
     commands.remove_resource::<ClearColor>();
 }

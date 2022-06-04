@@ -40,7 +40,7 @@ impl BotBundle {
         position: Vec2,
     ) -> Entity {
         let name = name.into();
-        info!("spawning bot {} at {}", name, position);
+        info!("spawning bot '{}' at {}", name, position);
 
         let mut bundle = commands.spawn_bundle(BotBundle {
             actor: ActorBundle {

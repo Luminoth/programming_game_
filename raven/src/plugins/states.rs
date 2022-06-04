@@ -6,6 +6,8 @@ use bevy::prelude::*;
 use crate::game::PHYSICS_STEP;
 use crate::states;
 use crate::states::*;
+use crate::systems;
+use crate::systems::Systems;
 
 pub struct StatesPlugins;
 
@@ -39,17 +41,20 @@ impl Plugin for MainStatePlugin {
             // physics (fixed timestep)
             .add_system_set(
                 // https://github.com/bevyengine/bevy/issues/1839
-                SystemSet::new().with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64).chain(
-                    |In(input): In<ShouldRun>, state: Res<State<GameState>>| {
-                        if state.current() == &GameState::Main {
-                            input
-                        } else {
-                            ShouldRun::No
-                        }
-                    },
-                )), /*SystemSet::on_update(GameState::Main)
+                SystemSet::new()
+                    .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64).chain(
+                        |In(input): In<ShouldRun>, state: Res<State<GameState>>| {
+                            if state.current() == &GameState::Main {
+                                input
+                            } else {
+                                ShouldRun::No
+                            }
+                        },
+                    ))
+                    /*SystemSet::on_update(GameState::Main)
                     .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))*/
-                    // everything else
+                    // physics
+                    .with_system(systems::physics::update.label(Systems::Physics)),
             )
             // per-frame systems
             .add_system_set(SystemSet::on_update(GameState::Main))

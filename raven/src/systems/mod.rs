@@ -1,4 +1,5 @@
 pub mod debug;
+pub mod physics;
 
 use bevy::prelude::*;
 

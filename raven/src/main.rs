@@ -77,8 +77,16 @@ fn main() {
         ..Default::default()
     })
     .add_plugin(WorldInspectorPlugin::new())
-        // inspectable types
-    ;
+    // inspectable types
+    .register_inspectable::<components::agent::Agent>()
+    .register_inspectable::<components::projectile::Projectile>()
+    .register_inspectable::<components::weapon::Weapon>()
+    .register_inspectable::<components::weapon::Blaster>()
+    .register_inspectable::<components::weapon::Shotgun>()
+    .register_inspectable::<components::weapon::RocketLauncher>()
+    .register_inspectable::<components::weapon::Railgun>()
+    .register_inspectable::<components::world::SpawnPoint>()
+    .register_inspectable::<components::world::Wall>();
 
     // plugins
     app.add_plugin(DebugPlugin).add_plugins(StatesPlugins);

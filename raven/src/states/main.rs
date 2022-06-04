@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
-use bevy_prototype_lyon::prelude::*;
 
+use crate::bundles::bot::BotBundle;
 use crate::components::camera::*;
 use crate::resources::game::*;
-use crate::{CAMERA_SCALE, PIXELS_TO_UNITS};
+use crate::CAMERA_SCALE;
 
 pub fn setup(mut commands: Commands) {
     debug!("entering main state");
@@ -25,20 +25,8 @@ pub fn setup(mut commands: Commands) {
     // nav
     commands.insert_resource(NavGraph);
 
-    // objects
-    commands
-        .spawn_bundle(GeometryBuilder::build_as(
-            &shapes::Rectangle {
-                extents: Vec2::new(-1.0, 1.0),
-                ..Default::default()
-            },
-            DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::CYAN),
-                outline_mode: StrokeMode::new(Color::WHITE, 1.0 * PIXELS_TO_UNITS),
-            },
-            Transform::default(),
-        ))
-        .insert(Name::new("Test Object"));
+    // spawn bots
+    BotBundle::spawn_at_position(&mut commands, "Test", Color::WHITE, Vec2::ZERO);
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

@@ -1,6 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
 
+mod bundles;
 mod components;
 mod events;
 mod game;
@@ -26,12 +27,15 @@ const WINDOW_WIDTH: f32 = 1024.0;
 const WINDOW_HEIGHT: f32 = 768.0;
 pub const ASPECT_RATIO: f32 = WINDOW_WIDTH / WINDOW_HEIGHT;
 
-const ORTHO_SIZE: f32 = 10.0; // Unity's Camera.orthographicSize (half the size of the vertical viewing volume)
+const ORTHO_SIZE: f32 = 50.0; // Unity's Camera.orthographicSize (half the size of the vertical viewing volume)
 pub const CAMERA_SCALE: f32 = ORTHO_SIZE / ASPECT_RATIO; // Bevy's OrthographicProject scale value
 
 // units to pixels conversion
 pub const UNITS_TO_PIXELS: f32 = ORTHO_SIZE * ORTHO_SIZE;
 pub const PIXELS_TO_UNITS: f32 = 1.0 / UNITS_TO_PIXELS;
+
+// sprite sorting
+pub const BOT_SORT: f32 = 2.0;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]

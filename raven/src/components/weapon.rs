@@ -12,23 +12,27 @@ const PELLET_SPEED: f32 = 25.0;
 const ROCKET_SPEED: f32 = 10.0;
 const SLUG_SPEED: f32 = 100.0;
 
-pub trait Weapon {
+pub trait Weapon: Default + Component {
+    fn name() -> &'static str;
+
     fn is_empty(&self) -> bool;
 
-    fn fire(&mut self, commands: &mut Commands, transform: &Transform, direction: Vec2);
+    fn fire(&mut self, commands: &mut Commands, position: Vec2, direction: Vec2);
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Blaster;
 
 impl Weapon for Blaster {
+    fn name() -> &'static str {
+        "Blaster"
+    }
+
     fn is_empty(&self) -> bool {
         false
     }
 
-    fn fire(&mut self, commands: &mut Commands, transform: &Transform, direction: Vec2) {
-        let position = transform.translation.truncate();
-
+    fn fire(&mut self, commands: &mut Commands, position: Vec2, direction: Vec2) {
         // TODO: offset
         ProjectileBundle::<Bolt>::spawn_at_position(commands, position, direction * BOLT_SPEED);
         ProjectileBundle::<Bolt>::spawn_at_position(commands, position, direction * BOLT_SPEED);
@@ -37,19 +41,23 @@ impl Weapon for Blaster {
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
-pub struct Shotgun;
+pub struct Shotgun {
+    ammo: usize,
+}
 
 impl Weapon for Shotgun {
-    fn is_empty(&self) -> bool {
-        false
+    fn name() -> &'static str {
+        "Shotgun"
     }
 
-    fn fire(&mut self, commands: &mut Commands, transform: &Transform, direction: Vec2) {
+    fn is_empty(&self) -> bool {
+        self.ammo < 1
+    }
+
+    fn fire(&mut self, commands: &mut Commands, position: Vec2, direction: Vec2) {
         if self.is_empty() {
             return;
         }
-
-        let position = transform.translation.truncate();
 
         // TODO: spread
         ProjectileBundle::<Pellet>::spawn_at_position(commands, position, direction * PELLET_SPEED);
@@ -62,43 +70,57 @@ impl Weapon for Shotgun {
         ProjectileBundle::<Pellet>::spawn_at_position(commands, position, direction * PELLET_SPEED);
         ProjectileBundle::<Pellet>::spawn_at_position(commands, position, direction * PELLET_SPEED);
         ProjectileBundle::<Pellet>::spawn_at_position(commands, position, direction * PELLET_SPEED);
+
+        self.ammo -= 1;
     }
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
-pub struct RocketLauncher;
+pub struct RocketLauncher {
+    ammo: usize,
+}
 
 impl Weapon for RocketLauncher {
-    fn is_empty(&self) -> bool {
-        false
+    fn name() -> &'static str {
+        "RocketLauncher"
     }
 
-    fn fire(&mut self, commands: &mut Commands, transform: &Transform, direction: Vec2) {
+    fn is_empty(&self) -> bool {
+        self.ammo < 1
+    }
+
+    fn fire(&mut self, commands: &mut Commands, position: Vec2, direction: Vec2) {
         if self.is_empty() {
             return;
         }
 
-        let position = transform.translation.truncate();
-
         ProjectileBundle::<Rocket>::spawn_at_position(commands, position, direction * ROCKET_SPEED);
+
+        self.ammo -= 1;
     }
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
-pub struct Railgun;
+pub struct Railgun {
+    ammo: usize,
+}
 
 impl Weapon for Railgun {
-    fn is_empty(&self) -> bool {
-        false
+    fn name() -> &'static str {
+        "Railgun"
     }
 
-    fn fire(&mut self, commands: &mut Commands, transform: &Transform, direction: Vec2) {
+    fn is_empty(&self) -> bool {
+        self.ammo < 1
+    }
+
+    fn fire(&mut self, commands: &mut Commands, position: Vec2, direction: Vec2) {
         if self.is_empty() {
             return;
         }
 
-        let position = transform.translation.truncate();
-
         ProjectileBundle::<Slug>::spawn_at_position(commands, position, direction * SLUG_SPEED);
+
+        self.ammo -= 1;
     }
 }

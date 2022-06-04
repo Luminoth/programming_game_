@@ -9,6 +9,7 @@ mod plugins;
 mod resources;
 mod states;
 mod systems;
+mod util;
 
 use bevy::diagnostic::*;
 use bevy::prelude::*;
@@ -25,10 +26,9 @@ use states::GameState;
 
 const WINDOW_WIDTH: f32 = 1024.0;
 const WINDOW_HEIGHT: f32 = 768.0;
-pub const ASPECT_RATIO: f32 = WINDOW_WIDTH / WINDOW_HEIGHT;
 
 const ORTHO_SIZE: f32 = 50.0; // Unity's Camera.orthographicSize (half the size of the vertical viewing volume)
-pub const CAMERA_SCALE: f32 = ORTHO_SIZE / ASPECT_RATIO; // Bevy's OrthographicProject scale value
+pub const CAMERA_SCALE: f32 = ORTHO_SIZE / (WINDOW_WIDTH / WINDOW_HEIGHT); // Bevy's OrthographicProject scale value
 
 // units to pixels conversion
 pub const UNITS_TO_PIXELS: f32 = ORTHO_SIZE * ORTHO_SIZE;

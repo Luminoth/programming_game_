@@ -3,6 +3,7 @@ use bevy::core::FixedTimestep;
 use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 
+use crate::components::weapon::*;
 use crate::game::PHYSICS_STEP;
 use crate::states;
 use crate::states::*;
@@ -57,7 +58,11 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::physics::update.label(Systems::Physics)),
             )
             // per-frame systems
-            .add_system_set(SystemSet::on_update(GameState::Main))
+            .add_system_set(
+                SystemSet::on_update(GameState::Main)
+                    .with_system(systems::projectile::check_bounds.label(Systems::Projectiles))
+                    .with_system(systems::test_fire::<Blaster>.label(Systems::Weapons)),
+            )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),
             );

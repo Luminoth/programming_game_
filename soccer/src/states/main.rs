@@ -87,6 +87,9 @@ pub fn teardown(mut commands: Commands, entities: Query<Entity>) {
         commands.entity(entity).despawn_recursive();
     }
 
+    commands.remove_resource::<GoalKeeperMessageDispatcher>();
+    commands.remove_resource::<FieldPlayerMessageDispatcher>();
+    commands.remove_resource::<Pitch>();
     commands.remove_resource::<GameState>();
     commands.remove_resource::<ClearColor>();
 }

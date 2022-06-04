@@ -36,6 +36,7 @@ pub const PIXELS_TO_UNITS: f32 = 1.0 / UNITS_TO_PIXELS;
 
 // sprite sorting
 pub const BOT_SORT: f32 = 2.0;
+pub const PROJECTILE_SORT: f32 = 2.0;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
@@ -85,12 +86,10 @@ fn main() {
     .register_inspectable::<components::actor::Actor>()
     .register_inspectable::<components::agent::Agent>()
     .register_inspectable::<components::physics::Physical>()
-    .register_inspectable::<components::projectile::Projectile>()
     .register_inspectable::<components::projectile::Bolt>()
     .register_inspectable::<components::projectile::Pellet>()
     .register_inspectable::<components::projectile::Rocket>()
     .register_inspectable::<components::projectile::Slug>()
-    .register_inspectable::<components::weapon::Weapon>()
     .register_inspectable::<components::weapon::Blaster>()
     .register_inspectable::<components::weapon::Shotgun>()
     .register_inspectable::<components::weapon::RocketLauncher>()

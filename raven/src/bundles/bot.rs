@@ -3,8 +3,8 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::bundles::actor::*;
 use crate::bundles::agent::*;
-use crate::bundles::weapon::*;
 use crate::components::physics::*;
+use crate::components::weapon::*;
 use crate::components::world::*;
 use crate::game::BOT_RADIUS;
 use crate::BOT_SORT;
@@ -57,11 +57,9 @@ impl BotBundle {
             agent: AgentBundle::default(),
         });
 
-        bundle.with_children(|parent| {
-            parent
-                .spawn_bundle(BlasterBundle::default())
-                .insert(Name::new("Weapon"));
+        bundle.insert(Blaster::default());
 
+        bundle.with_children(|parent| {
             parent
                 .spawn_bundle(GeometryBuilder::build_as(
                     &shapes::Circle {

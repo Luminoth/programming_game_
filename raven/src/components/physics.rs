@@ -14,9 +14,6 @@ pub struct Physical {
 
 impl Default for Physical {
     fn default() -> Self {
-        let heading = Vec2::new(0.0, 1.0);
-        let side = heading.perp();
-
         Self {
             acceleration: Vec2::default(),
             velocity: Vec2::default(),

@@ -55,14 +55,25 @@ impl Plugin for MainStatePlugin {
                     /*SystemSet::on_update(GameState::Main)
                     .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))*/
                     // physics
-                    .with_system(systems::physics::update.label(Systems::Physics)),
+                    .with_system(systems::physics::update.label(Systems::Physics))
+                    // bounds checking
+                    .with_system(
+                        systems::projectile::check_bounds
+                            .label(Systems::BoundsCheck)
+                            .after(Systems::Physics),
+                    ),
             )
             // per-frame systems
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
-                    .with_system(systems::projectile::check_bounds.label(Systems::Projectiles))
-                    .with_system(systems::test_select.label(Systems::Input))
-                    .with_system(systems::test_fire::<Blaster>.label(Systems::Weapons)),
+                    // input
+                    .with_system(systems::input::select_bot.label(Systems::Input))
+                    .with_system(systems::input::fire_weapon::<Blaster>.label(Systems::Input))
+                    .with_system(systems::input::fire_weapon::<Shotgun>.label(Systems::Input))
+                    .with_system(
+                        systems::input::fire_weapon::<RocketLauncher>.label(Systems::Input),
+                    )
+                    .with_system(systems::input::fire_weapon::<Railgun>.label(Systems::Input)),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

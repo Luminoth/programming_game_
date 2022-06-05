@@ -4,9 +4,10 @@ use bevy_inspector_egui::prelude::*;
 use crate::bundles::projectile::*;
 use crate::components::projectile::*;
 
+// TODO: pull weapon parameters from a config
+
 // TODO: weapon cooldown
 
-// TODO: pull these from a config
 const BOLT_SPEED: f32 = 50.0;
 const PELLET_SPEED: f32 = 25.0;
 const ROCKET_SPEED: f32 = 10.0;

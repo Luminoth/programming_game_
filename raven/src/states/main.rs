@@ -27,7 +27,13 @@ pub fn setup(mut commands: Commands) {
 
     // spawn bots
     // TODO: this should be done using spawnpoints
-    BotBundle::spawn_at_position(&mut commands, "Test", Color::WHITE, Vec2::new(0.0, 10.0));
+    BotBundle::spawn_at_position(
+        &mut commands,
+        "Test",
+        Color::WHITE,
+        100,
+        Vec2::new(0.0, 10.0),
+    );
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

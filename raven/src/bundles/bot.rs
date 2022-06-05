@@ -3,13 +3,14 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::bundles::actor::*;
 use crate::bundles::agent::*;
+use crate::components::bot::*;
 use crate::components::collision::*;
 use crate::components::physics::*;
 use crate::components::weapon::*;
 use crate::components::world::*;
 use crate::game::{BOT_RADIUS, BOT_SORT};
 
-#[derive(Debug, Default, Bundle)]
+#[derive(Debug, Bundle)]
 pub struct BotBundle {
     #[bundle]
     pub actor: ActorBundle,
@@ -19,6 +20,8 @@ pub struct BotBundle {
 
     #[bundle]
     pub agent: AgentBundle,
+
+    pub bot: Bot,
 }
 
 impl BotBundle {
@@ -26,22 +29,28 @@ impl BotBundle {
         commands: &mut Commands,
         name: impl Into<String>,
         color: Color,
+        health: usize,
         spawnpoint: SpawnPointQueryItem,
     ) -> Entity {
         let position = spawnpoint
             .spawnpoint
             .get_spawn_position(spawnpoint.transform);
-        Self::spawn_at_position(commands, name, color, position)
+
+        Self::spawn_at_position(commands, name, color, health, position)
     }
 
     pub fn spawn_at_position(
         commands: &mut Commands,
         name: impl Into<String>,
         color: Color,
+        health: usize,
         position: Vec2,
     ) -> Entity {
         let name = name.into();
-        info!("spawning bot '{}' at {}", name, position);
+        info!(
+            "spawning bot '{}' at {} with {} health",
+            name, position, health
+        );
 
         let mut bundle = commands.spawn_bundle(BotBundle {
             actor: ActorBundle {
@@ -57,6 +66,7 @@ impl BotBundle {
             },
             collider: BoundingCircle::from_radius(BOT_RADIUS),
             agent: AgentBundle::default(),
+            bot: Bot::new(color, health),
         });
 
         bundle.insert(Blaster::default());

@@ -4,7 +4,7 @@ pub mod projectile;
 
 use bevy::prelude::*;
 
-use crate::components::agent::*;
+use crate::components::bot::*;
 use crate::components::camera::*;
 use crate::components::collision::*;
 use crate::components::weapon::*;
@@ -24,8 +24,8 @@ pub fn test_select(
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
-    agents: Query<(Entity, &Agent, &Name, BoundsQuery<BoundingCircle>)>,
-    selected_agent: Query<Entity, With<SelectedAgent>>,
+    bots: Query<(Entity, &Bot, &Name, BoundsQuery<BoundingCircle>)>,
+    selected: Query<Entity, With<SelectedBot>>,
 ) {
     if buttons.just_released(MouseButton::Left) {
         let camera = camera.single();
@@ -33,10 +33,10 @@ pub fn test_select(
 
         if let Some(mouse_position) = get_mouse_position((camera.camera, camera.transform), window)
         {
-            for (entity, agent, name, bounds) in agents.iter() {
+            for (entity, bot, name, bounds) in bots.iter() {
                 if bounds.bounds.contains(bounds.transform, mouse_position) {
                     info!("selecting '{}'", name);
-                    agent.select(&mut commands, entity, selected_agent.optional_single());
+                    bot.select(&mut commands, entity, selected.optional_single());
                 }
             }
         }

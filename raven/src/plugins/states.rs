@@ -73,7 +73,9 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::input::fire_weapon::<RocketLauncher>.label(Systems::Input),
                     )
-                    .with_system(systems::input::fire_weapon::<Railgun>.label(Systems::Input)),
+                    .with_system(systems::input::fire_weapon::<Railgun>.label(Systems::Input))
+                    .with_system(systems::input::damage_bot.label(Systems::Input))
+                    .with_system(systems::input::kill_bot.label(Systems::Input)),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

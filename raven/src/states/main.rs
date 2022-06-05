@@ -31,7 +31,7 @@ pub fn setup(mut commands: Commands) {
         &mut commands,
         "Test",
         Color::WHITE,
-        100,
+        10,
         Vec2::new(0.0, 10.0),
     );
 }

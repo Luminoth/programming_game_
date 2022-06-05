@@ -6,8 +6,7 @@ use crate::bundles::agent::*;
 use crate::components::physics::*;
 use crate::components::weapon::*;
 use crate::components::world::*;
-use crate::game::BOT_RADIUS;
-use crate::BOT_SORT;
+use crate::game::{BOT_RADIUS, BOT_SORT};
 
 #[derive(Debug, Default, Bundle)]
 pub struct BotBundle {

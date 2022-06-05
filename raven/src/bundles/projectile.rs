@@ -3,24 +3,25 @@ use bevy::prelude::*;
 use crate::bundles::actor::*;
 use crate::components::physics::*;
 use crate::components::projectile::*;
-use crate::PROJECTILE_SORT;
+use crate::game::PROJECTILE_SORT;
 
 #[derive(Debug, Default, Bundle)]
 pub struct ProjectileBundle<T>
 where
-    T: Projectile,
+    T: ProjectileType,
 {
     #[bundle]
     pub actor: ActorBundle,
 
     pub physical: Physical,
 
-    pub projectile: T,
+    pub projectile: Projectile,
+    pub projectile_type: T,
 }
 
 impl<T> ProjectileBundle<T>
 where
-    T: Projectile,
+    T: ProjectileType,
 {
     pub fn spawn_at_position(commands: &mut Commands, position: Vec2, velocity: Vec2) -> Entity {
         info!(
@@ -43,7 +44,8 @@ where
                 mass: T::mass(),
                 ..Default::default()
             },
-            projectile: T::default(),
+            projectile: Projectile::default(),
+            projectile_type: T::default(),
         });
 
         bundle.with_children(|parent| {

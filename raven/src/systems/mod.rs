@@ -23,7 +23,7 @@ pub fn test_fire<T>(
     camera: Query<(&Camera, &Transform), With<MainCamera>>,
     mut weapons: Query<(&Transform, &mut T)>,
 ) where
-    T: Weapon,
+    T: WeaponType,
 {
     if buttons.just_released(MouseButton::Right) {
         let camera = camera.single();

@@ -7,7 +7,10 @@ use crate::game::BOLT_RADIUS;
 
 // TODO: pull projectile parameters from a config
 
-pub trait Projectile: Default + Component {
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct Projectile;
+
+pub trait ProjectileType: Default + Component {
     fn name() -> &'static str;
 
     fn mass() -> f32;
@@ -20,7 +23,7 @@ pub trait Projectile: Default + Component {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Bolt;
 
-impl Projectile for Bolt {
+impl ProjectileType for Bolt {
     fn name() -> &'static str {
         "Bolt"
     }
@@ -53,7 +56,7 @@ impl Projectile for Bolt {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Pellet;
 
-impl Projectile for Pellet {
+impl ProjectileType for Pellet {
     fn name() -> &'static str {
         "Pellet"
     }
@@ -74,7 +77,7 @@ impl Projectile for Pellet {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Rocket;
 
-impl Projectile for Rocket {
+impl ProjectileType for Rocket {
     fn name() -> &'static str {
         "Rocket"
     }
@@ -95,7 +98,7 @@ impl Projectile for Rocket {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Slug;
 
-impl Projectile for Slug {
+impl ProjectileType for Slug {
     fn name() -> &'static str {
         "Slug"
     }

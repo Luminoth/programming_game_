@@ -12,7 +12,7 @@ const PELLET_SPEED: f32 = 25.0;
 const ROCKET_SPEED: f32 = 10.0;
 const SLUG_SPEED: f32 = 100.0;
 
-pub trait Weapon: Default + Component {
+pub trait WeaponType: Default + Component {
     fn name() -> &'static str;
 
     fn is_empty(&self) -> bool;
@@ -23,7 +23,7 @@ pub trait Weapon: Default + Component {
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Blaster;
 
-impl Weapon for Blaster {
+impl WeaponType for Blaster {
     fn name() -> &'static str {
         "Blaster"
     }
@@ -45,7 +45,7 @@ pub struct Shotgun {
     ammo: usize,
 }
 
-impl Weapon for Shotgun {
+impl WeaponType for Shotgun {
     fn name() -> &'static str {
         "Shotgun"
     }
@@ -80,7 +80,7 @@ pub struct RocketLauncher {
     ammo: usize,
 }
 
-impl Weapon for RocketLauncher {
+impl WeaponType for RocketLauncher {
     fn name() -> &'static str {
         "RocketLauncher"
     }
@@ -105,7 +105,7 @@ pub struct Railgun {
     ammo: usize,
 }
 
-impl Weapon for Railgun {
+impl WeaponType for Railgun {
     fn name() -> &'static str {
         "Railgun"
     }

@@ -4,7 +4,7 @@ use bevy::render::camera::ScalingMode;
 use crate::bundles::bot::BotBundle;
 use crate::components::camera::*;
 use crate::resources::game::*;
-use crate::CAMERA_SCALE;
+use crate::ORTHO_SIZE;
 
 pub fn setup(mut commands: Commands) {
     debug!("entering main state");
@@ -13,7 +13,7 @@ pub fn setup(mut commands: Commands) {
     commands.insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)));
     let mut camera = OrthographicCameraBundle::new_2d();
     camera.orthographic_projection.scaling_mode = ScalingMode::FixedHorizontal;
-    camera.orthographic_projection.scale = CAMERA_SCALE;
+    camera.orthographic_projection.scale = ORTHO_SIZE;
     commands
         .spawn_bundle(camera)
         .insert(MainCamera)

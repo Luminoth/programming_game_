@@ -23,17 +23,18 @@ pub fn test_select(
     mut commands: Commands,
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
-    camera: Query<(&Camera, &Transform), With<MainCamera>>,
-    agents: Query<(Entity, &Agent, &Transform, &BoundingCircle, &Name), With<Agent>>,
+    camera: Query<CameraQuery, With<MainCamera>>,
+    agents: Query<(Entity, &Agent, &Name, BoundsQuery<BoundingCircle>)>,
     selected_agent: Query<Entity, With<SelectedAgent>>,
 ) {
     if buttons.just_released(MouseButton::Left) {
         let camera = camera.single();
         let window = windows.get_primary().unwrap();
 
-        if let Some(mouse_position) = get_mouse_position(camera, window) {
-            for (entity, agent, transform, bounds, name) in agents.iter() {
-                if bounds.contains(transform, mouse_position) {
+        if let Some(mouse_position) = get_mouse_position((camera.camera, camera.transform), window)
+        {
+            for (entity, agent, name, bounds) in agents.iter() {
+                if bounds.bounds.contains(bounds.transform, mouse_position) {
                     info!("selecting '{}'", name);
                     agent.select(&mut commands, entity, selected_agent.optional_single());
                 }
@@ -46,7 +47,7 @@ pub fn test_fire<T>(
     mut commands: Commands,
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
-    camera: Query<(&Camera, &Transform), With<MainCamera>>,
+    camera: Query<CameraQuery, With<MainCamera>>,
     mut weapons: Query<(&Transform, &mut T)>,
 ) where
     T: WeaponType,
@@ -55,7 +56,8 @@ pub fn test_fire<T>(
         let camera = camera.single();
         let window = windows.get_primary().unwrap();
 
-        if let Some(mouse_position) = get_mouse_position(camera, window) {
+        if let Some(mouse_position) = get_mouse_position((camera.camera, camera.transform), window)
+        {
             for (transform, mut weapon) in weapons.iter_mut() {
                 let position = transform.translation.truncate();
 

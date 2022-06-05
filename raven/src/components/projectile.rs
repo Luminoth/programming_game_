@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
@@ -9,6 +10,17 @@ use crate::game::BOLT_RADIUS;
 
 #[derive(Debug, Default, Component, Inspectable)]
 pub struct Projectile;
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct ProjectileQuery<'w, T>
+where
+    T: ProjectileType,
+{
+    pub projectile: &'w Projectile,
+    pub projectile_type: &'w T,
+    pub transform: &'w Transform,
+}
 
 pub trait ProjectileType: Default + Component {
     fn name() -> &'static str;

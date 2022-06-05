@@ -1,8 +1,19 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
-pub trait Bounds {
+pub trait Bounds: Default + Component {
     fn contains(&self, transform: &Transform, point: Vec2) -> bool;
+}
+
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct BoundsQuery<'w, T>
+where
+    T: Bounds,
+{
+    pub bounds: &'w T,
+    pub transform: &'w Transform,
 }
 
 #[derive(Debug, Component, Inspectable)]

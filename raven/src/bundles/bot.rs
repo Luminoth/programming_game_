@@ -69,7 +69,7 @@ impl BotBundle {
             bot: Bot::new(color, health),
         });
 
-        bundle.insert(Blaster::default());
+        bundle.insert(Weapon::Blaster);
 
         bundle.with_children(|parent| {
             parent

@@ -3,7 +3,6 @@ use bevy::core::FixedTimestep;
 use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 
-use crate::components::weapon::*;
 use crate::game::PHYSICS_STEP;
 use crate::states;
 use crate::states::*;
@@ -68,12 +67,7 @@ impl Plugin for MainStatePlugin {
                 SystemSet::on_update(GameState::Main)
                     // input
                     .with_system(systems::input::select_bot.label(Systems::Input))
-                    .with_system(systems::input::fire_weapon::<Blaster>.label(Systems::Input))
-                    .with_system(systems::input::fire_weapon::<Shotgun>.label(Systems::Input))
-                    .with_system(
-                        systems::input::fire_weapon::<RocketLauncher>.label(Systems::Input),
-                    )
-                    .with_system(systems::input::fire_weapon::<Railgun>.label(Systems::Input))
+                    .with_system(systems::input::fire_weapon.label(Systems::Input))
                     .with_system(systems::input::damage_bot.label(Systems::Input))
                     .with_system(systems::input::kill_bot.label(Systems::Input)),
             )

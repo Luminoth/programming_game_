@@ -85,10 +85,7 @@ fn main() {
     .register_inspectable::<components::projectile::Pellet>()
     .register_inspectable::<components::projectile::Rocket>()
     .register_inspectable::<components::projectile::Slug>()
-    .register_inspectable::<components::weapon::Blaster>()
-    .register_inspectable::<components::weapon::Shotgun>()
-    .register_inspectable::<components::weapon::RocketLauncher>()
-    .register_inspectable::<components::weapon::Railgun>()
+    .register_inspectable::<components::weapon::Weapon>()
     .register_inspectable::<components::world::SpawnPoint>()
     .register_inspectable::<components::world::Wall>();
 

@@ -55,18 +55,16 @@ impl Bot {
         commands.entity(entity).insert(SelectedBot);
     }
 
-    pub fn fire_weapon<T>(
+    pub fn fire_weapon(
         &self,
         commands: &mut Commands,
-        weapon: &mut T,
+        weapon: &mut Weapon,
         target: Vec2,
         transform: &Transform,
         name: impl AsRef<str>,
-    ) where
-        T: WeaponType,
-    {
+    ) {
         if weapon.is_empty() {
-            warn!("[{}]: weapon '{}' empty!", name.as_ref(), T::name());
+            warn!("[{}]: weapon '{}' empty!", name.as_ref(), weapon.name());
             return;
         }
 
@@ -75,7 +73,7 @@ impl Bot {
         info!(
             "[{}]: firing weapon '{}' at {} from {}!",
             name.as_ref(),
-            T::name(),
+            weapon.name(),
             target,
             position
         );
@@ -86,6 +84,7 @@ impl Bot {
     pub fn damage(
         &mut self,
         commands: &mut Commands,
+        entity: Entity,
         transform: &Transform,
         name: impl AsRef<str>,
         amount: usize,
@@ -104,14 +103,20 @@ impl Bot {
 
         if amount >= self.current_health {
             self.current_health = 0;
-            self.kill(commands, transform, name);
+            self.kill(commands, entity, transform, name);
             return;
         }
 
         self.current_health -= amount;
     }
 
-    pub fn kill(&mut self, commands: &mut Commands, transform: &Transform, name: impl AsRef<str>) {
+    pub fn kill(
+        &mut self,
+        commands: &mut Commands,
+        entity: Entity,
+        transform: &Transform,
+        name: impl AsRef<str>,
+    ) {
         if self.is_alive() {
             warn!("[{}] unalived!", name.as_ref());
             self.current_health = 0;
@@ -126,15 +131,17 @@ impl Bot {
             position,
         );
 
-        self.respawn(name);
+        self.respawn(commands, entity, name);
     }
 
-    pub fn respawn(&mut self, name: impl AsRef<str>) {
+    pub fn respawn(&mut self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
         if self.is_alive() {
             warn!("[{}] re-alived!", name.as_ref());
         }
 
         self.current_health = self.max_health;
+
+        commands.entity(entity).insert(Weapon::Blaster);
 
         warn!("TODO: respawn {}", name.as_ref());
     }

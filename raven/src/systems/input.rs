@@ -34,18 +34,14 @@ pub fn select_bot(
     }
 }
 
-// TODO: this isn't great, we just want to process this once
-// not once for every weapon type (a bot will only have a single weapon)
-pub fn fire_weapon<T>(
+pub fn fire_weapon(
     mut commands: Commands,
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
-    mut weapons: Query<&mut T>,
+    mut weapons: Query<&mut Weapon>,
     selected: Query<(Entity, &Bot, &Transform, &Name), With<SelectedBot>>,
-) where
-    T: WeaponType,
-{
+) {
     if buttons.just_released(MouseButton::Right) {
         if let Some((selected, bot, transform, name)) = selected.optional_single() {
             let camera = camera.single();
@@ -62,11 +58,11 @@ pub fn fire_weapon<T>(
                         name.as_str(),
                     );
                 } else {
-                    info!("[{}]: not equipped with weapon '{}'", name, T::name());
+                    warn!("[{}]: has no weapon!", name);
                 }
             }
         } else {
-            info!("no bot selected for firing weapon '{}'", T::name());
+            info!("no bot selected for firing weapon");
         }
     }
 }
@@ -74,11 +70,11 @@ pub fn fire_weapon<T>(
 pub fn damage_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    mut selected: Query<(&mut Bot, &Transform, &Name), With<SelectedBot>>,
+    mut selected: Query<(Entity, &mut Bot, &Transform, &Name), With<SelectedBot>>,
 ) {
     if keys.just_pressed(KeyCode::D) {
-        if let Some((mut bot, transform, name)) = selected.optional_single_mut() {
-            bot.damage(&mut commands, transform, name.as_str(), 1);
+        if let Some((entity, mut bot, transform, name)) = selected.optional_single_mut() {
+            bot.damage(&mut commands, entity, transform, name.as_str(), 1);
         } else {
             info!("no bot selected for damage");
         }
@@ -88,11 +84,11 @@ pub fn damage_bot(
 pub fn kill_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    mut selected: Query<(&mut Bot, &Transform, &Name), With<SelectedBot>>,
+    mut selected: Query<(Entity, &mut Bot, &Transform, &Name), With<SelectedBot>>,
 ) {
     if keys.just_pressed(KeyCode::K) {
-        if let Some((mut bot, transform, name)) = selected.optional_single_mut() {
-            bot.kill(&mut commands, transform, name.as_str());
+        if let Some((entity, mut bot, transform, name)) = selected.optional_single_mut() {
+            bot.kill(&mut commands, entity, transform, name.as_str());
         } else {
             info!("no bot selected for kill");
         }

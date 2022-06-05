@@ -3,6 +3,7 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::bundles::actor::*;
 use crate::bundles::agent::*;
+use crate::components::collision::*;
 use crate::components::physics::*;
 use crate::components::weapon::*;
 use crate::components::world::*;
@@ -14,6 +15,7 @@ pub struct BotBundle {
     pub actor: ActorBundle,
 
     pub physical: Physical,
+    pub collider: BoundingCircle,
 
     #[bundle]
     pub agent: AgentBundle,
@@ -53,6 +55,7 @@ impl BotBundle {
                 mass: 75.0,
                 ..Default::default()
             },
+            collider: BoundingCircle::from_radius(BOT_RADIUS),
             agent: AgentBundle::default(),
         });
 

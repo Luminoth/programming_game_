@@ -61,6 +61,7 @@ impl Plugin for MainStatePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
                     .with_system(systems::projectile::check_bounds.label(Systems::Projectiles))
+                    .with_system(systems::test_select.label(Systems::Input))
                     .with_system(systems::test_fire::<Blaster>.label(Systems::Weapons)),
             )
             .add_system_set(

@@ -1,3 +1,5 @@
+use bevy::ecs::query::{Fetch, FilterFetch, WorldQuery};
+use bevy::ecs::system::QuerySingleError;
 use bevy::prelude::*;
 
 // https://bevy-cheatbook.github.io/cookbook/cursor2world.html#2d-games
@@ -10,5 +12,40 @@ pub fn get_mouse_position(camera: (&Camera, &Transform), window: &Window) -> Opt
         Some(world_position.truncate())
     } else {
         None
+    }
+}
+
+pub trait OptionalSingle<'s, Q>
+where
+    Q: WorldQuery,
+{
+    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item>;
+    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item>;
+}
+
+impl<'w, 's, Q, F> OptionalSingle<'s, Q> for Query<'w, 's, Q, F>
+where
+    Q: WorldQuery,
+    F: WorldQuery,
+    F::Fetch: FilterFetch,
+{
+    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item> {
+        match self.get_single() {
+            Ok(item) => Some(item),
+            Err(QuerySingleError::NoEntities(_)) => None,
+            Err(QuerySingleError::MultipleEntities(_)) => {
+                panic!("multiple items from optional single query")
+            }
+        }
+    }
+
+    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item> {
+        match self.get_single_mut() {
+            Ok(item) => Some(item),
+            Err(QuerySingleError::NoEntities(_)) => None,
+            Err(QuerySingleError::MultipleEntities(_)) => {
+                panic!("multiple items from optional single query")
+            }
+        }
     }
 }

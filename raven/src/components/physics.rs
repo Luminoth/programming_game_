@@ -24,7 +24,7 @@ impl Default for Physical {
 }
 
 impl Physical {
-    pub fn speed(&self) -> f32 {
+    pub fn get_speed(&self) -> f32 {
         self.velocity.length()
     }
 

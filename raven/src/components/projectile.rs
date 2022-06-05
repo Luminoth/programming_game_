@@ -1,4 +1,3 @@
-use bevy::ecs::query::WorldQuery;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
@@ -8,122 +7,62 @@ use crate::game::BOLT_RADIUS;
 
 // TODO: pull projectile parameters from a config
 
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct Projectile;
-
-#[derive(WorldQuery)]
-#[world_query(derive(Debug))]
-pub struct ProjectileQuery<'w, T>
-where
-    T: ProjectileType,
-{
-    pub projectile: &'w Projectile,
-    pub projectile_type: &'w T,
-    pub transform: &'w Transform,
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Component, Inspectable)]
+pub enum Projectile {
+    Bolt,
+    Pellet,
+    Rocket,
+    Slug,
 }
 
-pub trait ProjectileType: Default + Component {
-    fn name() -> &'static str;
-
-    fn mass() -> f32;
-
-    fn spawn_model(commands: &mut EntityCommands);
-
-    fn damage(&self) -> usize;
-}
-
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct Bolt;
-
-impl ProjectileType for Bolt {
-    fn name() -> &'static str {
-        "Bolt"
+impl Projectile {
+    pub fn get_name(&self) -> &'static str {
+        match self {
+            Self::Bolt => "Bolt",
+            Self::Pellet => "Pellet",
+            Self::Rocket => "Rocket",
+            Self::Slug => "Slug",
+        }
     }
 
-    fn mass() -> f32 {
-        1.0
+    pub fn get_mass(&self) -> f32 {
+        match self {
+            Self::Bolt => 1.0,
+            Self::Pellet => 1.0,
+            Self::Rocket => 1.0,
+            Self::Slug => 1.0,
+        }
     }
 
-    fn spawn_model(commands: &mut EntityCommands) {
-        commands.insert_bundle(GeometryBuilder::build_as(
-            // TODO: this is the wrong shape for a bolt
-            // (a green bolt of electricity)
-            &shapes::Circle {
-                radius: BOLT_RADIUS,
-                ..Default::default()
-            },
-            DrawMode::Fill(FillMode {
-                color: Color::LIME_GREEN,
-                options: FillOptions::default(),
-            }),
-            Transform::default(),
-        ));
+    pub fn get_damage(&self) -> usize {
+        match self {
+            Self::Bolt => 1,
+            Self::Pellet => 1,
+            Self::Rocket => 10,
+            Self::Slug => 10,
+        }
     }
 
-    fn damage(&self) -> usize {
-        1
-    }
-}
-
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct Pellet;
-
-impl ProjectileType for Pellet {
-    fn name() -> &'static str {
-        "Pellet"
-    }
-
-    fn mass() -> f32 {
-        1.0
-    }
-
-    fn spawn_model(commands: &mut EntityCommands) {
-        todo!();
-    }
-
-    fn damage(&self) -> usize {
-        1
-    }
-}
-
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct Rocket;
-
-impl ProjectileType for Rocket {
-    fn name() -> &'static str {
-        "Rocket"
-    }
-
-    fn mass() -> f32 {
-        1.0
-    }
-
-    fn spawn_model(commands: &mut EntityCommands) {
-        todo!();
-    }
-
-    fn damage(&self) -> usize {
-        10
-    }
-}
-
-#[derive(Debug, Default, Component, Inspectable)]
-pub struct Slug;
-
-impl ProjectileType for Slug {
-    fn name() -> &'static str {
-        "Slug"
-    }
-
-    fn mass() -> f32 {
-        1.0
-    }
-
-    fn spawn_model(commands: &mut EntityCommands) {
-        todo!();
-    }
-
-    fn damage(&self) -> usize {
-        10
+    pub fn spawn_model(&self, commands: &mut EntityCommands) {
+        match self {
+            Self::Bolt => {
+                commands.insert_bundle(GeometryBuilder::build_as(
+                    // TODO: this is the wrong shape for a bolt
+                    // (a green bolt of electricity)
+                    &shapes::Circle {
+                        radius: BOLT_RADIUS,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::LIME_GREEN,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ));
+            }
+            Self::Pellet => todo!(),
+            Self::Rocket => todo!(),
+            Self::Slug => todo!(),
+        }
     }
 }

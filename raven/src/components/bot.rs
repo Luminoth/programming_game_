@@ -64,7 +64,7 @@ impl Bot {
         name: impl AsRef<str>,
     ) {
         if weapon.is_empty() {
-            warn!("[{}]: weapon '{}' empty!", name.as_ref(), weapon.name());
+            warn!("[{}]: weapon '{}' empty!", name.as_ref(), weapon.get_name());
             return;
         }
 
@@ -73,7 +73,7 @@ impl Bot {
         info!(
             "[{}]: firing weapon '{}' at {} from {}!",
             name.as_ref(),
-            weapon.name(),
+            weapon.get_name(),
             target,
             position
         );

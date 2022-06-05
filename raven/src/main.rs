@@ -81,10 +81,7 @@ fn main() {
     .register_inspectable::<components::collision::BoundingCircle>()
     .register_inspectable::<components::corpse::Corpse>()
     .register_inspectable::<components::physics::Physical>()
-    .register_inspectable::<components::projectile::Bolt>()
-    .register_inspectable::<components::projectile::Pellet>()
-    .register_inspectable::<components::projectile::Rocket>()
-    .register_inspectable::<components::projectile::Slug>()
+    .register_inspectable::<components::projectile::Projectile>()
     .register_inspectable::<components::weapon::Weapon>()
     .register_inspectable::<components::world::SpawnPoint>()
     .register_inspectable::<components::world::Wall>();

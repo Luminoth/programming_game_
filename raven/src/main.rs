@@ -78,7 +78,7 @@ fn main() {
     .register_inspectable::<components::actor::Actor>()
     .register_inspectable::<components::agent::Agent>()
     .register_inspectable::<components::bot::Bot>()
-    .register_inspectable::<components::collision::BoundingCircle>()
+    .register_inspectable::<components::collision::Bounds>()
     .register_inspectable::<components::corpse::Corpse>()
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::projectile::Projectile>()

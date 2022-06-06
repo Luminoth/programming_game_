@@ -16,7 +16,7 @@ pub struct BotBundle {
     pub actor: ActorBundle,
 
     pub physical: Physical,
-    pub collider: BoundingCircle,
+    pub bounds: Bounds,
 
     #[bundle]
     pub agent: AgentBundle,
@@ -64,7 +64,7 @@ impl BotBundle {
                 mass: 75.0,
                 ..Default::default()
             },
-            collider: BoundingCircle::from_radius(BOT_RADIUS),
+            bounds: Bounds::Circle(Vec2::ZERO, BOT_RADIUS),
             agent: AgentBundle::default(),
             bot: Bot::new(color, health),
         });

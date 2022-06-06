@@ -7,7 +7,7 @@ use crate::game::BOLT_RADIUS;
 
 // TODO: pull projectile parameters from a config
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Component, Inspectable)]
+#[derive(Debug, Clone, PartialEq, Eq, Component, Inspectable)]
 pub enum Projectile {
     Bolt,
     Pellet,

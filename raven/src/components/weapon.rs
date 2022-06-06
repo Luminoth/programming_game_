@@ -13,7 +13,7 @@ const PELLET_SPEED: f32 = 25.0;
 const ROCKET_SPEED: f32 = 10.0;
 const SLUG_SPEED: f32 = 100.0;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Component, Inspectable)]
+#[derive(Debug, Clone, PartialEq, Eq, Component, Inspectable)]
 pub enum Weapon {
     Blaster,
     Shotgun(usize),

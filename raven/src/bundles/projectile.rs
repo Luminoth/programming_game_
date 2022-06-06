@@ -42,7 +42,7 @@ impl ProjectileBundle {
                 mass: projectile.get_mass(),
                 ..Default::default()
             },
-            projectile,
+            projectile: projectile.clone(),
         });
 
         bundle.with_children(|parent| {

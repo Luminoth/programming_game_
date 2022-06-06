@@ -48,20 +48,22 @@ impl Bot {
         commands: &mut Commands,
         entity: Entity,
         name: impl AsRef<str>,
-        previous_selected: Option<Entity>,
+        previous_selected: Option<(Entity, &Bot, &Name)>,
         previous_possessed: Option<Entity>,
     ) {
         if !self.is_alive() {
             return;
         }
 
-        if let Some(previous_selected) = previous_selected {
-            if previous_selected != entity {
-                commands.entity(previous_selected).remove::<SelectedBot>();
-
-                if let Some(previous_possessed) = previous_possessed {
-                    commands.entity(previous_possessed).remove::<PossessedBot>();
-                }
+        if let Some((previous_selected_entity, previous_selected_bot, previous_selected_name)) =
+            previous_selected
+        {
+            if previous_selected_entity != entity {
+                previous_selected_bot.deselect(
+                    commands,
+                    previous_selected_entity,
+                    previous_selected_name,
+                );
 
                 self.do_select(commands, entity, name);
             } else {
@@ -76,6 +78,15 @@ impl Bot {
         } else {
             self.do_select(commands, entity, name);
         }
+    }
+
+    pub fn deselect(&self, commands: &mut Commands, entity: Entity, name: &Name) {
+        info!("[{}]: released!", name.as_ref());
+
+        commands
+            .entity(entity)
+            .remove::<SelectedBot>()
+            .remove::<PossessedBot>();
     }
 
     pub fn fire_weapon(

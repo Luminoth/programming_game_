@@ -67,6 +67,7 @@ impl Plugin for MainStatePlugin {
                 SystemSet::on_update(GameState::Main)
                     // input
                     .with_system(systems::input::select_bot.label(Systems::Input))
+                    .with_system(systems::input::deselect_bot.label(Systems::Input))
                     .with_system(systems::input::fire_weapon.label(Systems::Input))
                     .with_system(systems::input::damage_bot.label(Systems::Input))
                     .with_system(systems::input::kill_bot.label(Systems::Input)),

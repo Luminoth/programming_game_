@@ -12,7 +12,7 @@ pub fn select_bot(
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
     bots: Query<(Entity, &Bot, &Name, BoundsQuery<BoundingCircle>)>,
-    selected: Query<Entity, With<SelectedBot>>,
+    selected: Query<(Entity, &Bot, &Name), With<SelectedBot>>,
     possessed: Query<Entity, With<PossessedBot>>,
 ) {
     if buttons.just_released(MouseButton::Left) {
@@ -32,6 +32,23 @@ pub fn select_bot(
                     break;
                 }
             }
+        }
+    }
+}
+
+pub fn deselect_bot(
+    mut commands: Commands,
+    keys: Res<Input<KeyCode>>,
+    selected: Query<(Entity, &Bot, &Name), With<SelectedBot>>,
+    possessed: Query<(Entity, &Bot, &Name), With<PossessedBot>>,
+) {
+    if keys.just_pressed(KeyCode::X) {
+        if let Some(possessed) = possessed.optional_single() {
+            possessed
+                .1
+                .deselect(&mut commands, possessed.0, possessed.2);
+        } else if let Some(selected) = selected.optional_single() {
+            selected.1.deselect(&mut commands, selected.0, selected.2);
         }
     }
 }

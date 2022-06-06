@@ -31,28 +31,51 @@ impl Bot {
         self.current_health as f32 / self.max_health as f32
     }
 
+    fn do_select(&self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
+        info!("[{}]: selected!", name.as_ref());
+
+        commands.entity(entity).insert(SelectedBot);
+    }
+
+    fn do_possess(&self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
+        info!("[{}]: possessed!", name.as_ref());
+
+        commands.entity(entity).insert(PossessedBot);
+    }
+
     pub fn select(
         &self,
         commands: &mut Commands,
         entity: Entity,
         name: impl AsRef<str>,
         previous_selected: Option<Entity>,
+        previous_possessed: Option<Entity>,
     ) {
         if !self.is_alive() {
             return;
         }
 
-        info!("[{}]: selected!", name.as_ref());
-
         if let Some(previous_selected) = previous_selected {
-            // nothing to do if we are the currently selected bot
-            if previous_selected == entity {
-                return;
-            }
+            if previous_selected != entity {
+                commands.entity(previous_selected).remove::<SelectedBot>();
 
-            commands.entity(previous_selected).remove::<SelectedBot>();
+                if let Some(previous_possessed) = previous_possessed {
+                    commands.entity(previous_possessed).remove::<PossessedBot>();
+                }
+
+                self.do_select(commands, entity, name);
+            } else {
+                if let Some(previous_possessed) = previous_possessed {
+                    if previous_possessed == entity {
+                        return;
+                    }
+                }
+
+                self.do_possess(commands, entity, name);
+            }
+        } else {
+            self.do_select(commands, entity, name);
         }
-        commands.entity(entity).insert(SelectedBot);
     }
 
     pub fn fire_weapon(
@@ -149,3 +172,7 @@ impl Bot {
 
 #[derive(Debug, Default, Component)]
 pub struct SelectedBot;
+
+// TODO: add support for this
+#[derive(Debug, Default, Component)]
+pub struct PossessedBot;

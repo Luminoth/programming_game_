@@ -37,7 +37,18 @@ impl Bounds {
         box_center: Vec2,
         box_extents: Vec2,
     ) -> bool {
-        todo!();
+        let box_half_extents = box_extents / 2.0;
+        let box_min = box_center - box_half_extents;
+        let box_max = box_center + box_half_extents;
+
+        // point on the box nearest the circle
+        let nearest = Vec2::new(
+            box_min.x.max(circle_center.x.min(box_max.x)),
+            box_min.y.max(circle_center.y.min(box_max.y)),
+        );
+
+        let d = circle_center.distance_squared(nearest);
+        d <= circle_radius * circle_radius
     }
 
     pub fn intersects(

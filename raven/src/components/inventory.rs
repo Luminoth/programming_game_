@@ -33,6 +33,33 @@ impl Default for Inventory {
 }
 
 impl Inventory {
+    pub fn has_weapon(&self, weapon: Weapon) -> bool {
+        *self.weapons.get(&weapon).unwrap()
+    }
+
+    pub fn get_ammo_amount(&self, weapon: Weapon) -> usize {
+        if weapon == Weapon::Blaster {
+            return 0;
+        }
+
+        let ammo = weapon.get_ammo();
+        *self.ammo.get(&ammo).unwrap()
+    }
+
+    pub fn decrease_ammo(&mut self, weapon: Weapon, amount: usize) {
+        if weapon == Weapon::Blaster {
+            return;
+        }
+
+        let ammo = weapon.get_ammo();
+        let current_amount = *self.ammo.get(&ammo).unwrap();
+        let amount = current_amount.min(amount);
+
+        if amount > 0 {
+            self.ammo.insert(ammo, current_amount - amount);
+        }
+    }
+
     pub fn fill(&mut self, name: impl AsRef<str>) {
         info!("[{}]: filling inventory!", name.as_ref());
 

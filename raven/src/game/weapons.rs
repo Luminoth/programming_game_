@@ -13,9 +13,9 @@ pub enum Ammo {
 impl Ammo {
     pub fn get_max_amount(&self) -> usize {
         match self {
-            Self::Shell => 100,
-            Self::Rocket => 100,
-            Self::Slug => 100,
+            Self::Shell => 10,
+            Self::Rocket => 5,
+            Self::Slug => 5,
         }
     }
 }
@@ -35,6 +35,15 @@ impl Weapon {
             Self::Shotgun => "Shotgun",
             Self::RocketLauncher => "Rocket Launcher",
             Self::Railgun => "Railgun",
+        }
+    }
+
+    pub fn get_ammo(&self) -> Ammo {
+        match self {
+            Self::Blaster => panic!("Blasters don't use ammo!"),
+            Self::Shotgun => Ammo::Shell,
+            Self::RocketLauncher => Ammo::Rocket,
+            Self::Railgun => Ammo::Slug,
         }
     }
 }

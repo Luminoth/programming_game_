@@ -97,11 +97,12 @@ impl Bot {
         &self,
         commands: &mut Commands,
         weapon: &mut EquippedWeapon,
+        inventory: &mut Inventory,
         target: Vec2,
         transform: &Transform,
         name: impl AsRef<str>,
     ) {
-        if weapon.is_empty() {
+        if weapon.is_empty(inventory) {
             warn!(
                 "[{}]: weapon '{}' empty!",
                 name.as_ref(),
@@ -120,7 +121,12 @@ impl Bot {
             position
         );
 
-        weapon.fire(commands, position, (target - position).normalize_or_zero());
+        weapon.fire(
+            commands,
+            inventory,
+            position,
+            (target - position).normalize_or_zero(),
+        );
     }
 
     pub fn damage(

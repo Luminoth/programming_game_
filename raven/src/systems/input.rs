@@ -5,6 +5,7 @@ use crate::components::camera::*;
 use crate::components::collision::*;
 use crate::components::inventory::*;
 use crate::components::weapon::*;
+use crate::game::weapons::*;
 use crate::util::*;
 
 pub fn select_bot(
@@ -54,25 +55,53 @@ pub fn deselect_bot(
     }
 }
 
+pub fn select_weapon(
+    keys: Res<Input<KeyCode>>,
+    mut possessed: Query<(&mut EquippedWeapon, &Inventory, &Name), With<PossessedBot>>,
+) {
+    let mut weapon = None;
+    if keys.just_pressed(KeyCode::Key1) {
+        weapon = Some(Weapon::Blaster);
+    } else if keys.just_pressed(KeyCode::Key2) {
+        weapon = Some(Weapon::Shotgun);
+    } else if keys.just_pressed(KeyCode::Key3) {
+        weapon = Some(Weapon::RocketLauncher);
+    } else if keys.just_pressed(KeyCode::Key4) {
+        weapon = Some(Weapon::Railgun);
+    }
+
+    if let Some(weapon) = weapon {
+        if let Some((mut equipped_weapon, inventory, name)) = possessed.optional_single_mut() {
+            equipped_weapon.select(inventory, weapon, name.as_str());
+        } else {
+            info!("no bot possessed for select weapon '{}'", weapon.get_name());
+        }
+    }
+}
+
 pub fn fire_weapon(
     mut commands: Commands,
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
-    mut weapons: Query<&mut EquippedWeapon>,
-    possessed: Query<(Entity, &Bot, &Transform, &Name), With<PossessedBot>>,
+    mut possessed: Query<
+        (&Bot, &mut EquippedWeapon, &mut Inventory, &Transform, &Name),
+        With<PossessedBot>,
+    >,
 ) {
     if buttons.just_released(MouseButton::Right) {
-        if let Some((entity, bot, transform, name)) = possessed.optional_single() {
+        if let Some((bot, mut weapon, mut inventory, transform, name)) =
+            possessed.optional_single_mut()
+        {
             let camera = camera.single();
             let window = windows.get_primary().unwrap();
             if let Some(mouse_position) =
                 get_mouse_position((camera.camera, camera.transform), window)
             {
-                let mut weapon = weapons.get_mut(entity).unwrap();
                 bot.fire_weapon(
                     &mut commands,
-                    &mut *weapon,
+                    &mut weapon,
+                    &mut inventory,
                     mouse_position,
                     transform,
                     name.as_str(),

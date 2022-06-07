@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
 use crate::bundles::projectile::*;
+use crate::components::inventory::*;
 use crate::components::projectile::*;
 use crate::game::weapons::*;
 
@@ -17,28 +18,52 @@ const SLUG_SPEED: f32 = 100.0;
 #[derive(Debug, Component, Inspectable)]
 pub struct EquippedWeapon {
     pub weapon: Weapon,
-    pub ammo: usize,
 }
 
 impl Default for EquippedWeapon {
     fn default() -> Self {
         Self {
             weapon: Weapon::Blaster,
-            ammo: 0,
         }
     }
 }
 
 impl EquippedWeapon {
-    pub fn is_empty(&self) -> bool {
+    pub fn get_ammo_amount(&self, inventory: &Inventory) -> usize {
+        if self.weapon == Weapon::Blaster {
+            return 0;
+        }
+        inventory.get_ammo_amount(self.weapon)
+    }
+
+    pub fn is_empty(&self, inventory: &Inventory) -> bool {
         if self.weapon == Weapon::Blaster {
             return false;
         }
-        self.ammo < 1
+        self.get_ammo_amount(inventory) < 1
     }
 
-    pub fn fire(&mut self, commands: &mut Commands, position: Vec2, direction: Vec2) {
-        if self.is_empty() {
+    pub fn select(&mut self, inventory: &Inventory, weapon: Weapon, name: impl AsRef<str>) {
+        if !inventory.has_weapon(weapon) {
+            warn!(
+                "[{}]: weapon '{}' not in inventory!",
+                name.as_ref(),
+                weapon.get_name()
+            );
+            return;
+        }
+
+        self.weapon = weapon;
+    }
+
+    pub fn fire(
+        &mut self,
+        commands: &mut Commands,
+        inventory: &mut Inventory,
+        position: Vec2,
+        direction: Vec2,
+    ) {
+        if self.is_empty(inventory) {
             return;
         }
 
@@ -126,8 +151,6 @@ impl EquippedWeapon {
                     position,
                     direction * PELLET_SPEED,
                 );
-
-                self.ammo -= 1;
             }
             Weapon::RocketLauncher => {
                 ProjectileBundle::spawn_at_position(
@@ -136,8 +159,6 @@ impl EquippedWeapon {
                     position,
                     direction * ROCKET_SPEED,
                 );
-
-                self.ammo -= 1;
             }
             Weapon::Railgun => {
                 ProjectileBundle::spawn_at_position(
@@ -146,9 +167,9 @@ impl EquippedWeapon {
                     position,
                     direction * SLUG_SPEED,
                 );
-
-                self.ammo -= 1;
             }
         }
+
+        inventory.decrease_ammo(self.weapon, 1);
     }
 }

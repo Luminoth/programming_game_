@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::components::bot::*;
 use crate::components::camera::*;
 use crate::components::collision::*;
+use crate::components::inventory::*;
 use crate::components::weapon::*;
 use crate::util::*;
 
@@ -79,6 +80,19 @@ pub fn fire_weapon(
             }
         } else {
             info!("no bot possessed for firing weapon");
+        }
+    }
+}
+
+pub fn fill_inventory(
+    keys: Res<Input<KeyCode>>,
+    mut possessed: Query<(&mut Inventory, &Name), With<PossessedBot>>,
+) {
+    if keys.just_pressed(KeyCode::F) {
+        if let Some((mut inventory, name)) = possessed.optional_single_mut() {
+            inventory.fill(name.as_str());
+        } else {
+            info!("no bot possessed for inventory fill");
         }
     }
 }

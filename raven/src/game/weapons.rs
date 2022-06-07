@@ -1,14 +1,26 @@
 use bevy_inspector_egui::prelude::*;
 use strum_macros::EnumIter;
 
-#[derive(Debug, Eq, PartialEq, Hash, Inspectable, EnumIter)]
+// TODO: pull ammo parameters from a config
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]
 pub enum Ammo {
     Shell,
     Rocket,
     Slug,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Inspectable, EnumIter)]
+impl Ammo {
+    pub fn get_max_amount(&self) -> usize {
+        match self {
+            Self::Shell => 100,
+            Self::Rocket => 100,
+            Self::Slug => 100,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]
 pub enum Weapon {
     Blaster,
     Shotgun,

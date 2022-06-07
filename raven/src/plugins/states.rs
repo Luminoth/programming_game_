@@ -69,6 +69,7 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::input::select_bot.label(Systems::Input))
                     .with_system(systems::input::deselect_bot.label(Systems::Input))
                     .with_system(systems::input::fire_weapon.label(Systems::Input))
+                    .with_system(systems::input::fill_inventory.label(Systems::Input))
                     .with_system(systems::input::damage_bot.label(Systems::Input))
                     .with_system(systems::input::kill_bot.label(Systems::Input)),
             )

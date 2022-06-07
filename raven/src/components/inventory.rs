@@ -31,3 +31,17 @@ impl Default for Inventory {
         Self { weapons, ammo }
     }
 }
+
+impl Inventory {
+    pub fn fill(&mut self, name: impl AsRef<str>) {
+        info!("[{}]: filling inventory!", name.as_ref());
+
+        for weapon in Weapon::iter() {
+            self.weapons.insert(weapon, true);
+        }
+
+        for ammo_ in Ammo::iter() {
+            self.ammo.insert(ammo_, ammo_.get_max_amount());
+        }
+    }
+}

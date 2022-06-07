@@ -17,7 +17,7 @@ impl Bounds {
                 let center = position + *center;
 
                 let d = center.distance_squared(point);
-                d < radius * radius
+                d <= radius * radius
             }
             Self::Box(center, extents) => {
                 let center = position + *center;
@@ -112,4 +112,100 @@ impl Bounds {
 pub struct BoundsQuery<'w> {
     pub bounds: &'w Bounds,
     pub transform: &'w Transform,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn circle_contains_point_center() {
+        let radius = 10.0;
+        let center = Vec2::new(5.0, 5.0);
+        let position = Vec2::new(5.0, 5.0);
+
+        let transform = Transform::from_translation(position.extend(0.0));
+        let bounds = Bounds::Circle(center, radius);
+
+        let point = position + center;
+
+        assert_eq!(bounds.contains(&transform, point), true);
+    }
+
+    #[test]
+    fn circle_contains_point_edge() {
+        let radius = 10.0;
+        let center = Vec2::new(5.0, 5.0);
+        let position = Vec2::new(5.0, 5.0);
+
+        let transform = Transform::from_translation(position.extend(0.0));
+        let bounds = Bounds::Circle(center, radius);
+
+        let angle: f32 = 0.5;
+        let point = position + center + Vec2::new(angle.cos(), angle.sin()) * radius;
+
+        assert_eq!(bounds.contains(&transform, point), true);
+    }
+
+    #[test]
+    fn circle_not_contains_point_edge() {
+        let radius = 10.0;
+        let center = Vec2::new(5.0, 5.0);
+        let position = Vec2::new(5.0, 5.0);
+
+        let transform = Transform::from_translation(position.extend(0.0));
+        let bounds = Bounds::Circle(center, radius);
+
+        let angle: f32 = 0.5;
+        let point = position + center + Vec2::new(angle.cos(), angle.sin()) * (radius + 0.1);
+
+        assert_eq!(bounds.contains(&transform, point), false);
+    }
+
+    #[test]
+    fn box_contains_point_center() {
+        let extents = Vec2::new(10.0, 10.0);
+        let center = Vec2::new(5.0, 5.0);
+        let position = Vec2::new(5.0, 5.0);
+
+        let transform = Transform::from_translation(position.extend(0.0));
+        let bounds = Bounds::Box(center, extents);
+
+        let point = position + center;
+
+        assert_eq!(bounds.contains(&transform, point), true);
+    }
+
+    #[test]
+    fn box_contains_point_edge() {
+        let extents = Vec2::new(10.0, 10.0);
+        let center = Vec2::new(5.0, 5.0);
+        let position = Vec2::new(5.0, 5.0);
+
+        let transform = Transform::from_translation(position.extend(0.0));
+        let bounds = Bounds::Box(center, extents);
+
+        let half_extents = extents / 2.0;
+        let point = position + center + half_extents;
+
+        assert_eq!(bounds.contains(&transform, point), true);
+    }
+
+    #[test]
+    fn box_not_contains_point_edge() {
+        let extents = Vec2::new(10.0, 10.0);
+        let center = Vec2::new(5.0, 5.0);
+        let position = Vec2::new(5.0, 5.0);
+
+        let transform = Transform::from_translation(position.extend(0.0));
+        let bounds = Bounds::Box(center, extents);
+
+        let mut half_extents = extents / 2.0;
+        half_extents.x += 0.1;
+        let point = position + center + half_extents;
+
+        assert_eq!(bounds.contains(&transform, point), false);
+    }
+
+    // TODO: test intersections
 }

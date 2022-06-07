@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
 use crate::bundles::corpse::*;
+use crate::components::inventory::*;
 use crate::components::weapon::*;
 
 // TODO: pull bot parameters from a config
@@ -10,6 +11,7 @@ use crate::components::weapon::*;
 pub struct Bot {
     pub color: Color,
 
+    // TODO: these may need to go in a separate component
     pub max_health: usize,
     pub current_health: usize,
 }
@@ -92,13 +94,17 @@ impl Bot {
     pub fn fire_weapon(
         &self,
         commands: &mut Commands,
-        weapon: &mut Weapon,
+        weapon: &mut EquippedWeapon,
         target: Vec2,
         transform: &Transform,
         name: impl AsRef<str>,
     ) {
         if weapon.is_empty() {
-            warn!("[{}]: weapon '{}' empty!", name.as_ref(), weapon.get_name());
+            warn!(
+                "[{}]: weapon '{}' empty!",
+                name.as_ref(),
+                weapon.weapon.get_name()
+            );
             return;
         }
 
@@ -107,7 +113,7 @@ impl Bot {
         info!(
             "[{}]: firing weapon '{}' at {} from {}!",
             name.as_ref(),
-            weapon.get_name(),
+            weapon.weapon.get_name(),
             target,
             position
         );
@@ -175,7 +181,10 @@ impl Bot {
 
         self.current_health = self.max_health;
 
-        commands.entity(entity).insert(Weapon::Blaster);
+        commands
+            .entity(entity)
+            .insert(Inventory::default())
+            .insert(EquippedWeapon::default());
 
         warn!("TODO: respawn {}", name.as_ref());
     }

@@ -5,6 +5,7 @@ use crate::bundles::actor::*;
 use crate::bundles::agent::*;
 use crate::components::bot::*;
 use crate::components::collision::*;
+use crate::components::inventory::*;
 use crate::components::physics::*;
 use crate::components::weapon::*;
 use crate::components::world::*;
@@ -22,6 +23,8 @@ pub struct BotBundle {
     pub agent: AgentBundle,
 
     pub bot: Bot,
+    pub inventory: Inventory,
+    pub equipped_weapon: EquippedWeapon,
 }
 
 impl BotBundle {
@@ -67,9 +70,9 @@ impl BotBundle {
             bounds: Bounds::Circle(Vec2::ZERO, BOT_RADIUS),
             agent: AgentBundle::default(),
             bot: Bot::new(color, health),
+            inventory: Inventory::default(),
+            equipped_weapon: EquippedWeapon::default(),
         });
-
-        bundle.insert(Weapon::Blaster);
 
         bundle.with_children(|parent| {
             parent

@@ -80,11 +80,14 @@ fn main() {
     .register_inspectable::<components::bot::Bot>()
     .register_inspectable::<components::collision::Bounds>()
     .register_inspectable::<components::corpse::Corpse>()
+    .register_inspectable::<components::inventory::Inventory>()
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::projectile::Projectile>()
-    .register_inspectable::<components::weapon::Weapon>()
+    .register_inspectable::<components::weapon::EquippedWeapon>()
     .register_inspectable::<components::world::SpawnPoint>()
-    .register_inspectable::<components::world::Wall>();
+    .register_inspectable::<components::world::Wall>()
+    .register_inspectable::<game::weapons::Ammo>()
+    .register_inspectable::<game::weapons::Weapon>();
 
     // plugins
     app.add_plugin(DebugPlugin).add_plugins(StatesPlugins);

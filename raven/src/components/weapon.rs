@@ -3,6 +3,7 @@ use bevy_inspector_egui::prelude::*;
 
 use crate::bundles::projectile::*;
 use crate::components::projectile::*;
+use crate::game::weapons::*;
 
 // TODO: pull weapon parameters from a config
 
@@ -13,31 +14,27 @@ const PELLET_SPEED: f32 = 25.0;
 const ROCKET_SPEED: f32 = 10.0;
 const SLUG_SPEED: f32 = 100.0;
 
-#[derive(Debug, Clone, PartialEq, Eq, Component, Inspectable)]
-pub enum Weapon {
-    Blaster,
-    Shotgun(usize),
-    RocketLauncher(usize),
-    Railgun(usize),
+#[derive(Debug, Component, Inspectable)]
+pub struct EquippedWeapon {
+    pub weapon: Weapon,
+    pub ammo: usize,
 }
 
-impl Weapon {
-    pub fn get_name(&self) -> &'static str {
-        match self {
-            Self::Blaster => "Blaster",
-            Self::Shotgun(_) => "Shotgun",
-            Self::RocketLauncher(_) => "Rocket Launcher",
-            Self::Railgun(_) => "Railgun",
+impl Default for EquippedWeapon {
+    fn default() -> Self {
+        Self {
+            weapon: Weapon::Blaster,
+            ammo: 0,
         }
     }
+}
 
+impl EquippedWeapon {
     pub fn is_empty(&self) -> bool {
-        match self {
-            Self::Blaster => false,
-            Self::Shotgun(ammo) => *ammo < 1,
-            Self::RocketLauncher(ammo) => *ammo < 1,
-            Self::Railgun(ammo) => *ammo < 1,
+        if self.weapon == Weapon::Blaster {
+            return false;
         }
+        self.ammo < 1
     }
 
     pub fn fire(&mut self, commands: &mut Commands, position: Vec2, direction: Vec2) {
@@ -45,8 +42,8 @@ impl Weapon {
             return;
         }
 
-        match self {
-            Self::Blaster => {
+        match self.weapon {
+            Weapon::Blaster => {
                 // TODO: offset
                 ProjectileBundle::spawn_at_position(
                     commands,
@@ -67,7 +64,7 @@ impl Weapon {
                     direction * BOLT_SPEED,
                 );
             }
-            Self::Shotgun(ammo) => {
+            Weapon::Shotgun => {
                 // TODO: spread
                 ProjectileBundle::spawn_at_position(
                     commands,
@@ -130,9 +127,9 @@ impl Weapon {
                     direction * PELLET_SPEED,
                 );
 
-                *ammo -= 1;
+                self.ammo -= 1;
             }
-            Self::RocketLauncher(ammo) => {
+            Weapon::RocketLauncher => {
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Rocket,
@@ -140,9 +137,9 @@ impl Weapon {
                     direction * ROCKET_SPEED,
                 );
 
-                *ammo -= 1;
+                self.ammo -= 1;
             }
-            Self::Railgun(ammo) => {
+            Weapon::Railgun => {
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Slug,
@@ -150,7 +147,7 @@ impl Weapon {
                     direction * SLUG_SPEED,
                 );
 
-                *ammo -= 1;
+                self.ammo -= 1;
             }
         }
     }

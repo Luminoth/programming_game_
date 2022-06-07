@@ -58,7 +58,7 @@ pub fn fire_weapon(
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
-    mut weapons: Query<&mut Weapon>,
+    mut weapons: Query<&mut EquippedWeapon>,
     possessed: Query<(Entity, &Bot, &Transform, &Name), With<PossessedBot>>,
 ) {
     if buttons.just_released(MouseButton::Right) {

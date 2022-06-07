@@ -14,6 +14,7 @@ pub struct Bot {
     // TODO: these may need to go in a separate component
     pub max_health: usize,
     pub current_health: usize,
+    pub invulnerable: bool,
 }
 
 impl Bot {
@@ -22,6 +23,7 @@ impl Bot {
             color,
             max_health: health,
             current_health: health,
+            invulnerable: false,
         }
     }
 
@@ -134,6 +136,11 @@ impl Bot {
             return;
         }
 
+        if self.invulnerable {
+            info!("[{}]: invulnerable!", name.as_ref());
+            return;
+        }
+
         info!(
             "[{}]: damaged {} ({})",
             name.as_ref(),
@@ -157,10 +164,13 @@ impl Bot {
         transform: &Transform,
         name: impl AsRef<str>,
     ) {
-        if self.is_alive() {
+        if self.invulnerable {
+            warn!("[{}]: unkillable but unalived!", name.as_ref());
+        } else if self.is_alive() {
             warn!("[{}] unalived!", name.as_ref());
-            self.current_health = 0;
         }
+
+        self.current_health = 0;
 
         let position = transform.translation.truncate();
 
@@ -175,8 +185,10 @@ impl Bot {
     }
 
     pub fn respawn(&mut self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
-        if self.is_alive() {
-            warn!("[{}] re-alived!", name.as_ref());
+        if self.invulnerable {
+            warn!("[{}]: unkillable but reborn!", name.as_ref());
+        } else if self.is_alive() {
+            warn!("[{}] reborn!", name.as_ref());
         }
 
         self.current_health = self.max_health;

@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use mlua::prelude::*;
 use mlua::{chunk, Function, UserData, UserDataMethods};
 
@@ -151,7 +154,7 @@ impl UserData for SharedUserData {
 fn shared_userdata_example() -> anyhow::Result<()> {
     let lua = Lua::new();
 
-    let data = SharedUserData::default();
+    let data = Rc::new(RefCell::new(SharedUserData::default()));
 
     lua.load(chunk! {
     function incr(data)
@@ -162,11 +165,11 @@ fn shared_userdata_example() -> anyhow::Result<()> {
     })
     .exec()?;
 
-    println!("[Rust]: Before = {}", data.get_val());
+    println!("[Rust]: Before = {}", data.borrow().get_val());
     lua.globals()
         .get::<_, Function>("incr")?
         .call::<_, ()>(data.clone())?;
-    println!("[Rust]: After = {}", data.get_val());
+    println!("[Rust]: After = {}", data.borrow().get_val());
 
     Ok(())
 }

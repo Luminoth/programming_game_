@@ -102,6 +102,15 @@ impl Bot {
         transform: &Transform,
         name: impl AsRef<str>,
     ) {
+        if !weapon.is_ready() {
+            warn!(
+                "[{}]: weapon '{}' not ready!",
+                name.as_ref(),
+                weapon.weapon.get_name()
+            );
+            return;
+        }
+
         if weapon.is_empty(inventory) {
             warn!(
                 "[{}]: weapon '{}' empty!",

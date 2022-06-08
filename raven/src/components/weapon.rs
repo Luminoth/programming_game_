@@ -4,21 +4,28 @@ use bevy_inspector_egui::prelude::*;
 use crate::bundles::projectile::*;
 use crate::components::inventory::*;
 use crate::components::projectile::*;
+use crate::game::cooldown::*;
 use crate::game::weapons::*;
 
-// TODO: pull weapon parameters from a config
-
-// TODO: weapon cooldown
+// TODO: weapon cooldown could be better:
+// 1) global cooldown on switching weapons
+// 2) set the cooldown on the weapon in the inventory
+//    so that it keeps rolling
 
 #[derive(Debug, Component, Inspectable)]
 pub struct EquippedWeapon {
     pub weapon: Weapon,
+
+    #[inspectable(ignore)]
+    pub cooldown: Cooldown,
 }
 
 impl Default for EquippedWeapon {
     fn default() -> Self {
+        let weapon = Weapon::Blaster;
         Self {
-            weapon: Weapon::Blaster,
+            weapon,
+            cooldown: Cooldown::from_seconds(weapon.get_cooldown_seconds()),
         }
     }
 }
@@ -38,6 +45,10 @@ impl EquippedWeapon {
         self.get_ammo_amount(inventory) < 1
     }
 
+    pub fn is_ready(&self) -> bool {
+        self.cooldown.is_available()
+    }
+
     pub fn select(&mut self, inventory: &Inventory, weapon: Weapon, name: impl AsRef<str>) {
         if !inventory.has_weapon(weapon) {
             warn!(
@@ -49,6 +60,8 @@ impl EquippedWeapon {
         }
 
         self.weapon = weapon;
+        self.cooldown
+            .set_duration(self.weapon.get_cooldown_seconds());
     }
 
     pub fn fire(
@@ -58,25 +71,12 @@ impl EquippedWeapon {
         position: Vec2,
         direction: Vec2,
     ) {
-        if self.is_empty(inventory) {
+        if !self.is_ready() || self.is_empty(inventory) {
             return;
         }
 
         match self.weapon {
             Weapon::Blaster => {
-                // TODO: offset
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Bolt,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Bolt,
-                    position,
-                    direction,
-                );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Bolt,
@@ -166,5 +166,7 @@ impl EquippedWeapon {
         }
 
         inventory.decrease_ammo(self.weapon, 1);
+
+        self.cooldown.start();
     }
 }

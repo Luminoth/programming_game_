@@ -2,6 +2,7 @@ pub mod debug;
 pub mod input;
 pub mod physics;
 pub mod projectile;
+pub mod weapons;
 
 use bevy::prelude::*;
 
@@ -10,4 +11,6 @@ pub enum Systems {
     Physics,
     BoundsCheck,
     Input,
+
+    Weapons,
 }

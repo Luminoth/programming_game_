@@ -1,3 +1,4 @@
+pub mod cooldown;
 pub mod weapons;
 
 // 50hz, the same as Unity

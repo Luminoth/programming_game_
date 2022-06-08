@@ -14,6 +14,8 @@ use crate::resources::pitch::*;
 use crate::resources::*;
 use crate::util::*;
 
+// TODO: the kick cooldown is never started
+
 pub fn update<T>(time: Res<Time>, mut field_players: Query<FieldPlayerQueryMut<T>>)
 where
     T: TeamColorMarker,

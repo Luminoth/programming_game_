@@ -3,6 +3,8 @@ use strum_macros::EnumIter;
 
 // TODO: pull ammo parameters from a config
 
+// TODO: pull weapon parameters from a config
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]
 pub enum Ammo {
     Shell,
@@ -44,6 +46,15 @@ impl Weapon {
             Self::Shotgun => Ammo::Shell,
             Self::RocketLauncher => Ammo::Rocket,
             Self::Railgun => Ammo::Slug,
+        }
+    }
+
+    pub fn get_cooldown_seconds(&self) -> f32 {
+        match self {
+            Self::Blaster => 0.33,
+            Self::Shotgun => 1.0,
+            Self::RocketLauncher => 0.66,
+            Self::Railgun => 1.0,
         }
     }
 }

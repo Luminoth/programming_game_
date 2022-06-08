@@ -72,7 +72,9 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::input::fire_weapon.label(Systems::Input))
                     .with_system(systems::input::fill_inventory.label(Systems::Input))
                     .with_system(systems::input::damage_bot.label(Systems::Input))
-                    .with_system(systems::input::kill_bot.label(Systems::Input)),
+                    .with_system(systems::input::kill_bot.label(Systems::Input))
+                    // everything else
+                    .with_system(systems::weapons::update.label(Systems::Weapons)),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Main).with_system(states::main::teardown),

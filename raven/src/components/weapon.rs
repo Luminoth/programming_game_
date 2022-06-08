@@ -10,11 +10,6 @@ use crate::game::weapons::*;
 
 // TODO: weapon cooldown
 
-const BOLT_SPEED: f32 = 50.0;
-const PELLET_SPEED: f32 = 25.0;
-const ROCKET_SPEED: f32 = 10.0;
-const SLUG_SPEED: f32 = 100.0;
-
 #[derive(Debug, Component, Inspectable)]
 pub struct EquippedWeapon {
     pub weapon: Weapon,
@@ -74,19 +69,19 @@ impl EquippedWeapon {
                     commands,
                     Projectile::Bolt,
                     position,
-                    direction * BOLT_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Bolt,
                     position,
-                    direction * BOLT_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Bolt,
                     position,
-                    direction * BOLT_SPEED,
+                    direction,
                 );
             }
             Weapon::Shotgun => {
@@ -95,61 +90,61 @@ impl EquippedWeapon {
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
                 ProjectileBundle::spawn_at_position(
                     commands,
                     Projectile::Pellet,
                     position,
-                    direction * PELLET_SPEED,
+                    direction,
                 );
             }
             Weapon::RocketLauncher => {
@@ -157,7 +152,7 @@ impl EquippedWeapon {
                     commands,
                     Projectile::Rocket,
                     position,
-                    direction * ROCKET_SPEED,
+                    direction,
                 );
             }
             Weapon::Railgun => {
@@ -165,7 +160,7 @@ impl EquippedWeapon {
                     commands,
                     Projectile::Slug,
                     position,
-                    direction * SLUG_SPEED,
+                    direction,
                 );
             }
         }

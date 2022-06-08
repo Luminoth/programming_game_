@@ -11,3 +11,6 @@ pub const PROJECTILE_SORT: f32 = 2.0;
 pub const BOT_RADIUS: f32 = 1.0;
 pub const CORPSE_RADIUS: f32 = 1.0;
 pub const BOLT_RADIUS: f32 = 0.1;
+pub const PELLET_RADIUS: f32 = 0.1;
+pub const ROCKET_RADIUS: f32 = 0.25;
+pub const SLUG_RADIUS: f32 = 0.1;

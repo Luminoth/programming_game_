@@ -20,8 +20,9 @@ impl ProjectileBundle {
         commands: &mut Commands,
         projectile: Projectile,
         position: Vec2,
-        velocity: Vec2,
+        direction: Vec2,
     ) -> Entity {
+        let velocity = direction * projectile.get_initial_speed();
         info!(
             "spawning projectile '{}' at {} with velocity {}",
             projectile.get_name(),

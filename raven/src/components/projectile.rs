@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::game::BOLT_RADIUS;
+use crate::game::{BOLT_RADIUS, PELLET_RADIUS, ROCKET_RADIUS, SLUG_RADIUS};
 
 // TODO: pull projectile parameters from a config
 
@@ -34,6 +34,15 @@ impl Projectile {
         }
     }
 
+    pub fn get_initial_speed(&self) -> f32 {
+        match self {
+            Self::Bolt => 50.0,
+            Self::Pellet => 100.0,
+            Self::Rocket => 25.0,
+            Self::Slug => 150.0,
+        }
+    }
+
     pub fn get_damage(&self) -> usize {
         match self {
             Self::Bolt => 1,
@@ -60,9 +69,47 @@ impl Projectile {
                     Transform::default(),
                 ));
             }
-            Self::Pellet => todo!(),
-            Self::Rocket => todo!(),
-            Self::Slug => todo!(),
+            Self::Pellet => {
+                commands.insert_bundle(GeometryBuilder::build_as(
+                    &shapes::Circle {
+                        radius: PELLET_RADIUS,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::GRAY,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ));
+            }
+            Self::Rocket => {
+                commands.insert_bundle(GeometryBuilder::build_as(
+                    // TODO: this is the wrong shape for a rocket
+                    &shapes::Circle {
+                        radius: ROCKET_RADIUS,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::ORANGE_RED,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ));
+            }
+            Self::Slug => {
+                commands.insert_bundle(GeometryBuilder::build_as(
+                    // TODO: this is the wrong shape for a slug
+                    &shapes::Circle {
+                        radius: SLUG_RADIUS,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::PURPLE,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ));
+            }
         }
     }
 }

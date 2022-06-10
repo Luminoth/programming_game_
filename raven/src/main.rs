@@ -84,8 +84,8 @@ fn main() {
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::projectile::Projectile>()
     .register_inspectable::<components::weapon::EquippedWeapon>()
-    .register_inspectable::<components::world::SpawnPoint>()
-    .register_inspectable::<components::world::Wall>()
+    .register_inspectable::<components::spawnpoint::SpawnPoint>()
+    .register_inspectable::<components::wall::Wall>()
     .register_inspectable::<game::weapons::Ammo>()
     .register_inspectable::<game::weapons::Weapon>();
 

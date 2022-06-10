@@ -84,12 +84,7 @@ impl EquippedWeapon {
 
         match self.weapon {
             Weapon::Blaster => {
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Bolt,
-                    position,
-                    direction,
-                );
+                ProjectileBundle::spawn(commands, Projectile::Bolt, position, direction);
             }
             Weapon::Shotgun => {
                 let spread = PELLET_SPREAD.to_radians();
@@ -99,31 +94,16 @@ impl EquippedWeapon {
                 for _ in 0..NUMBER_OF_PELLETS {
                     let direction = direction.rotate(angle);
 
-                    ProjectileBundle::spawn_at_position(
-                        commands,
-                        Projectile::Pellet,
-                        position,
-                        direction,
-                    );
+                    ProjectileBundle::spawn(commands, Projectile::Pellet, position, direction);
 
                     angle += stride;
                 }
             }
             Weapon::RocketLauncher => {
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Rocket,
-                    position,
-                    direction,
-                );
+                ProjectileBundle::spawn(commands, Projectile::Rocket, position, direction);
             }
             Weapon::Railgun => {
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Slug,
-                    position,
-                    direction,
-                );
+                ProjectileBundle::spawn(commands, Projectile::Slug, position, direction);
             }
         }
 

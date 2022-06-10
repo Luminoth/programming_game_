@@ -7,5 +7,6 @@ pub mod corpse;
 pub mod inventory;
 pub mod physics;
 pub mod projectile;
+pub mod spawnpoint;
+pub mod wall;
 pub mod weapon;
-pub mod world;

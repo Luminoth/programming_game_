@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 
 use crate::bundles::bot::BotBundle;
+use crate::bundles::wall::WallBundle;
 use crate::components::camera::*;
 use crate::resources::game::*;
 use crate::ORTHO_SIZE;
@@ -19,14 +20,21 @@ pub fn setup(mut commands: Commands) {
         .insert(MainCamera)
         .insert(Name::new("Main Camera"));
 
-    // map
-    commands.insert_resource(Map);
+    // load map
+    // TODO:
+    let map = Map::default();
 
-    // nav
-    commands.insert_resource(NavGraph);
+    commands.insert_resource(map.calculate_navgraph());
+
+    // spawn the world
+    // TODO: this should come from the map
+    WallBundle::spawn(&mut commands, Vec2::new(20.0, 0.0), Vec2::new(-1.0, 30.0));
+
+    // TODO: spawn spawnpoints
 
     // spawn bots
     // TODO: this should be done using spawnpoints
+    // and should probably happen after setup
     BotBundle::spawn_at_position(
         &mut commands,
         "Test",

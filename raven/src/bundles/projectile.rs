@@ -16,7 +16,7 @@ pub struct ProjectileBundle {
 }
 
 impl ProjectileBundle {
-    pub fn spawn_at_position(
+    pub fn spawn(
         commands: &mut Commands,
         projectile: Projectile,
         position: Vec2,

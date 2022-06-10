@@ -7,8 +7,8 @@ use crate::components::bot::*;
 use crate::components::collision::*;
 use crate::components::inventory::*;
 use crate::components::physics::*;
+use crate::components::spawnpoint::*;
 use crate::components::weapon::*;
-use crate::components::world::*;
 use crate::game::{BOT_RADIUS, BOT_SORT};
 
 #[derive(Debug, Bundle)]

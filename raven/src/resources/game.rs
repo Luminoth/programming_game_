@@ -1,16 +1,12 @@
-use crate::components::world::*;
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Map;
 
 impl Map {
-    pub fn get_random_spawnpoint<'a, S>(&self, spawnpoints: S) -> Option<SpawnPoint>
-    where
-        S: Iterator<Item = &'a SpawnPoint>,
-    {
-        todo!();
+    pub fn calculate_navgraph(&self) -> NavGraph {
+        // TODO:
+        NavGraph::default()
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct NavGraph;

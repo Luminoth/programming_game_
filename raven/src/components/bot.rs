@@ -220,6 +220,11 @@ impl Bot {
 #[derive(Debug, Default, Component)]
 pub struct SelectedBot;
 
-// TODO: add support for this
+#[derive(Debug, Default, Component)]
+pub struct SelectedBotVisual;
+
 #[derive(Debug, Default, Component)]
 pub struct PossessedBot;
+
+#[derive(Debug, Default, Component)]
+pub struct PossessedBotVisual;

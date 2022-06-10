@@ -78,6 +78,38 @@ impl BotBundle {
             parent
                 .spawn_bundle(GeometryBuilder::build_as(
                     &shapes::Circle {
+                        radius: BOT_RADIUS * 2.0,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::RED,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Visibility { is_visible: false })
+                .insert(SelectedBotVisual)
+                .insert(Name::new("Selected"));
+
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::Circle {
+                        radius: BOT_RADIUS * 2.0,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::BLUE,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Visibility { is_visible: false })
+                .insert(PossessedBotVisual)
+                .insert(Name::new("Possessed"));
+
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::Circle {
                         radius: BOT_RADIUS,
                         ..Default::default()
                     },

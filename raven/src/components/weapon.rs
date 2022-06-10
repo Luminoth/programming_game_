@@ -59,6 +59,12 @@ impl EquippedWeapon {
             return;
         }
 
+        info!(
+            "[{}] selecting weapon '{}'",
+            name.as_ref(),
+            weapon.get_name()
+        );
+
         self.weapon = weapon;
         self.cooldown
             .set_duration(self.weapon.get_cooldown_seconds());
@@ -85,67 +91,23 @@ impl EquippedWeapon {
                 );
             }
             Weapon::Shotgun => {
-                // TODO: spread
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
-                ProjectileBundle::spawn_at_position(
-                    commands,
-                    Projectile::Pellet,
-                    position,
-                    direction,
-                );
+                let spread = PELLET_SPREAD.to_radians();
+                let stride = spread / NUMBER_OF_PELLETS as f32;
+
+                let direction = direction.extend(0.0);
+                let mut angle = -spread / 2.0;
+                for _ in 0..NUMBER_OF_PELLETS {
+                    let direction = Quat::from_rotation_z(angle) * direction;
+
+                    ProjectileBundle::spawn_at_position(
+                        commands,
+                        Projectile::Pellet,
+                        position,
+                        direction.truncate(),
+                    );
+
+                    angle += stride;
+                }
             }
             Weapon::RocketLauncher => {
                 ProjectileBundle::spawn_at_position(

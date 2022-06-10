@@ -7,6 +7,9 @@ use crate::game::{BOLT_RADIUS, PELLET_RADIUS, ROCKET_RADIUS, SLUG_RADIUS};
 
 // TODO: pull projectile parameters from a config
 
+pub const PELLET_SPREAD: f32 = 7.0;
+pub const NUMBER_OF_PELLETS: usize = 10;
+
 #[derive(Debug, Clone, PartialEq, Eq, Component, Inspectable)]
 pub enum Projectile {
     Bolt,

@@ -49,3 +49,24 @@ where
         }
     }
 }
+
+pub trait Vec2Utils {
+    fn sign(&self, v2: Vec2) -> f32;
+
+    fn rotate(&self, angle: f32) -> Vec2;
+}
+
+impl Vec2Utils for Vec2 {
+    fn sign(&self, v2: Vec2) -> f32 {
+        if self.y * v2.x > self.x * v2.y {
+            -1.0
+        } else {
+            1.0
+        }
+    }
+
+    fn rotate(&self, angle: f32) -> Vec2 {
+        let v = self.extend(0.0);
+        (Quat::from_rotation_z(angle) * v).truncate()
+    }
+}

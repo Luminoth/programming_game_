@@ -6,6 +6,7 @@ use crate::components::inventory::*;
 use crate::components::projectile::*;
 use crate::game::cooldown::*;
 use crate::game::weapons::*;
+use crate::util::*;
 
 // TODO: weapon cooldown could be better:
 // 1) global cooldown on switching weapons
@@ -94,16 +95,15 @@ impl EquippedWeapon {
                 let spread = PELLET_SPREAD.to_radians();
                 let stride = spread / NUMBER_OF_PELLETS as f32;
 
-                let direction = direction.extend(0.0);
                 let mut angle = -spread / 2.0;
                 for _ in 0..NUMBER_OF_PELLETS {
-                    let direction = Quat::from_rotation_z(angle) * direction;
+                    let direction = direction.rotate(angle);
 
                     ProjectileBundle::spawn_at_position(
                         commands,
                         Projectile::Pellet,
                         position,
-                        direction.truncate(),
+                        direction,
                     );
 
                     angle += stride;

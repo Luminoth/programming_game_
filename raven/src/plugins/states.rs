@@ -60,6 +60,11 @@ impl Plugin for MainStatePlugin {
                         systems::projectile::check_bounds
                             .label(Systems::BoundsCheck)
                             .after(Systems::Physics),
+                    )
+                    .with_system(
+                        systems::projectile::check_collision
+                            .label(Systems::Collision)
+                            .after(Systems::Physics),
                     ),
             )
             // per-frame systems

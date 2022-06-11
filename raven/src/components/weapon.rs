@@ -74,6 +74,7 @@ impl EquippedWeapon {
     pub fn fire(
         &mut self,
         commands: &mut Commands,
+        owner: Entity,
         inventory: &mut Inventory,
         position: Vec2,
         direction: Vec2,
@@ -84,7 +85,7 @@ impl EquippedWeapon {
 
         match self.weapon {
             Weapon::Blaster => {
-                ProjectileBundle::spawn(commands, Projectile::Bolt, position, direction);
+                ProjectileBundle::spawn(commands, Projectile::Bolt(owner), position, direction);
             }
             Weapon::Shotgun => {
                 let spread = PELLET_SPREAD.to_radians();
@@ -94,16 +95,21 @@ impl EquippedWeapon {
                 for _ in 0..NUMBER_OF_PELLETS {
                     let direction = direction.rotate(angle);
 
-                    ProjectileBundle::spawn(commands, Projectile::Pellet, position, direction);
+                    ProjectileBundle::spawn(
+                        commands,
+                        Projectile::Pellet(owner),
+                        position,
+                        direction,
+                    );
 
                     angle += stride;
                 }
             }
             Weapon::RocketLauncher => {
-                ProjectileBundle::spawn(commands, Projectile::Rocket, position, direction);
+                ProjectileBundle::spawn(commands, Projectile::Rocket(owner), position, direction);
             }
             Weapon::Railgun => {
-                ProjectileBundle::spawn(commands, Projectile::Slug, position, direction);
+                ProjectileBundle::spawn(commands, Projectile::Slug(owner), position, direction);
             }
         }
 

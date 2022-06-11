@@ -9,6 +9,7 @@ use bevy::prelude::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
 pub enum Systems {
     Physics,
+    Collision,
     BoundsCheck,
     Input,
 

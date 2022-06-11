@@ -116,12 +116,19 @@ pub fn fire_weapon(
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
     mut possessed: Query<
-        (&Bot, &mut EquippedWeapon, &mut Inventory, &Transform, &Name),
+        (
+            Entity,
+            &Bot,
+            &mut EquippedWeapon,
+            &mut Inventory,
+            &Transform,
+            &Name,
+        ),
         With<PossessedBot>,
     >,
 ) {
     if buttons.just_released(MouseButton::Right) {
-        if let Some((bot, mut weapon, mut inventory, transform, name)) =
+        if let Some((entity, bot, mut weapon, mut inventory, transform, name)) =
             possessed.optional_single_mut()
         {
             let camera = camera.single();
@@ -131,6 +138,7 @@ pub fn fire_weapon(
             {
                 bot.fire_weapon(
                     &mut commands,
+                    entity,
                     &mut weapon,
                     &mut inventory,
                     mouse_position,

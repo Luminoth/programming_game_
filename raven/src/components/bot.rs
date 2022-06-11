@@ -169,6 +169,7 @@ impl Bot {
     pub fn fire_weapon(
         &self,
         commands: &mut Commands,
+        entity: Entity,
         weapon: &mut EquippedWeapon,
         inventory: &mut Inventory,
         target: Vec2,
@@ -205,6 +206,7 @@ impl Bot {
 
         weapon.fire(
             commands,
+            entity,
             inventory,
             position,
             (target - position).normalize_or_zero(),

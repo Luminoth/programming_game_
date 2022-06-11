@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
+use crate::components::collision::*;
 use crate::game::{BOLT_RADIUS, PELLET_RADIUS, ROCKET_RADIUS, SLUG_RADIUS};
 
 // TODO: pull projectile parameters from a config
@@ -43,6 +44,16 @@ impl Projectile {
             Self::Pellet => 100.0,
             Self::Rocket => 25.0,
             Self::Slug => 150.0,
+        }
+    }
+
+    pub fn get_bounds(&self) -> Bounds {
+        // TODO: not all of these shapes are correct
+        match self {
+            Self::Bolt => Bounds::Circle(Vec2::ZERO, BOLT_RADIUS),
+            Self::Pellet => Bounds::Circle(Vec2::ZERO, PELLET_RADIUS),
+            Self::Rocket => Bounds::Circle(Vec2::ZERO, ROCKET_RADIUS),
+            Self::Slug => Bounds::Circle(Vec2::ZERO, SLUG_RADIUS),
         }
     }
 

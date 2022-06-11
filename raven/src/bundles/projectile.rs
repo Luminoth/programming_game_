@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::bundles::actor::*;
+use crate::components::collision::*;
 use crate::components::physics::*;
 use crate::components::projectile::*;
 use crate::components::*;
@@ -12,6 +13,7 @@ pub struct ProjectileBundle {
     pub actor: ActorBundle,
 
     pub physical: Physical,
+    pub bounds: Bounds,
 
     pub projectile: Projectile,
 }
@@ -44,6 +46,7 @@ impl ProjectileBundle {
                 mass: projectile.get_mass(),
                 ..Default::default()
             },
+            bounds: projectile.get_bounds(),
             projectile: projectile.clone(),
         });
 

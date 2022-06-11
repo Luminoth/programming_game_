@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
+use crate::components::collision::*;
 use crate::components::wall::*;
 use crate::components::*;
 use crate::game::WALL_SORT;
@@ -9,6 +10,10 @@ use crate::game::WALL_SORT;
 pub struct WallBundle {
     #[bundle]
     pub transform: TransformBundle,
+
+    pub name: Name,
+
+    pub bounds: Bounds,
 
     pub wall: Wall,
 }
@@ -21,6 +26,8 @@ impl WallBundle {
             transform: TransformBundle::from_transform(Transform::from_translation(
                 position.extend(WALL_SORT),
             )),
+            name: Name::new("Wall"),
+            bounds: Bounds::Box(Vec2::ZERO, extents),
             wall: Wall::default(),
         });
 

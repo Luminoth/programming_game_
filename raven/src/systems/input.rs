@@ -13,23 +13,34 @@ pub fn select_bot(
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
-    bots: Query<(Entity, &Bot, &Name, BoundsQuery)>,
-    selected: Query<(Entity, &Bot, &Name), With<SelectedBot>>,
+    bots: Query<(Entity, &Bot, &Name, BoundsQuery, &Children)>,
+    selected: Query<(Entity, &Bot, &Name, &Children), With<SelectedBot>>,
     possessed: Query<Entity, With<PossessedBot>>,
+    mut selected_visibility: Query<
+        &mut Visibility,
+        (With<SelectedBotVisual>, Without<PossessedBotVisual>),
+    >,
+    mut possessed_visibility: Query<
+        &mut Visibility,
+        (With<PossessedBotVisual>, Without<SelectedBotVisual>),
+    >,
 ) {
     if buttons.just_released(MouseButton::Left) {
         let camera = camera.single();
         let window = windows.get_primary().unwrap();
         if let Some(mouse_position) = get_mouse_position((camera.camera, camera.transform), window)
         {
-            for (entity, bot, name, bounds) in bots.iter() {
+            for (entity, bot, name, bounds, children) in bots.iter() {
                 if bounds.bounds.contains(bounds.transform, mouse_position) {
                     bot.select(
                         &mut commands,
                         entity,
                         name.as_str(),
+                        children,
                         selected.optional_single(),
                         possessed.optional_single(),
+                        &mut selected_visibility,
+                        &mut possessed_visibility,
                     );
                     break;
                 }
@@ -41,16 +52,36 @@ pub fn select_bot(
 pub fn deselect_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    selected: Query<(Entity, &Bot, &Name), With<SelectedBot>>,
-    possessed: Query<(Entity, &Bot, &Name), With<PossessedBot>>,
+    selected: Query<(Entity, &Bot, &Name, &Children), With<SelectedBot>>,
+    possessed: Query<(Entity, &Bot, &Name, &Children), With<PossessedBot>>,
+    mut selected_visibility: Query<
+        &mut Visibility,
+        (With<SelectedBotVisual>, Without<PossessedBotVisual>),
+    >,
+    mut possessed_visibility: Query<
+        &mut Visibility,
+        (With<PossessedBotVisual>, Without<SelectedBotVisual>),
+    >,
 ) {
     if keys.just_pressed(KeyCode::X) {
-        if let Some(possessed) = possessed.optional_single() {
-            possessed
-                .1
-                .deselect(&mut commands, possessed.0, possessed.2);
-        } else if let Some(selected) = selected.optional_single() {
-            selected.1.deselect(&mut commands, selected.0, selected.2);
+        if let Some((entity, bot, name, children)) = possessed.optional_single() {
+            bot.deselect(
+                &mut commands,
+                entity,
+                name,
+                children,
+                &mut selected_visibility,
+                &mut possessed_visibility,
+            );
+        } else if let Some((entity, bot, name, children)) = selected.optional_single() {
+            bot.deselect(
+                &mut commands,
+                entity,
+                name,
+                children,
+                &mut selected_visibility,
+                &mut possessed_visibility,
+            );
         }
     }
 }

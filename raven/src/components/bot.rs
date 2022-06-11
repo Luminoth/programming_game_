@@ -35,16 +35,49 @@ impl Bot {
         self.current_health as f32 / self.max_health as f32
     }
 
-    fn do_select(&self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
+    fn do_select(
+        &self,
+        commands: &mut Commands,
+        entity: Entity,
+        name: impl AsRef<str>,
+        children: &Children,
+        selected_visibility: &mut Query<
+            &mut Visibility,
+            (With<SelectedBotVisual>, Without<PossessedBotVisual>),
+        >,
+    ) {
         info!("[{}]: selected!", name.as_ref());
 
         commands.entity(entity).insert(SelectedBot);
+
+        for &child in children.iter() {
+            if let Ok(mut selected_visibility) = selected_visibility.get_mut(child) {
+                selected_visibility.is_visible = true;
+                break;
+            }
+        }
     }
 
-    fn do_possess(&self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
+    fn do_possess(
+        &self,
+        commands: &mut Commands,
+        entity: Entity,
+        name: impl AsRef<str>,
+        children: &Children,
+        possessed_visibility: &mut Query<
+            &mut Visibility,
+            (With<PossessedBotVisual>, Without<SelectedBotVisual>),
+        >,
+    ) {
         info!("[{}]: possessed!", name.as_ref());
 
         commands.entity(entity).insert(PossessedBot);
+
+        for &child in children.iter() {
+            if let Ok(mut possessed_visibility) = possessed_visibility.get_mut(child) {
+                possessed_visibility.is_visible = true;
+            }
+        }
     }
 
     pub fn select(
@@ -52,45 +85,85 @@ impl Bot {
         commands: &mut Commands,
         entity: Entity,
         name: impl AsRef<str>,
-        previous_selected: Option<(Entity, &Bot, &Name)>,
+        children: &Children,
+        previous_selected: Option<(Entity, &Bot, &Name, &Children)>,
         previous_possessed: Option<Entity>,
+        selected_visibility: &mut Query<
+            &mut Visibility,
+            (With<SelectedBotVisual>, Without<PossessedBotVisual>),
+        >,
+        possessed_visibility: &mut Query<
+            &mut Visibility,
+            (With<PossessedBotVisual>, Without<SelectedBotVisual>),
+        >,
     ) {
         if !self.is_alive() {
             return;
         }
 
-        if let Some((previous_selected_entity, previous_selected_bot, previous_selected_name)) =
-            previous_selected
+        if let Some((
+            previous_selected_entity,
+            previous_selected_bot,
+            previous_selected_name,
+            previous_selected_children,
+        )) = previous_selected
         {
             if previous_selected_entity != entity {
                 previous_selected_bot.deselect(
                     commands,
                     previous_selected_entity,
                     previous_selected_name,
+                    previous_selected_children,
+                    selected_visibility,
+                    possessed_visibility,
                 );
 
-                self.do_select(commands, entity, name);
+                self.do_select(commands, entity, name, children, selected_visibility);
             } else {
-                if let Some(previous_possessed) = previous_possessed {
-                    if previous_possessed == entity {
+                if let Some(previous_possessed_entity) = previous_possessed {
+                    if previous_possessed_entity == entity {
                         return;
                     }
                 }
 
-                self.do_possess(commands, entity, name);
+                self.do_possess(commands, entity, name, children, possessed_visibility);
             }
         } else {
-            self.do_select(commands, entity, name);
+            self.do_select(commands, entity, name, children, selected_visibility);
         }
     }
 
-    pub fn deselect(&self, commands: &mut Commands, entity: Entity, name: &Name) {
+    pub fn deselect(
+        &self,
+        commands: &mut Commands,
+        entity: Entity,
+        name: &Name,
+        children: &Children,
+        selected_visibility: &mut Query<
+            &mut Visibility,
+            (With<SelectedBotVisual>, Without<PossessedBotVisual>),
+        >,
+        possessed_visibility: &mut Query<
+            &mut Visibility,
+            (With<PossessedBotVisual>, Without<SelectedBotVisual>),
+        >,
+    ) {
         info!("[{}]: released!", name.as_ref());
 
         commands
             .entity(entity)
             .remove::<SelectedBot>()
             .remove::<PossessedBot>();
+
+        for &child in children.iter() {
+            if let Ok(mut selected_visibility) = selected_visibility.get_mut(child) {
+                selected_visibility.is_visible = false;
+            }
+
+            if let Ok(mut possessed_visibility) = possessed_visibility.get_mut(child) {
+                possessed_visibility.is_visible = false;
+            }
+        }
     }
 
     pub fn fire_weapon(

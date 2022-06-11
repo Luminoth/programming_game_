@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::bundles::actor::*;
 use crate::components::physics::*;
 use crate::components::projectile::*;
+use crate::components::*;
 use crate::game::PROJECTILE_SORT;
 
 #[derive(Debug, Bundle)]
@@ -49,7 +50,7 @@ impl ProjectileBundle {
         bundle.with_children(|parent| {
             let mut model = parent.spawn();
             projectile.spawn_model(&mut model);
-            model.insert(Name::new("Model"));
+            model.insert(Model).insert(Name::new("Model"));
         });
 
         bundle.id()

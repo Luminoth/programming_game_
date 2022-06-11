@@ -3,6 +3,7 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::bundles::actor::*;
 use crate::components::corpse::*;
+use crate::components::*;
 use crate::game::{CORPSE_RADIUS, CORPSE_SORT};
 
 #[derive(Debug, Default, Bundle)]
@@ -47,6 +48,7 @@ impl CorpseBundle {
                     }),
                     Transform::default(),
                 ))
+                .insert(Model)
                 .insert(Name::new("Model"));
         });
 

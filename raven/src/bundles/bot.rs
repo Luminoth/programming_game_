@@ -9,6 +9,7 @@ use crate::components::inventory::*;
 use crate::components::physics::*;
 use crate::components::spawnpoint::*;
 use crate::components::weapon::*;
+use crate::components::*;
 use crate::game::{BOT_RADIUS, BOT_SORT};
 
 #[derive(Debug, Bundle)]
@@ -117,8 +118,9 @@ impl BotBundle {
                         color,
                         options: FillOptions::default(),
                     }),
-                    Transform::default(),
+                    Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
                 ))
+                .insert(Model)
                 .insert(Name::new("Model"));
         });
 

@@ -10,3 +10,8 @@ pub mod projectile;
 pub mod spawnpoint;
 pub mod wall;
 pub mod weapon;
+
+use bevy::prelude::*;
+
+#[derive(Debug, Default, Component)]
+pub struct Model;

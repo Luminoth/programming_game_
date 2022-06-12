@@ -111,7 +111,7 @@ impl Bounds {
         transform: &Transform,
         origin: Vec2,
         direction: Vec2,
-        max_distance: f32,
+        max_distance_squared: f32,
     ) -> bool {
         let position = transform.translation.truncate();
 
@@ -151,7 +151,7 @@ impl Bounds {
                 let dx = tmax - tmin;
                 let dy = tymax - tymin;
                 let d = dx * dx + dy * dy;
-                d <= max_distance * max_distance
+                d <= max_distance_squared
             }
         }
     }

@@ -45,13 +45,17 @@ impl Physical {
         self.acceleration += force;
     }
 
+    pub fn future_position(&self, transform: &Transform, dt: f32) -> Vec2 {
+        let position = transform.translation.truncate();
+        position + self.velocity * dt
+    }
+
     pub fn update(&mut self, transform: &mut Transform) {
         // https://github.com/bevyengine/bevy/issues/2041
         let dt = PHYSICS_STEP;
 
         // semi-implicit euler integration
         self.velocity += self.acceleration * dt;
-        self.velocity = self.velocity;
 
         transform.translation += (self.velocity * dt).extend(0.0);
 

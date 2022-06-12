@@ -2,8 +2,10 @@ use bevy::prelude::*;
 
 use crate::components::bot::*;
 use crate::components::collision::*;
+use crate::components::physics::*;
 use crate::components::projectile::*;
 use crate::components::wall::*;
+use crate::game::PHYSICS_STEP;
 use crate::ORTHO_SIZE;
 
 pub fn check_bounds(
@@ -28,14 +30,23 @@ pub fn check_bounds(
 
 pub fn check_collision(
     mut commands: Commands,
-    projectiles: Query<(Entity, &Projectile, &Transform, &Bounds, &Name)>,
+    projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
     walls: Query<(&Transform, &Bounds), With<Wall>>,
     mut bots: Query<(Entity, &mut Bot, &Transform, &Bounds, &Name)>,
 ) {
-    for (entity, projectile, transform, bounds, name) in projectiles.iter() {
+    for (entity, projectile, physical, bounds, name) in projectiles.iter() {
+        let position = physical.transform.translation.truncate();
+        let future_position = physical
+            .physical
+            .future_position(physical.transform, PHYSICS_STEP);
+
+        let v = future_position - position;
+        let distance_squared = v.length_squared();
+        let direction = v.normalize_or_zero();
+
         let mut despawned = false;
         for (wall_transform, wall_bounds) in walls.iter() {
-            if bounds.bounds_intersects(transform, wall_bounds, wall_transform) {
+            if wall_bounds.ray_intersects(wall_transform, position, direction, distance_squared) {
                 info!("projectile '{}' hit a wall", name);
                 commands.entity(entity).despawn_recursive();
 
@@ -53,7 +64,7 @@ pub fn check_collision(
                 continue;
             }
 
-            if bounds.bounds_intersects(transform, bot_bounds, bot_transform) {
+            if bounds.bounds_intersects(physical.transform, bot_bounds, bot_transform) {
                 info!("projectile '{}' hit bot '{}'!", name, bot_name);
                 bot.damage(
                     &mut commands,

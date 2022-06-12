@@ -9,6 +9,24 @@ pub enum Bounds {
 }
 
 impl Bounds {
+    pub fn closest_point(&self, transform: &Transform, point: Vec2) -> Vec2 {
+        let position = transform.translation.truncate();
+        match self {
+            Self::Circle(center, radius) => todo!(),
+            Self::Box(center, extents) => {
+                let center = position + *center;
+                let half_extents = *extents / 2.0;
+
+                let min = center - half_extents;
+                let max = center + half_extents;
+
+                let x = point.x.max(min.x).min(max.x);
+                let y = point.y.max(min.y).min(max.y);
+                Vec2::new(x, y)
+            }
+        }
+    }
+
     pub fn contains(&self, transform: &Transform, point: Vec2) -> bool {
         let position = transform.translation.truncate();
 
@@ -21,12 +39,9 @@ impl Bounds {
             }
             Self::Box(center, extents) => {
                 let center = position + *center;
-                let half_extents = *extents / 2.0;
 
-                let min = center - half_extents;
-                let max = center + half_extents;
-
-                point.x >= min.x && point.x <= max.x && point.y >= min.y && point.y <= max.y
+                (center.x - point.x).abs() * 2.0 <= extents.x
+                    && (center.y - point.y).abs() * 2.0 <= extents.y
             }
         }
     }
@@ -42,12 +57,11 @@ impl Bounds {
         let box_max = box_center + box_half_extents;
 
         // point on the box nearest the circle
-        let nearest = Vec2::new(
-            box_min.x.max(circle_center.x.min(box_max.x)),
-            box_min.y.max(circle_center.y.min(box_max.y)),
-        );
+        let x = circle_center.x.max(box_min.x).min(box_max.x);
+        let y = circle_center.y.max(box_min.y).min(box_max.y);
+        let closest_point = Vec2::new(x, y);
 
-        let d = circle_center.distance_squared(nearest);
+        let d = circle_center.distance_squared(closest_point);
         d <= circle_radius * circle_radius
     }
 
@@ -87,19 +101,11 @@ impl Bounds {
                         Self::box_circle_intersects(other_center, *other_radius, center, *extents)
                     }
                     Self::Box(other_center, other_extents) => {
-                        let half_extents = *extents / 2.0;
-                        let min = center - half_extents;
-                        let max = center + half_extents;
-
                         let other_center = other_position + *other_center;
-                        let other_half_extents = *other_extents / 2.0;
-                        let other_min = other_center - other_half_extents;
-                        let other_max = other_center + other_half_extents;
 
-                        other_min.x <= max.x
-                            && other_max.x >= min.x
-                            && other_max.y >= min.y
-                            && other_min.y <= max.y
+                        (center.x - other_center.x).abs() * 2.0 <= (extents.x + other_extents.x)
+                            && (center.y - other_center.y).abs() * 2.0
+                                <= (extents.y + other_extents.y)
                     }
                 }
             }

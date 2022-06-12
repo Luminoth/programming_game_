@@ -51,7 +51,7 @@ impl Bounds {
         d <= circle_radius * circle_radius
     }
 
-    pub fn intersects(
+    pub fn bounds_intersects(
         &self,
         transform: &Transform,
         other: &Bounds,
@@ -102,6 +102,56 @@ impl Bounds {
                             && other_min.y <= max.y
                     }
                 }
+            }
+        }
+    }
+
+    pub fn ray_intersects(
+        &self,
+        transform: &Transform,
+        origin: Vec2,
+        direction: Vec2,
+        max_distance: f32,
+    ) -> bool {
+        let position = transform.translation.truncate();
+
+        match self {
+            Self::Circle(center, radius) => {
+                let center = position + *center;
+
+                todo!();
+            }
+            Self::Box(center, extents) => {
+                // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
+
+                let center = position + *center;
+                let half_extents = *extents / 2.0;
+
+                let min = center - half_extents;
+                let max = center + half_extents;
+
+                let invdir = 1.0 / direction;
+
+                let (tmin, tmax) = if invdir.x >= 0.0 {
+                    ((min.x - origin.x) * invdir.x, (max.x - origin.x) * invdir.x)
+                } else {
+                    ((max.x - origin.x) * invdir.x, (min.x - origin.x) * invdir.x)
+                };
+
+                let (tymin, tymax) = if invdir.x >= 0.0 {
+                    ((min.y - origin.y) * invdir.y, (max.y - origin.y) * invdir.y)
+                } else {
+                    ((max.y - origin.y) * invdir.y, (min.y - origin.y) * invdir.y)
+                };
+
+                if (tmin > tymax) || (tymin > tmax) {
+                    return false;
+                }
+
+                let dx = tmax - tmin;
+                let dy = tymax - tymin;
+                let d = dx * dx + dy * dy;
+                d <= max_distance * max_distance
             }
         }
     }

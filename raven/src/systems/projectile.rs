@@ -64,7 +64,7 @@ pub fn check_collision(
                 continue;
             }
 
-            if bounds.bounds_intersects(physical.transform, bot_bounds, bot_transform) {
+            if bot_bounds.ray_intersects(bot_transform, position, direction, distance) {
                 info!("projectile '{}' hit bot '{}'!", name, bot_name);
                 bot.damage(
                     &mut commands,

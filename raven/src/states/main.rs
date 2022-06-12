@@ -28,6 +28,7 @@ pub fn setup(mut commands: Commands) {
 
     // spawn the world
     // TODO: this should come from the map
+
     WallBundle::spawn(&mut commands, Vec2::new(20.0, 0.0), Vec2::new(1.0, 30.0));
 
     // TODO: spawn spawnpoints
@@ -35,12 +36,21 @@ pub fn setup(mut commands: Commands) {
     // spawn bots
     // TODO: this should be done using spawnpoints
     // and should probably happen after setup
+
     BotBundle::spawn_at_position(
         &mut commands,
-        "Test",
-        Color::WHITE,
+        "Bot A",
+        Color::TURQUOISE,
         10,
         Vec2::new(0.0, 10.0),
+    );
+
+    BotBundle::spawn_at_position(
+        &mut commands,
+        "Bot B",
+        Color::ORANGE,
+        10,
+        Vec2::new(-10.0, -10.0),
     );
 }
 

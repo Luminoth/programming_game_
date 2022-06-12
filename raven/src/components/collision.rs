@@ -11,12 +11,18 @@ pub enum Bounds {
 impl Bounds {
     pub fn closest_point(&self, transform: &Transform, point: Vec2) -> Vec2 {
         let position = transform.translation.truncate();
+
         match self {
-            Self::Circle(center, radius) => todo!(),
+            Self::Circle(center, radius) => {
+                let center = position + *center;
+
+                let direction = (point - center).normalize_or_zero();
+                direction * *radius
+            }
             Self::Box(center, extents) => {
                 let center = position + *center;
-                let half_extents = *extents / 2.0;
 
+                let half_extents = *extents / 2.0;
                 let min = center - half_extents;
                 let max = center + half_extents;
 
@@ -40,8 +46,8 @@ impl Bounds {
             Self::Box(center, extents) => {
                 let center = position + *center;
 
-                (center.x - point.x).abs() * 2.0 <= extents.x
-                    && (center.y - point.y).abs() * 2.0 <= extents.y
+                (point.x - center.x).abs() * 2.0 <= extents.x
+                    && (point.y - center.y).abs() * 2.0 <= extents.y
             }
         }
     }
@@ -120,20 +126,34 @@ impl Bounds {
         max_distance: f32,
     ) -> bool {
         let position = transform.translation.truncate();
-        let p1 = origin + direction * max_distance;
 
         match self {
             Self::Circle(center, radius) => {
                 let center = position + *center;
 
-                todo!();
+                let m = origin - center;
+                let b = m.dot(direction);
+                let c = m.dot(m) - radius * radius;
+                if c > 0.0 && b > 0.0 {
+                    return false;
+                }
+
+                let discr = b * b - c;
+                if discr < 0.0 {
+                    return false;
+                }
+
+                let t = -b - discr.sqrt();
+                t < max_distance
             }
             Self::Box(center, extents) => {
                 let center = position + *center;
-                let half_extents = *extents / 2.0;
 
+                let half_extents = *extents / 2.0;
                 let min = center - half_extents;
                 let max = center + half_extents;
+
+                let p1 = origin + direction * max_distance;
 
                 let c = (min + max) * 0.5;
                 let e = max - center;
@@ -146,12 +166,7 @@ impl Bounds {
                     return false;
                 }
 
-                let ady = d.y.abs();
-                if m.y.abs() > e.y + ady {
-                    return false;
-                }
-
-                true
+                m.y.abs() <= e.y + d.y.abs()
             }
         }
     }

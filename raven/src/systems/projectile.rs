@@ -41,12 +41,12 @@ pub fn check_collision(
             .future_position(physical.transform, PHYSICS_STEP);
 
         let v = future_position - position;
-        let distance_squared = v.length_squared();
+        let distance = v.length();
         let direction = v.normalize_or_zero();
 
         let mut despawned = false;
         for (wall_transform, wall_bounds) in walls.iter() {
-            if wall_bounds.ray_intersects(wall_transform, position, direction, distance_squared) {
+            if wall_bounds.ray_intersects(wall_transform, position, direction, distance) {
                 info!("projectile '{}' hit a wall", name);
                 commands.entity(entity).despawn_recursive();
 

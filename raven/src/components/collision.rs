@@ -117,9 +117,10 @@ impl Bounds {
         transform: &Transform,
         origin: Vec2,
         direction: Vec2,
-        max_distance_squared: f32,
+        max_distance: f32,
     ) -> bool {
         let position = transform.translation.truncate();
+        let p1 = origin + direction * max_distance;
 
         match self {
             Self::Circle(center, radius) => {
@@ -128,36 +129,29 @@ impl Bounds {
                 todo!();
             }
             Self::Box(center, extents) => {
-                // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
-
                 let center = position + *center;
                 let half_extents = *extents / 2.0;
 
                 let min = center - half_extents;
                 let max = center + half_extents;
 
-                let invdir = 1.0 / direction;
+                let c = (min + max) * 0.5;
+                let e = max - center;
+                let m = (origin + p1) * 0.5;
+                let d = p1 - m;
+                let m = m - c;
 
-                let (tmin, tmax) = if invdir.x >= 0.0 {
-                    ((min.x - origin.x) * invdir.x, (max.x - origin.x) * invdir.x)
-                } else {
-                    ((max.x - origin.x) * invdir.x, (min.x - origin.x) * invdir.x)
-                };
-
-                let (tymin, tymax) = if invdir.x >= 0.0 {
-                    ((min.y - origin.y) * invdir.y, (max.y - origin.y) * invdir.y)
-                } else {
-                    ((max.y - origin.y) * invdir.y, (min.y - origin.y) * invdir.y)
-                };
-
-                if (tmin > tymax) || (tymin > tmax) {
+                let adx = d.x.abs();
+                if m.x.abs() > e.x + adx {
                     return false;
                 }
 
-                let dx = tmax - tmin;
-                let dy = tymax - tymin;
-                let d = dx * dx + dy * dy;
-                d <= max_distance_squared
+                let ady = d.y.abs();
+                if m.y.abs() > e.y + ady {
+                    return false;
+                }
+
+                true
             }
         }
     }

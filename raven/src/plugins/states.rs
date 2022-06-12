@@ -64,7 +64,7 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::projectile::check_collision
                             .label(Systems::Collision)
-                            .after(Systems::Physics),
+                            .before(Systems::Physics),
                     ),
             )
             // per-frame systems

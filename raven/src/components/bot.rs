@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
@@ -86,7 +87,7 @@ impl Bot {
         entity: Entity,
         name: impl AsRef<str>,
         children: &Children,
-        previous_selected: Option<(Entity, &Bot, &Name, &Children)>,
+        previous_selected: Option<(Entity, BotQueryItem, &Children)>,
         previous_possessed: Option<Entity>,
         selected_visibility: &mut Query<
             &mut Visibility,
@@ -101,18 +102,14 @@ impl Bot {
             return;
         }
 
-        if let Some((
-            previous_selected_entity,
-            previous_selected_bot,
-            previous_selected_name,
-            previous_selected_children,
-        )) = previous_selected
+        if let Some((previous_selected_entity, previous_selected_bot, previous_selected_children)) =
+            previous_selected
         {
             if previous_selected_entity != entity {
-                previous_selected_bot.deselect(
+                previous_selected_bot.bot.deselect(
                     commands,
                     previous_selected_entity,
-                    previous_selected_name,
+                    previous_selected_bot.name,
                     previous_selected_children,
                     selected_visibility,
                     possessed_visibility,
@@ -290,6 +287,22 @@ impl Bot {
 
         warn!("TODO: respawn {}", name.as_ref());
     }
+}
+
+// this doesn't include a transform because
+// most of the time the PhysicalQuery captures that
+#[derive(WorldQuery)]
+#[world_query(derive(Debug))]
+pub struct BotQuery<'w> {
+    pub bot: &'w Bot,
+    pub name: &'w Name,
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct BotQueryMut<'w> {
+    pub bot: &'w mut Bot,
+    pub name: &'w Name,
 }
 
 #[derive(Debug, Default, Component)]

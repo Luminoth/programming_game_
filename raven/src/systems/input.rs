@@ -13,8 +13,8 @@ pub fn select_bot(
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
-    bots: Query<(Entity, &Bot, &Name, BoundsQuery, &Children)>,
-    selected: Query<(Entity, &Bot, &Name, &Children), With<SelectedBot>>,
+    bots: Query<(Entity, BotQuery, BoundsQuery, &Children)>,
+    selected: Query<(Entity, BotQuery, &Children), With<SelectedBot>>,
     possessed: Query<Entity, With<PossessedBot>>,
     mut selected_visibility: Query<
         &mut Visibility,
@@ -30,12 +30,12 @@ pub fn select_bot(
         let window = windows.get_primary().unwrap();
         if let Some(mouse_position) = get_mouse_position((camera.camera, camera.transform), window)
         {
-            for (entity, bot, name, bounds, children) in bots.iter() {
+            for (entity, bot, bounds, children) in bots.iter() {
                 if bounds.bounds.contains(bounds.transform, mouse_position) {
-                    bot.select(
+                    bot.bot.select(
                         &mut commands,
                         entity,
-                        name.as_str(),
+                        bot.name.as_str(),
                         children,
                         selected.optional_single(),
                         possessed.optional_single(),
@@ -52,8 +52,8 @@ pub fn select_bot(
 pub fn deselect_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    selected: Query<(Entity, &Bot, &Name, &Children), With<SelectedBot>>,
-    possessed: Query<(Entity, &Bot, &Name, &Children), With<PossessedBot>>,
+    selected: Query<(Entity, BotQuery, &Children), With<SelectedBot>>,
+    possessed: Query<(Entity, BotQuery, &Children), With<PossessedBot>>,
     mut selected_visibility: Query<
         &mut Visibility,
         (With<SelectedBotVisual>, Without<PossessedBotVisual>),
@@ -64,20 +64,20 @@ pub fn deselect_bot(
     >,
 ) {
     if keys.just_pressed(KeyCode::X) {
-        if let Some((entity, bot, name, children)) = possessed.optional_single() {
-            bot.deselect(
+        if let Some((entity, bot, children)) = possessed.optional_single() {
+            bot.bot.deselect(
                 &mut commands,
                 entity,
-                name,
+                bot.name,
                 children,
                 &mut selected_visibility,
                 &mut possessed_visibility,
             );
-        } else if let Some((entity, bot, name, children)) = selected.optional_single() {
-            bot.deselect(
+        } else if let Some((entity, bot, children)) = selected.optional_single() {
+            bot.bot.deselect(
                 &mut commands,
                 entity,
-                name,
+                bot.name,
                 children,
                 &mut selected_visibility,
                 &mut possessed_visibility,
@@ -168,11 +168,12 @@ pub fn fill_inventory(
 pub fn damage_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    mut possessed: Query<(Entity, &mut Bot, &Transform, &Name), With<PossessedBot>>,
+    mut possessed: Query<(Entity, BotQueryMut, &Transform), With<PossessedBot>>,
 ) {
     if keys.just_pressed(KeyCode::D) {
-        if let Some((entity, mut bot, transform, name)) = possessed.optional_single_mut() {
-            bot.damage(&mut commands, entity, transform, name.as_str(), 1);
+        if let Some((entity, mut bot, transform)) = possessed.optional_single_mut() {
+            bot.bot
+                .damage(&mut commands, entity, transform, bot.name.as_str(), 1);
         } else {
             info!("no bot possessed for damage");
         }
@@ -182,11 +183,12 @@ pub fn damage_bot(
 pub fn kill_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    mut possessed: Query<(Entity, &mut Bot, &Transform, &Name), With<PossessedBot>>,
+    mut possessed: Query<(Entity, BotQueryMut, &Transform), With<PossessedBot>>,
 ) {
     if keys.just_pressed(KeyCode::K) {
-        if let Some((entity, mut bot, transform, name)) = possessed.optional_single_mut() {
-            bot.kill(&mut commands, entity, transform, name.as_str());
+        if let Some((entity, mut bot, transform)) = possessed.optional_single_mut() {
+            bot.bot
+                .kill(&mut commands, entity, transform, bot.name.as_str());
         } else {
             info!("no bot possessed for kill");
         }

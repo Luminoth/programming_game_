@@ -62,6 +62,5 @@ pub fn teardown(mut commands: Commands, entities: Query<Entity>) {
     }
 
     commands.remove_resource::<NavGraph>();
-    commands.remove_resource::<Map>();
     commands.remove_resource::<ClearColor>();
 }

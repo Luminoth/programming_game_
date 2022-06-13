@@ -46,8 +46,10 @@ pub fn check_collision(
 
         let mut despawned = false;
         for (wall_transform, wall_bounds) in walls.iter() {
-            if wall_bounds.ray_intersects(wall_transform, position, direction, distance) {
-                info!("projectile '{}' hit a wall", name);
+            if let Some(hit) =
+                wall_bounds.ray_intersects(wall_transform, position, direction, distance)
+            {
+                info!("projectile '{}' hit a wall at {}", name, hit);
                 commands.entity(entity).despawn_recursive();
 
                 despawned = true;
@@ -64,8 +66,10 @@ pub fn check_collision(
                 continue;
             }
 
-            if bot_bounds.ray_intersects(bot_transform, position, direction, distance) {
-                info!("projectile '{}' hit bot '{}'!", name, bot_name);
+            if let Some(hit) =
+                bot_bounds.ray_intersects(bot_transform, position, direction, distance)
+            {
+                info!("projectile '{}' hit bot '{}' at {}!", name, bot_name, hit);
                 bot.damage(
                     &mut commands,
                     bot_entity,

@@ -2,6 +2,8 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
+// Real-Time Collision Detection, Ericson
+
 #[derive(Debug, Clone, Component, Inspectable)]
 pub enum Bounds {
     Circle(Vec2, f32),
@@ -124,7 +126,7 @@ impl Bounds {
         origin: Vec2,
         direction: Vec2,
         max_distance: f32,
-    ) -> bool {
+    ) -> Option<Vec2> {
         let position = transform.translation.truncate();
 
         match self {
@@ -135,16 +137,24 @@ impl Bounds {
                 let b = m.dot(direction);
                 let c = m.dot(m) - radius * radius;
                 if c > 0.0 && b > 0.0 {
-                    return false;
+                    return None;
                 }
 
                 let discr = b * b - c;
                 if discr < 0.0 {
-                    return false;
+                    return None;
                 }
 
-                let t = -b - discr.sqrt();
-                t < max_distance
+                let mut t = -b - discr.sqrt();
+                if t < 0.0 {
+                    t = 0.0;
+                }
+
+                if t > max_distance {
+                    return None;
+                }
+
+                Some(origin + direction * t)
             }
             Self::Box(center, extents) => {
                 let center = position + *center;
@@ -153,20 +163,52 @@ impl Bounds {
                 let min = center - half_extents;
                 let max = center + half_extents;
 
-                let p1 = origin + direction * max_distance;
+                let mut tmin = 0.0_f32;
+                let mut tmax = f32::MAX;
 
-                let c = (min + max) * 0.5;
-                let e = max - center;
-                let m = (origin + p1) * 0.5;
-                let d = p1 - m;
-                let m = m - c;
+                if direction.x.abs() < f32::EPSILON {
+                    if origin.x < min.x || origin.x > max.x {
+                        return None;
+                    }
+                } else {
+                    let ood = 1.0 / direction.x;
+                    let mut t1 = (min.x - origin.x) * ood;
+                    let mut t2 = (max.x - origin.x) * ood;
+                    if t1 > t2 {
+                        std::mem::swap(&mut t1, &mut t2);
+                    }
 
-                let adx = d.x.abs();
-                if m.x.abs() > e.x + adx {
-                    return false;
+                    tmin = tmin.max(t1);
+                    tmax = tmax.min(t2);
+                    if tmin > tmax {
+                        return None;
+                    }
                 }
 
-                m.y.abs() <= e.y + d.y.abs()
+                if direction.y.abs() < f32::EPSILON {
+                    if origin.y < min.y || origin.y > max.y {
+                        return None;
+                    }
+                } else {
+                    let ood = 1.0 / direction.y;
+                    let mut t1 = (min.y - origin.y) * ood;
+                    let mut t2 = (max.y - origin.y) * ood;
+                    if t1 > t2 {
+                        std::mem::swap(&mut t1, &mut t2);
+                    }
+
+                    tmin = tmin.max(t1);
+                    tmax = tmax.min(t2);
+                    if tmin > tmax {
+                        return None;
+                    }
+                }
+
+                if tmin > max_distance {
+                    return None;
+                }
+
+                Some(origin + direction * tmin)
             }
         }
     }

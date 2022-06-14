@@ -31,7 +31,10 @@ pub fn select_bot(
         if let Some(mouse_position) = get_mouse_position((camera.camera, camera.transform), window)
         {
             for (entity, bot, bounds, children) in bots.iter() {
-                if bounds.bounds.contains(bounds.transform, mouse_position) {
+                if bounds
+                    .bounds
+                    .contains(bounds.transform.translation.truncate(), mouse_position)
+                {
                     bot.bot.select(
                         &mut commands,
                         entity,

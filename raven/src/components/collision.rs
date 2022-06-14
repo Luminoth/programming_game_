@@ -11,9 +11,7 @@ pub enum Bounds {
 }
 
 impl Bounds {
-    pub fn closest_point(&self, transform: &Transform, point: Vec2) -> Vec2 {
-        let position = transform.translation.truncate();
-
+    pub fn closest_point(&self, position: Vec2, point: Vec2) -> Vec2 {
         match self {
             Self::Circle(center, radius) => {
                 let center = position + *center;
@@ -35,9 +33,7 @@ impl Bounds {
         }
     }
 
-    pub fn contains(&self, transform: &Transform, point: Vec2) -> bool {
-        let position = transform.translation.truncate();
-
+    pub fn contains(&self, position: Vec2, point: Vec2) -> bool {
         match self {
             Self::Circle(center, radius) => {
                 let center = position + *center;
@@ -73,15 +69,7 @@ impl Bounds {
         d <= circle_radius * circle_radius
     }
 
-    pub fn bounds_intersects(
-        &self,
-        transform: &Transform,
-        other: &Bounds,
-        other_transform: &Transform,
-    ) -> bool {
-        let position = transform.translation.truncate();
-        let other_position = other_transform.translation.truncate();
-
+    pub fn bounds_intersects(&self, position: Vec2, other: &Bounds, other_position: Vec2) -> bool {
         match self {
             Self::Circle(center, radius) => {
                 let center = position + *center;
@@ -122,13 +110,11 @@ impl Bounds {
 
     pub fn ray_intersects(
         &self,
-        transform: &Transform,
+        position: Vec2,
         origin: Vec2,
         direction: Vec2,
         max_distance: f32,
     ) -> Option<Vec2> {
-        let position = transform.translation.truncate();
-
         match self {
             Self::Circle(center, radius) => {
                 let center = position + *center;
@@ -231,12 +217,11 @@ mod tests {
         let center = Vec2::new(5.0, 5.0);
         let position = Vec2::new(5.0, 5.0);
 
-        let transform = Transform::from_translation(position.extend(0.0));
         let bounds = Bounds::Circle(center, radius);
 
         let point = position + center;
 
-        assert_eq!(bounds.contains(&transform, point), true);
+        assert_eq!(bounds.contains(position, point), true);
     }
 
     #[test]
@@ -245,13 +230,12 @@ mod tests {
         let center = Vec2::new(5.0, 5.0);
         let position = Vec2::new(5.0, 5.0);
 
-        let transform = Transform::from_translation(position.extend(0.0));
         let bounds = Bounds::Circle(center, radius);
 
         let angle: f32 = 0.5;
         let point = position + center + Vec2::new(angle.cos(), angle.sin()) * radius;
 
-        assert_eq!(bounds.contains(&transform, point), true);
+        assert_eq!(bounds.contains(position, point), true);
     }
 
     #[test]
@@ -260,13 +244,12 @@ mod tests {
         let center = Vec2::new(5.0, 5.0);
         let position = Vec2::new(5.0, 5.0);
 
-        let transform = Transform::from_translation(position.extend(0.0));
         let bounds = Bounds::Circle(center, radius);
 
         let angle: f32 = 0.5;
         let point = position + center + Vec2::new(angle.cos(), angle.sin()) * (radius + 0.1);
 
-        assert_eq!(bounds.contains(&transform, point), false);
+        assert_eq!(bounds.contains(position, point), false);
     }
 
     #[test]
@@ -275,12 +258,11 @@ mod tests {
         let center = Vec2::new(5.0, 5.0);
         let position = Vec2::new(5.0, 5.0);
 
-        let transform = Transform::from_translation(position.extend(0.0));
         let bounds = Bounds::Box(center, extents);
 
         let point = position + center;
 
-        assert_eq!(bounds.contains(&transform, point), true);
+        assert_eq!(bounds.contains(position, point), true);
     }
 
     #[test]
@@ -289,13 +271,12 @@ mod tests {
         let center = Vec2::new(5.0, 5.0);
         let position = Vec2::new(5.0, 5.0);
 
-        let transform = Transform::from_translation(position.extend(0.0));
         let bounds = Bounds::Box(center, extents);
 
         let half_extents = extents / 2.0;
         let point = position + center + half_extents;
 
-        assert_eq!(bounds.contains(&transform, point), true);
+        assert_eq!(bounds.contains(position, point), true);
     }
 
     #[test]
@@ -304,14 +285,13 @@ mod tests {
         let center = Vec2::new(5.0, 5.0);
         let position = Vec2::new(5.0, 5.0);
 
-        let transform = Transform::from_translation(position.extend(0.0));
         let bounds = Bounds::Box(center, extents);
 
         let mut half_extents = extents / 2.0;
         half_extents.x += 0.1;
         let point = position + center + half_extents;
 
-        assert_eq!(bounds.contains(&transform, point), false);
+        assert_eq!(bounds.contains(position, point), false);
     }
 
     // TODO: test intersections

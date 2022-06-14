@@ -271,6 +271,8 @@ impl Bot {
         self.respawn(commands, entity, name);
     }
 
+    // TODO: we need to respawn on the *next* frame
+    // but we should also have bots be invincible on spawn for a little bit
     pub fn respawn(&mut self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
         if self.invulnerable {
             warn!("[{}]: unkillable but reborn!", name.as_ref());

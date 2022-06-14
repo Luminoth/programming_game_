@@ -2,6 +2,7 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
+use crate::components::bot::*;
 use crate::components::collision::*;
 use crate::game::{BOLT_RADIUS, PELLET_RADIUS, ROCKET_RADIUS, SLUG_RADIUS};
 
@@ -9,6 +10,7 @@ use crate::game::{BOLT_RADIUS, PELLET_RADIUS, ROCKET_RADIUS, SLUG_RADIUS};
 
 pub const PELLET_SPREAD: f32 = 7.0;
 pub const NUMBER_OF_PELLETS: usize = 10;
+pub const ROCKET_EXPLOSION_RADIUS: f32 = 20.0;
 
 #[derive(Debug, Clone, PartialEq, Eq, Component)]
 pub enum Projectile {
@@ -72,6 +74,42 @@ impl Projectile {
             Self::Rocket(_) => 10,
             Self::Slug(_) => 10,
         }
+    }
+
+    pub fn on_impact<'w, B>(&self, commands: &mut Commands, entity: Entity, hit: Vec2, bots: B)
+    where
+        B: Iterator<Item = (Entity, BotQueryMutItem<'w>, &'w Transform, &'w Bounds)>,
+    {
+        if let Self::Rocket(_) = self {
+            let explosion_bounds = Bounds::Circle(Vec2::ZERO, ROCKET_EXPLOSION_RADIUS);
+
+            for (bot_entity, mut bot, bot_transform, bot_bounds) in bots {
+                // don't re-hit the initial impact entity
+                // note that we are allowing explosions to impact the rocket owner here
+                if bot_entity == entity {
+                    continue;
+                }
+
+                if explosion_bounds.bounds_intersects(
+                    hit,
+                    bot_bounds,
+                    bot_transform.translation.truncate(),
+                ) {
+                    info!("rocket explosion hit bot '{}' at {}!", bot.name, hit);
+                    bot.bot.damage(
+                        commands,
+                        bot_entity,
+                        bot_transform,
+                        bot.name,
+                        self.get_damage() / 2,
+                    );
+                }
+            }
+
+            // TODO: spawn the explosion visual
+        }
+
+        commands.entity(entity).despawn_recursive();
     }
 
     pub fn spawn_model(&self, commands: &mut EntityCommands) {

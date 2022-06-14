@@ -32,7 +32,7 @@ pub fn check_collision(
     mut commands: Commands,
     projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
     walls: Query<(&Transform, &Bounds), With<Wall>>,
-    mut bots: Query<(Entity, &mut Bot, &Transform, &Bounds, &Name)>,
+    mut bots: Query<(Entity, BotQueryMut, &Transform, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
         let position = physical.transform.translation.truncate();
@@ -46,11 +46,14 @@ pub fn check_collision(
 
         let mut despawned = false;
         for (wall_transform, wall_bounds) in walls.iter() {
-            if let Some(hit) =
-                wall_bounds.ray_intersects(wall_transform, position, direction, distance)
-            {
+            if let Some(hit) = wall_bounds.ray_intersects(
+                wall_transform.translation.truncate(),
+                position,
+                direction,
+                distance,
+            ) {
                 info!("projectile '{}' hit a wall at {}", name, hit);
-                commands.entity(entity).despawn_recursive();
+                projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
 
                 despawned = true;
                 break;
@@ -61,23 +64,27 @@ pub fn check_collision(
             continue;
         }
 
-        for (bot_entity, mut bot, bot_transform, bot_bounds, bot_name) in bots.iter_mut() {
+        for (bot_entity, mut bot, bot_transform, bot_bounds) in bots.iter_mut() {
             if bot_entity == projectile.get_owner() {
                 continue;
             }
 
-            if let Some(hit) =
-                bot_bounds.ray_intersects(bot_transform, position, direction, distance)
-            {
-                info!("projectile '{}' hit bot '{}' at {}!", name, bot_name, hit);
-                bot.damage(
+            if let Some(hit) = bot_bounds.ray_intersects(
+                bot_transform.translation.truncate(),
+                position,
+                direction,
+                distance,
+            ) {
+                info!("projectile '{}' hit bot '{}' at {}!", name, bot.name, hit);
+                bot.bot.damage(
                     &mut commands,
                     bot_entity,
                     bot_transform,
-                    bot_name,
+                    bot.name,
                     projectile.get_damage(),
                 );
-                commands.entity(entity).despawn_recursive();
+
+                projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
 
                 despawned = true;
                 break;

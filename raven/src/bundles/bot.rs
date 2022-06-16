@@ -66,6 +66,8 @@ impl BotBundle {
             },
             physical: Physical {
                 mass: 75.0,
+                max_force: 200.0,
+                max_speed: 100.0,
                 ..Default::default()
             },
             bounds: Bounds::Circle(Vec2::ZERO, BOT_RADIUS),

@@ -2,6 +2,7 @@ pub mod debug;
 pub mod input;
 pub mod physics;
 pub mod projectile;
+pub mod steering;
 pub mod weapons;
 
 use bevy::prelude::*;
@@ -12,6 +13,10 @@ pub enum Systems {
     Collision,
     BoundsCheck,
     Input,
+
+    // steering
+    Steering,
+    SteeringUpdatePhysics,
 
     Weapons,
 }

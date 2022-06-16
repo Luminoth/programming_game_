@@ -53,6 +53,14 @@ impl Plugin for MainStatePlugin {
                     ))
                     /*SystemSet::on_update(GameState::Main)
                     .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))*/
+                    // steering
+                    .with_system(systems::steering::update_seek.label(Systems::Steering))
+                    .with_system(systems::steering::update_arrive.label(Systems::Steering))
+                    .with_system(
+                        systems::steering::update
+                            .label(Systems::SteeringUpdatePhysics)
+                            .after(Systems::Steering),
+                    )
                     // physics
                     .with_system(systems::physics::update.label(Systems::Physics))
                     // bounds checking
@@ -70,6 +78,8 @@ impl Plugin for MainStatePlugin {
             // per-frame systems
             .add_system_set(
                 SystemSet::on_update(GameState::Main)
+                    // steering
+                    .with_system(systems::steering::update_debug)
                     // input
                     .with_system(systems::input::select_bot.label(Systems::Input))
                     .with_system(systems::input::deselect_bot.label(Systems::Input))

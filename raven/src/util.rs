@@ -70,3 +70,32 @@ impl Vec2Utils for Vec2 {
         (Quat::from_rotation_z(angle) * v).truncate()
     }
 }
+
+pub trait TransformUtils {
+    fn set_world_translation(&mut self, global_transform: &GlobalTransform, world_position: Vec3);
+}
+
+impl TransformUtils for Transform {
+    fn set_world_translation(&mut self, global_transform: &GlobalTransform, world_position: Vec3) {
+        /*println!(
+            "before global: {}, local: {} to world_position: {}",
+            global_transform.translation, self.translation, world_position
+        );*/
+
+        let parent_position = global_transform.translation - self.translation;
+        //println!("parent: {}", parent_position);
+
+        let local_position = world_position - parent_position;
+        if self.translation.distance_squared(local_position) > f32::EPSILON * f32::EPSILON {
+            self.translation = local_position;
+        }
+        //println!("after local: {}", self.translation);
+    }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct TransformQueryMut<'w> {
+    pub global_transform: &'w GlobalTransform,
+    pub transform: &'w mut Transform,
+}

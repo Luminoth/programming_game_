@@ -44,6 +44,8 @@ impl ProjectileBundle {
             physical: Physical {
                 velocity,
                 mass: projectile.get_mass(),
+                max_force: 200.0,
+                max_speed: 150.0,
                 ..Default::default()
             },
             bounds: projectile.get_bounds(),

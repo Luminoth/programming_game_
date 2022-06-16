@@ -10,6 +10,10 @@ pub struct Physical {
     pub velocity: Vec2,
 
     pub mass: f32,
+
+    pub max_speed: f32,
+    pub max_force: f32,
+    pub max_turn_rate: f32,
 }
 
 impl Default for Physical {
@@ -19,6 +23,10 @@ impl Default for Physical {
             velocity: Vec2::default(),
 
             mass: 1.0,
+
+            max_speed: f32::MAX,
+            max_force: f32::MAX,
+            max_turn_rate: std::f32::consts::PI,
         }
     }
 }
@@ -42,7 +50,7 @@ impl Physical {
             force
         };
 
-        self.acceleration += force;
+        self.acceleration += force.clamp_length_max(self.max_force);
     }
 
     pub fn future_position(&self, transform: &Transform, dt: f32) -> Vec2 {
@@ -56,6 +64,7 @@ impl Physical {
 
         // semi-implicit euler integration
         self.velocity += self.acceleration * dt;
+        self.velocity = self.velocity.clamp_length_max(self.max_speed);
 
         transform.translation += (self.velocity * dt).extend(0.0);
 

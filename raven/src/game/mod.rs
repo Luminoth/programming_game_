@@ -9,6 +9,7 @@ pub const BOT_SORT: f32 = 2.0;
 pub const CORPSE_SORT: f32 = 2.0;
 pub const PROJECTILE_SORT: f32 = 2.0;
 pub const WALL_SORT: f32 = 3.0;
+pub const DEBUG_SORT: f32 = 100.0;
 
 pub const BOT_RADIUS: f32 = 1.0;
 pub const CORPSE_RADIUS: f32 = 1.0;

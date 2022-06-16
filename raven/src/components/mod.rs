@@ -8,6 +8,7 @@ pub mod inventory;
 pub mod physics;
 pub mod projectile;
 pub mod spawnpoint;
+pub mod steering;
 pub mod wall;
 pub mod weapon;
 

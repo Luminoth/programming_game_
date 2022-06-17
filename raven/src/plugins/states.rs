@@ -81,7 +81,7 @@ impl Plugin for MainStatePlugin {
                     // steering
                     .with_system(systems::steering::update_debug)
                     // input
-                    .with_system(systems::input::select_bot.label(Systems::Input))
+                    .with_system(systems::input::handle_select.label(Systems::Input))
                     .with_system(systems::input::deselect_bot.label(Systems::Input))
                     .with_system(systems::input::select_weapon.label(Systems::Input))
                     .with_system(systems::input::fire_weapon.label(Systems::Input))

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::components::agent::*;
 use crate::components::bot::*;
 use crate::components::camera::*;
 use crate::components::collision::*;
@@ -8,16 +9,14 @@ use crate::components::weapon::*;
 use crate::game::weapons::*;
 use crate::util::*;
 
-// TODO: right click select / possess / move, left click fire
-
-pub fn select_bot(
+pub fn handle_select(
     mut commands: Commands,
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     camera: Query<CameraQuery, With<MainCamera>>,
     bots: Query<(Entity, BotQuery, BoundsQuery, &Children)>,
     selected: Query<(Entity, BotQuery, &Children), With<SelectedBot>>,
-    possessed: Query<Entity, With<PossessedBot>>,
+    mut possessed: Query<(Entity, AgentQueryMut, &Name), With<PossessedBot>>,
     mut selected_visibility: Query<
         &mut Visibility,
         (With<SelectedBotVisual>, Without<PossessedBotVisual>),
@@ -27,11 +26,12 @@ pub fn select_bot(
         (With<PossessedBotVisual>, Without<SelectedBotVisual>),
     >,
 ) {
-    if buttons.just_released(MouseButton::Left) {
+    if buttons.just_released(MouseButton::Right) {
         let camera = camera.single();
         let window = windows.get_primary().unwrap();
         if let Some(mouse_position) = get_mouse_position((camera.camera, camera.transform), window)
         {
+            // bot clicked?
             for (entity, bot, bounds, children) in bots.iter() {
                 if bounds
                     .bounds
@@ -43,12 +43,20 @@ pub fn select_bot(
                         bot.name.as_str(),
                         children,
                         selected.optional_single(),
-                        possessed.optional_single(),
+                        possessed.optional_single().map(|(entity, _, _)| entity),
                         &mut selected_visibility,
                         &mut possessed_visibility,
                     );
-                    break;
+                    return;
                 }
+            }
+
+            // ground clicked
+            if let Some((entity, mut agent, name)) = possessed.optional_single_mut() {
+                info!("[{}]: moving to {} ...", name.as_ref(), mouse_position);
+
+                agent.agent.arrive_on(&mut commands, entity);
+                agent.steering.target = mouse_position;
             }
         }
     }
@@ -132,7 +140,7 @@ pub fn fire_weapon(
         With<PossessedBot>,
     >,
 ) {
-    if buttons.just_released(MouseButton::Right) {
+    if buttons.just_released(MouseButton::Left) {
         if let Some((entity, bot, mut weapon, mut inventory, transform, name)) =
             possessed.optional_single_mut()
         {

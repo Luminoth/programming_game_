@@ -1,3 +1,4 @@
+use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
@@ -19,7 +20,23 @@ impl Agent {
         commands.entity(entity).insert(Arrive::default());
     }
 
+    pub fn arrive_on_with_deceleration(
+        &self,
+        commands: &mut Commands,
+        entity: Entity,
+        deceleration: Deceleration,
+    ) {
+        commands.entity(entity).insert(Arrive { deceleration });
+    }
+
     pub fn arrive_off(&self, commands: &mut Commands, entity: Entity) {
         commands.entity(entity).remove::<Arrive>();
     }
+}
+
+#[derive(WorldQuery)]
+#[world_query(mutable, derive(Debug))]
+pub struct AgentQueryMut<'w> {
+    pub agent: &'w mut Agent,
+    pub steering: &'w mut Steering,
 }

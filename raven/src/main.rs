@@ -84,6 +84,9 @@ fn main() {
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::weapon::EquippedWeapon>()
     .register_inspectable::<components::spawnpoint::SpawnPoint>()
+    .register_inspectable::<components::steering::Steering>()
+    .register_inspectable::<components::steering::Arrive>()
+    .register_inspectable::<components::steering::Seek>()
     .register_inspectable::<components::wall::Wall>()
     .register_inspectable::<game::weapons::Ammo>()
     .register_inspectable::<game::weapons::Weapon>();

@@ -40,7 +40,7 @@ impl Steering {
     }
 
     pub fn update(&mut self, physical: &mut Physical) {
-        physical.apply_force(self.accumulated_force);
+        physical.apply_force(self.accumulated_force * physical.mass);
         self.accumulated_force = Vec2::ZERO;
     }
 }

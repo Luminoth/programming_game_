@@ -8,6 +8,8 @@ use crate::components::weapon::*;
 use crate::game::weapons::*;
 use crate::util::*;
 
+// TODO: right click select / possess / move, left click fire
+
 pub fn select_bot(
     mut commands: Commands,
     windows: Res<Windows>,

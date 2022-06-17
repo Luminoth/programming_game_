@@ -44,6 +44,8 @@ pub fn check_collision(
         let distance = v.length();
         let direction = v.normalize_or_zero();
 
+        // TODO: need to account for projectile bounds in raycast
+
         let mut despawned = false;
         for (wall_transform, wall_bounds) in walls.iter() {
             if let Some(hit) = wall_bounds.ray_intersects(

@@ -28,6 +28,7 @@ pub fn check_bounds(
     }
 }
 
+// TODO: we need to differentiate between collision enter, stay, and exit
 pub fn check_collision(
     mut commands: Commands,
     projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
@@ -56,6 +57,8 @@ pub fn check_collision(
             ) {
                 info!("projectile '{}' hit a wall at {}", name, hit);
                 projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
+
+                commands.entity(entity).despawn_recursive();
 
                 despawned = true;
                 break;
@@ -88,7 +91,11 @@ pub fn check_collision(
 
                 projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
 
-                despawned = true;
+                if !matches!(projectile, Projectile::Slug(_)) {
+                    commands.entity(entity).despawn_recursive();
+
+                    despawned = true;
+                }
                 break;
             }
         }

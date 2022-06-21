@@ -108,8 +108,6 @@ impl Projectile {
 
             // TODO: spawn the explosion visual
         }
-
-        commands.entity(entity).despawn_recursive();
     }
 
     pub fn spawn_model(&self, commands: &mut EntityCommands) {

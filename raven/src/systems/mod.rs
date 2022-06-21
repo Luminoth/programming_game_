@@ -1,3 +1,4 @@
+pub mod corpse;
 pub mod debug;
 pub mod input;
 pub mod physics;

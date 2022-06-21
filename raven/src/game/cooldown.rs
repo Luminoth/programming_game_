@@ -1,4 +1,5 @@
 // modified from https://github.com/kokounet/bevy_time/blob/main/src/cooldown.rs
+// TODO: I'm pretty sure this can now be done with Timer
 #![allow(dead_code)]
 
 use std::time::Duration;

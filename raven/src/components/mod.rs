@@ -9,6 +9,7 @@ pub mod physics;
 pub mod projectile;
 pub mod spawnpoint;
 pub mod steering;
+pub mod trigger;
 pub mod wall;
 pub mod weapon;
 

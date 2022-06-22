@@ -210,6 +210,15 @@ impl Bot {
         );
     }
 
+    pub fn increase_health(&mut self, amount: usize) {
+        let available = self.max_health - self.current_health;
+        let amount = available.min(amount);
+
+        if amount > 0 {
+            self.current_health += amount;
+        }
+    }
+
     pub fn damage(
         &mut self,
         commands: &mut Commands,

@@ -4,6 +4,7 @@ pub mod input;
 pub mod physics;
 pub mod projectile;
 pub mod steering;
+pub mod trigger;
 pub mod weapons;
 
 use bevy::prelude::*;

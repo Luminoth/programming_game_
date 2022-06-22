@@ -20,6 +20,14 @@ impl Ammo {
             Self::Slug => 5,
         }
     }
+
+    pub fn get_trigger_amount(&self) -> usize {
+        match self {
+            Self::Shell => 5,
+            Self::Rocket => 1,
+            Self::Slug => 1,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]

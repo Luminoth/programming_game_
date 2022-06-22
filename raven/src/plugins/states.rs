@@ -94,6 +94,7 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::input::damage_bot.label(Systems::Input))
                     .with_system(systems::input::kill_bot.label(Systems::Input))
                     // everything else
+                    .with_system(systems::trigger::update)
                     .with_system(systems::corpse::update)
                     .with_system(systems::weapons::update.label(Systems::Weapons)),
             )

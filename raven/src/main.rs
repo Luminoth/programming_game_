@@ -87,7 +87,6 @@ fn main() {
     .register_inspectable::<components::steering::Steering>()
     .register_inspectable::<components::steering::Arrive>()
     .register_inspectable::<components::steering::Seek>()
-    .register_inspectable::<components::trigger::Trigger>()
     .register_inspectable::<components::wall::Wall>()
     .register_inspectable::<game::weapons::Ammo>()
     .register_inspectable::<game::weapons::Weapon>();

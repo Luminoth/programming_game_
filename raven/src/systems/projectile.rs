@@ -28,7 +28,7 @@ pub fn check_bounds(
     }
 }
 
-pub fn check_collision(
+pub fn check_wall_collision(
     mut commands: Commands,
     projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
     walls: Query<(&Transform, &Bounds), With<Wall>>,
@@ -46,7 +46,6 @@ pub fn check_collision(
 
         // TODO: need to account for projectile bounds in raycast
 
-        let mut despawned = false;
         for (wall_transform, wall_bounds) in walls.iter() {
             let wall_position = wall_transform.translation.truncate();
 
@@ -60,16 +59,29 @@ pub fn check_collision(
                     projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
 
                     commands.entity(entity).despawn_recursive();
-
-                    despawned = true;
                     break;
                 }
             }
         }
+    }
+}
 
-        if despawned {
-            continue;
-        }
+pub fn check_bot_collision(
+    mut commands: Commands,
+    projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
+    mut bots: Query<(Entity, BotQueryMut, &Transform, &Bounds)>,
+) {
+    for (entity, projectile, physical, bounds, name) in projectiles.iter() {
+        let position = physical.transform.translation.truncate();
+        let future_position = physical
+            .physical
+            .future_position(physical.transform, PHYSICS_STEP);
+
+        let v = future_position - position;
+        let distance = v.length();
+        let direction = v.normalize_or_zero();
+
+        // TODO: need to account for projectile bounds in raycast
 
         for (bot_entity, mut bot, bot_transform, bot_bounds) in bots.iter_mut() {
             if bot_entity == projectile.get_owner() {
@@ -97,16 +109,10 @@ pub fn check_collision(
 
                     if !matches!(projectile, Projectile::Slug(_)) {
                         commands.entity(entity).despawn_recursive();
-
-                        despawned = true;
                     }
                     break;
                 }
             }
-        }
-
-        if despawned {
-            continue;
         }
     }
 }

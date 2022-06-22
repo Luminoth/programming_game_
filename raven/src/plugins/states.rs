@@ -70,7 +70,12 @@ impl Plugin for MainStatePlugin {
                             .after(Systems::Physics),
                     )
                     .with_system(
-                        systems::projectile::check_collision
+                        systems::projectile::check_wall_collision
+                            .label(Systems::Collision)
+                            .before(Systems::Physics),
+                    )
+                    .with_system(
+                        systems::projectile::check_bot_collision
                             .label(Systems::Collision)
                             .before(Systems::Physics),
                     ),

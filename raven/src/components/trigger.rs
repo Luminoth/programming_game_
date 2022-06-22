@@ -32,7 +32,7 @@ impl Trigger {
 
                 info!("[{}]: ammo {} pickup!", name.as_ref(), ammo);
 
-                inventory.increase_ammo(ammo, ammo.get_trigger_amount());
+                inventory.increase_ammo(*weapon, ammo.get_trigger_amount());
 
                 cooldown.start();
             }

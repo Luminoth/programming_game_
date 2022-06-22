@@ -78,6 +78,11 @@ impl Plugin for MainStatePlugin {
                         systems::projectile::check_bot_collision
                             .label(Systems::Collision)
                             .before(Systems::Physics),
+                    )
+                    .with_system(
+                        systems::trigger::check_bot_collision
+                            .label(Systems::Collision)
+                            .before(Systems::Physics),
                     ),
             )
             // per-frame systems

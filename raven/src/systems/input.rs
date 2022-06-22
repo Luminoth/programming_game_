@@ -181,12 +181,18 @@ pub fn fill_inventory(
 pub fn damage_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    mut possessed: Query<(Entity, BotQueryMut, &Transform), With<PossessedBot>>,
+    mut possessed: Query<(Entity, BotQueryMut, &mut Inventory, &Transform), With<PossessedBot>>,
 ) {
     if keys.just_pressed(KeyCode::D) {
-        if let Some((entity, mut bot, transform)) = possessed.optional_single_mut() {
-            bot.bot
-                .damage(&mut commands, entity, transform, bot.name.as_str(), 1);
+        if let Some((entity, mut bot, mut inventory, transform)) = possessed.optional_single_mut() {
+            bot.bot.damage(
+                &mut commands,
+                entity,
+                transform,
+                &mut inventory,
+                bot.name.as_str(),
+                1,
+            );
         } else {
             info!("no bot possessed for damage");
         }
@@ -196,12 +202,17 @@ pub fn damage_bot(
 pub fn kill_bot(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    mut possessed: Query<(Entity, BotQueryMut, &Transform), With<PossessedBot>>,
+    mut possessed: Query<(Entity, BotQueryMut, &mut Inventory, &Transform), With<PossessedBot>>,
 ) {
     if keys.just_pressed(KeyCode::K) {
-        if let Some((entity, mut bot, transform)) = possessed.optional_single_mut() {
-            bot.bot
-                .kill(&mut commands, entity, transform, bot.name.as_str());
+        if let Some((entity, mut bot, mut inventory, transform)) = possessed.optional_single_mut() {
+            bot.bot.kill(
+                &mut commands,
+                entity,
+                transform,
+                &mut inventory,
+                bot.name.as_str(),
+            );
         } else {
             info!("no bot possessed for kill");
         }

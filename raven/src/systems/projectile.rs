@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::components::bot::*;
 use crate::components::collision::*;
+use crate::components::inventory::*;
 use crate::components::physics::*;
 use crate::components::projectile::*;
 use crate::components::wall::*;
@@ -32,7 +33,7 @@ pub fn check_wall_collision(
     mut commands: Commands,
     projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
     walls: Query<(&Transform, &Bounds), With<Wall>>,
-    mut bots: Query<(Entity, BotQueryMut, &Transform, &Bounds)>,
+    mut bots: Query<(Entity, BotQueryMut, &mut Inventory, PhysicalQuery, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
         let position = physical.transform.translation.truncate();
@@ -66,10 +67,11 @@ pub fn check_wall_collision(
     }
 }
 
+// TODO: bots move so we really need to do a ray vs ray intersection?
 pub fn check_bot_collision(
     mut commands: Commands,
     projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
-    mut bots: Query<(Entity, BotQueryMut, &Transform, &Bounds)>,
+    mut bots: Query<(Entity, BotQueryMut, &mut Inventory, PhysicalQuery, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
         let position = physical.transform.translation.truncate();
@@ -83,12 +85,12 @@ pub fn check_bot_collision(
 
         // TODO: need to account for projectile bounds in raycast
 
-        for (bot_entity, mut bot, bot_transform, bot_bounds) in bots.iter_mut() {
+        for (bot_entity, mut bot, mut inventory, bot_physical, bot_bounds) in bots.iter_mut() {
             if bot_entity == projectile.get_owner() {
                 continue;
             }
 
-            let bot_position = bot_transform.translation.truncate();
+            let bot_position = bot_physical.transform.translation.truncate();
 
             let contains = bot_bounds.contains(bot_position, position);
 
@@ -100,7 +102,8 @@ pub fn check_bot_collision(
                     bot.bot.damage(
                         &mut commands,
                         bot_entity,
-                        bot_transform,
+                        bot_physical.transform,
+                        &mut inventory,
                         bot.name,
                         projectile.get_damage(),
                     );

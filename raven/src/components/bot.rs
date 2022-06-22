@@ -224,6 +224,7 @@ impl Bot {
         commands: &mut Commands,
         entity: Entity,
         transform: &Transform,
+        inventory: &mut Inventory,
         name: impl AsRef<str>,
         amount: usize,
     ) {
@@ -246,7 +247,7 @@ impl Bot {
 
         if amount >= self.current_health {
             self.current_health = 0;
-            self.kill(commands, entity, transform, name);
+            self.kill(commands, entity, transform, inventory, name);
             return;
         }
 
@@ -258,6 +259,7 @@ impl Bot {
         commands: &mut Commands,
         entity: Entity,
         transform: &Transform,
+        inventory: &mut Inventory,
         name: impl AsRef<str>,
     ) {
         if self.invulnerable {
@@ -277,12 +279,18 @@ impl Bot {
             position,
         );
 
-        self.respawn(commands, entity, name);
+        self.respawn(commands, entity, inventory, name);
     }
 
     // TODO: we need to respawn on the *next* frame
     // but we should also have bots be invincible on spawn for a little bit
-    pub fn respawn(&mut self, commands: &mut Commands, entity: Entity, name: impl AsRef<str>) {
+    pub fn respawn(
+        &mut self,
+        commands: &mut Commands,
+        entity: Entity,
+        inventory: &mut Inventory,
+        name: impl AsRef<str>,
+    ) {
         if self.invulnerable {
             warn!("[{}]: unkillable but reborn!", name.as_ref());
         } else if self.is_alive() {
@@ -290,6 +298,7 @@ impl Bot {
         }
 
         self.current_health = self.max_health;
+        inventory.reset();
 
         commands
             .entity(entity)

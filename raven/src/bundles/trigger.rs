@@ -11,6 +11,8 @@ pub struct TriggerBundle {
     #[bundle]
     pub transform: TransformBundle,
 
+    pub name: Name,
+
     pub bounds: Bounds,
 
     pub trigger: Trigger,
@@ -26,6 +28,7 @@ impl TriggerBundle {
             transform: TransformBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
+            name: Name::new(format!("{} Trigger", trigger)),
             bounds: Bounds::Circle(Vec2::ZERO, TRIGGER_RADIUS),
             trigger,
         });

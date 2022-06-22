@@ -7,6 +7,8 @@ pub struct SpawnPointBundle {
     #[bundle]
     pub transform: TransformBundle,
 
+    pub name: Name,
+
     pub spawnpoint: SpawnPoint,
 }
 
@@ -18,6 +20,7 @@ impl SpawnPointBundle {
             transform: TransformBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
+            name: Name::new("Spawnpoint"),
             spawnpoint: SpawnPoint { offset },
         });
 

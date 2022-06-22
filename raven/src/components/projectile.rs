@@ -4,6 +4,8 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::components::bot::*;
 use crate::components::collision::*;
+use crate::components::inventory::*;
+use crate::components::physics::*;
 use crate::game::{BOLT_RADIUS, PELLET_RADIUS, ROCKET_RADIUS, SLUG_RADIUS};
 
 // TODO: pull projectile parameters from a config
@@ -78,12 +80,20 @@ impl Projectile {
 
     pub fn on_impact<'w, B>(&self, commands: &mut Commands, entity: Entity, hit: Vec2, bots: B)
     where
-        B: Iterator<Item = (Entity, BotQueryMutItem<'w>, &'w Transform, &'w Bounds)>,
+        B: Iterator<
+            Item = (
+                Entity,
+                BotQueryMutItem<'w>,
+                Mut<'w, Inventory>,
+                PhysicalQueryItem<'w>,
+                &'w Bounds,
+            ),
+        >,
     {
         if let Self::Rocket(_) = self {
             let explosion_bounds = Bounds::Circle(Vec2::ZERO, ROCKET_EXPLOSION_RADIUS);
 
-            for (bot_entity, mut bot, bot_transform, bot_bounds) in bots {
+            for (bot_entity, mut bot, mut inventory, bot_physical, bot_bounds) in bots {
                 // don't re-hit the initial impact entity
                 // note that we are allowing explosions to impact the rocket owner here
                 if bot_entity == entity {
@@ -93,13 +103,14 @@ impl Projectile {
                 if explosion_bounds.bounds_intersects(
                     hit,
                     bot_bounds,
-                    bot_transform.translation.truncate(),
+                    bot_physical.transform.translation.truncate(),
                 ) {
                     info!("rocket explosion hit bot '{}' at {}!", bot.name, hit);
                     bot.bot.damage(
                         commands,
                         bot_entity,
-                        bot_transform,
+                        bot_physical.transform,
+                        &mut inventory,
                         bot.name,
                         self.get_damage() / 2,
                     );

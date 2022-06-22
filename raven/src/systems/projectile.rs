@@ -28,7 +28,6 @@ pub fn check_bounds(
     }
 }
 
-// TODO: we need to differentiate between collision enter, stay, and exit
 pub fn check_collision(
     mut commands: Commands,
     projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
@@ -49,19 +48,22 @@ pub fn check_collision(
 
         let mut despawned = false;
         for (wall_transform, wall_bounds) in walls.iter() {
-            if let Some(hit) = wall_bounds.ray_intersects(
-                wall_transform.translation.truncate(),
-                position,
-                direction,
-                distance,
-            ) {
-                info!("projectile '{}' hit a wall at {}", name, hit);
-                projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
+            let wall_position = wall_transform.translation.truncate();
 
-                commands.entity(entity).despawn_recursive();
+            let contains = wall_bounds.contains(wall_position, position);
 
-                despawned = true;
-                break;
+            if let Some(hit) =
+                wall_bounds.ray_intersects(wall_position, position, direction, distance)
+            {
+                if !contains {
+                    info!("projectile '{}' hit a wall at {}", name, hit);
+                    projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
+
+                    commands.entity(entity).despawn_recursive();
+
+                    despawned = true;
+                    break;
+                }
             }
         }
 
@@ -74,29 +76,32 @@ pub fn check_collision(
                 continue;
             }
 
-            if let Some(hit) = bot_bounds.ray_intersects(
-                bot_transform.translation.truncate(),
-                position,
-                direction,
-                distance,
-            ) {
-                info!("projectile '{}' hit bot '{}' at {}!", name, bot.name, hit);
-                bot.bot.damage(
-                    &mut commands,
-                    bot_entity,
-                    bot_transform,
-                    bot.name,
-                    projectile.get_damage(),
-                );
+            let bot_position = bot_transform.translation.truncate();
 
-                projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
+            let contains = bot_bounds.contains(bot_position, position);
 
-                if !matches!(projectile, Projectile::Slug(_)) {
-                    commands.entity(entity).despawn_recursive();
+            if let Some(hit) =
+                bot_bounds.ray_intersects(bot_position, position, direction, distance)
+            {
+                if !contains {
+                    info!("projectile '{}' hit bot '{}' at {}!", name, bot.name, hit);
+                    bot.bot.damage(
+                        &mut commands,
+                        bot_entity,
+                        bot_transform,
+                        bot.name,
+                        projectile.get_damage(),
+                    );
 
-                    despawned = true;
+                    projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
+
+                    if !matches!(projectile, Projectile::Slug(_)) {
+                        commands.entity(entity).despawn_recursive();
+
+                        despawned = true;
+                    }
+                    break;
                 }
-                break;
             }
         }
 

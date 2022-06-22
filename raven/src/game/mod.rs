@@ -13,7 +13,7 @@ pub const DEBUG_SORT: f32 = 100.0;
 
 pub const BOT_RADIUS: f32 = 1.0;
 pub const CORPSE_RADIUS: f32 = 1.0;
-pub const BOLT_RADIUS: f32 = 0.1;
+pub const BOLT_RADIUS: f32 = 0.2;
 pub const PELLET_RADIUS: f32 = 0.1;
-pub const ROCKET_RADIUS: f32 = 0.25;
-pub const SLUG_RADIUS: f32 = 0.1;
+pub const ROCKET_RADIUS: f32 = 0.35;
+pub const SLUG_RADIUS: f32 = 0.2;

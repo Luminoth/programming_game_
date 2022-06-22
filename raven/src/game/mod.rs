@@ -17,3 +17,4 @@ pub const BOLT_RADIUS: f32 = 0.2;
 pub const PELLET_RADIUS: f32 = 0.1;
 pub const ROCKET_RADIUS: f32 = 0.35;
 pub const SLUG_RADIUS: f32 = 0.2;
+pub const TRIGGER_RADIUS: f32 = 1.0;

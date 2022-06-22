@@ -7,21 +7,32 @@ use crate::game::weapons::*;
 
 // TODO: pull trigger parameters from a config
 
-#[derive(Debug, Component)]
+#[derive(Debug, strum_macros::Display, Component)]
 pub enum Trigger {
     Weapon(Weapon, Cooldown),
     Health(Cooldown),
 }
 
 impl Trigger {
-    pub fn trigger(&mut self, bot: &mut Bot, inventory: &mut Inventory) {
+    pub fn get_color(&self) -> Color {
+        match self {
+            Self::Weapon(_, _) => Color::GOLD,
+            Self::Health(_) => Color::DARK_GREEN,
+        }
+    }
+
+    pub fn trigger(&mut self, bot: &mut Bot, inventory: &mut Inventory, name: &Name) {
         match self {
             Self::Weapon(weapon, cooldown) => {
                 if !cooldown.is_available() {
                     return;
                 }
 
-                inventory.increase_ammo(*weapon, weapon.get_ammo().get_trigger_amount());
+                let ammo = weapon.get_ammo();
+
+                info!("[{}]: ammo {} pickup!", name.as_ref(), ammo);
+
+                inventory.increase_ammo(ammo, ammo.get_trigger_amount());
 
                 cooldown.start();
             }
@@ -29,6 +40,8 @@ impl Trigger {
                 if !cooldown.is_available() {
                     return;
                 }
+
+                info!("[{}]: health pickup!", name.as_ref());
 
                 bot.increase_health(5);
 

@@ -5,7 +5,7 @@ use strum_macros::EnumIter;
 
 // TODO: pull weapon parameters from a config
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]
+#[derive(Debug, strum_macros::Display, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]
 pub enum Ammo {
     Shell,
     Rocket,
@@ -30,7 +30,7 @@ impl Ammo {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]
+#[derive(Debug, strum_macros::Display, Copy, Clone, Eq, PartialEq, Hash, Inspectable, EnumIter)]
 pub enum Weapon {
     Blaster,
     Shotgun,

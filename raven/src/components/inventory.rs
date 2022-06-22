@@ -46,12 +46,7 @@ impl Inventory {
         *self.ammo.get(&ammo).unwrap()
     }
 
-    pub fn increase_ammo(&mut self, weapon: Weapon, amount: usize) {
-        if weapon == Weapon::Blaster {
-            return;
-        }
-
-        let ammo = weapon.get_ammo();
+    pub fn increase_ammo(&mut self, ammo: Ammo, amount: usize) {
         let current_amount = *self.ammo.get(&ammo).unwrap();
         let available = ammo.get_max_amount() - current_amount;
         let amount = available.min(amount);

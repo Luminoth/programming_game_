@@ -53,6 +53,11 @@ impl Physical {
         self.acceleration += force.clamp_length_max(self.max_force);
     }
 
+    pub fn stop(&mut self) {
+        self.acceleration = Vec2::ZERO;
+        self.velocity = Vec2::ZERO;
+    }
+
     pub fn future_position(&self, transform: &Transform, dt: f32) -> Vec2 {
         let position = transform.translation.truncate();
         position + self.velocity * dt

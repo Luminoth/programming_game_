@@ -69,6 +69,12 @@ impl Plugin for MainStatePlugin {
                             .label(Systems::BoundsCheck)
                             .after(Systems::Physics),
                     )
+                    // collisions
+                    .with_system(
+                        systems::bot::check_wall_collision
+                            .label(Systems::Collision)
+                            .before(Systems::Physics),
+                    )
                     .with_system(
                         systems::projectile::check_wall_collision
                             .label(Systems::Collision)

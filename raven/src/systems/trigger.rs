@@ -17,20 +17,20 @@ pub fn check_bot_collision(
     mut triggers: Query<(&mut Trigger, &Transform, &Bounds)>,
     mut bots: Query<(BotQueryMut, PhysicalQuery, &mut Inventory, &Bounds, &Name)>,
 ) {
-    for (mut trigger, transform, bounds) in triggers.iter_mut() {
-        let position = transform.translation.truncate();
+    for (mut bot, bot_physical, mut inventory, bot_bounds, name) in bots.iter_mut() {
+        let bot_position = bot_physical.transform.translation.truncate();
+        let bot_future_position = bot_physical
+            .physical
+            .future_position(bot_physical.transform, PHYSICS_STEP);
 
-        // TODO: need to account for bot bounds in raycast
+        let v = bot_future_position - bot_position;
+        let distance = v.length();
+        let direction = v.normalize_or_zero();
 
-        for (mut bot, bot_physical, mut inventory, bot_bounds, name) in bots.iter_mut() {
-            let bot_position = bot_physical.transform.translation.truncate();
-            let bot_future_position = bot_physical
-                .physical
-                .future_position(bot_physical.transform, PHYSICS_STEP);
+        for (mut trigger, transform, bounds) in triggers.iter_mut() {
+            let position = transform.translation.truncate();
 
-            let v = bot_future_position - bot_position;
-            let distance = v.length();
-            let direction = v.normalize_or_zero();
+            // TODO: need to account for bot bounds in raycast
 
             let contains = bot_bounds.contains(bot_position, position);
 

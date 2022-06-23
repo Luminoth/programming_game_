@@ -2,17 +2,19 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
+use crate::bundles::trigger::*;
 use crate::components::bot::*;
 use crate::components::collision::*;
 use crate::components::inventory::*;
 use crate::components::physics::*;
-use crate::game::{BOLT_RADIUS, PELLET_RADIUS, ROCKET_RADIUS, SLUG_RADIUS};
+use crate::components::trigger::*;
+use crate::game::{BOLT_RADIUS, PELLET_RADIUS, PHYSICS_STEP, ROCKET_RADIUS, SLUG_RADIUS};
 
 // TODO: pull projectile parameters from a config
 
 pub const PELLET_SPREAD: f32 = 7.0;
 pub const NUMBER_OF_PELLETS: usize = 10;
-pub const ROCKET_EXPLOSION_RADIUS: f32 = 20.0;
+pub const ROCKET_EXPLOSION_RADIUS: f32 = 10.0;
 
 #[derive(Debug, Clone, PartialEq, Eq, Component)]
 pub enum Projectile {
@@ -90,7 +92,14 @@ impl Projectile {
             ),
         >,
     {
-        if let Self::Rocket(_) = self {
+        if let Self::Rocket(owner) = self {
+            TriggerBundle::spawn(
+                commands,
+                Trigger::Sound(*owner, Timer::from_seconds(PHYSICS_STEP, false)),
+                hit,
+                ROCKET_EXPLOSION_RADIUS,
+            );
+
             let explosion_bounds = Bounds::Circle(Vec2::ZERO, ROCKET_EXPLOSION_RADIUS);
 
             for (bot_entity, mut bot, mut inventory, bot_physical, bot_bounds) in bots {

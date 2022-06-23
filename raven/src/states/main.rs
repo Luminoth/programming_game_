@@ -8,6 +8,7 @@ use crate::components::camera::*;
 use crate::components::trigger::*;
 use crate::game::cooldown::*;
 use crate::game::weapons::*;
+use crate::game::POWERUP_TRIGGER_RADIUS;
 use crate::resources::game::*;
 use crate::ORTHO_SIZE;
 
@@ -42,12 +43,14 @@ pub fn setup(mut commands: Commands) {
         &mut commands,
         Trigger::Weapon(Weapon::RocketLauncher, Cooldown::from_seconds(30.0)),
         Vec2::new(-20.0, 0.0),
+        POWERUP_TRIGGER_RADIUS,
     );
 
     TriggerBundle::spawn(
         &mut commands,
         Trigger::Health(Cooldown::from_seconds(60.0)),
         Vec2::new(30.0, 0.0),
+        POWERUP_TRIGGER_RADIUS,
     );
 
     // spawn bots

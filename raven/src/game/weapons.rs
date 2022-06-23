@@ -21,7 +21,7 @@ impl Ammo {
         }
     }
 
-    pub fn get_trigger_amount(&self) -> usize {
+    pub fn get_powerup_amount(&self) -> usize {
         match self {
             Self::Shell => 5,
             Self::Rocket => 1,
@@ -62,6 +62,15 @@ impl Weapon {
             Self::Blaster => 0.33,
             Self::Shotgun => 1.0,
             Self::RocketLauncher => 0.66,
+            Self::Railgun => 1.0,
+        }
+    }
+
+    pub fn get_sound_radius(&self) -> f32 {
+        match self {
+            Self::Blaster => 1.0,
+            Self::Shotgun => 5.0,
+            Self::RocketLauncher => 5.0,
             Self::Railgun => 1.0,
         }
     }

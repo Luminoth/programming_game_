@@ -2,10 +2,13 @@ use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
 use crate::bundles::projectile::*;
+use crate::bundles::trigger::*;
 use crate::components::inventory::*;
 use crate::components::projectile::*;
+use crate::components::trigger::*;
 use crate::game::cooldown::*;
 use crate::game::weapons::*;
+use crate::game::PHYSICS_STEP;
 use crate::util::*;
 
 // TODO: weapon cooldown could be better:
@@ -116,5 +119,12 @@ impl EquippedWeapon {
         inventory.decrease_ammo(self.weapon, 1);
 
         self.cooldown.start();
+
+        TriggerBundle::spawn(
+            commands,
+            Trigger::Sound(owner, Timer::from_seconds(PHYSICS_STEP, false)),
+            position,
+            self.weapon.get_sound_radius(),
+        );
     }
 }

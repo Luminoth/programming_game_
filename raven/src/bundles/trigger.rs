@@ -4,7 +4,6 @@ use bevy_prototype_lyon::prelude::*;
 use crate::components::collision::*;
 use crate::components::trigger::*;
 use crate::components::*;
-use crate::game::TRIGGER_RADIUS;
 
 #[derive(Debug, Bundle)]
 pub struct TriggerBundle {
@@ -19,8 +18,8 @@ pub struct TriggerBundle {
 }
 
 impl TriggerBundle {
-    pub fn spawn(commands: &mut Commands, trigger: Trigger, position: Vec2) -> Entity {
-        info!("spawning trigger {} at {}", trigger, position);
+    pub fn spawn(commands: &mut Commands, trigger: Trigger, position: Vec2, radius: f32) -> Entity {
+        info!("spawning {} trigger at {}", trigger, position);
 
         let color = trigger.get_color();
 
@@ -29,7 +28,7 @@ impl TriggerBundle {
                 position.extend(0.0),
             )),
             name: Name::new(format!("{} Trigger", trigger)),
-            bounds: Bounds::Circle(Vec2::ZERO, TRIGGER_RADIUS),
+            bounds: Bounds::Circle(Vec2::ZERO, radius),
             trigger,
         });
 
@@ -37,7 +36,7 @@ impl TriggerBundle {
             parent
                 .spawn_bundle(GeometryBuilder::build_as(
                     &shapes::Circle {
-                        radius: TRIGGER_RADIUS,
+                        radius,
                         ..Default::default()
                     },
                     DrawMode::Fill(FillMode {

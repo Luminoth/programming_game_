@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::components::bot::*;
@@ -11,6 +13,7 @@ use crate::game::weapons::*;
 pub enum Trigger {
     Weapon(Weapon, Cooldown),
     Health(Cooldown),
+    Sound(Entity, Timer),
 }
 
 impl Trigger {
@@ -18,10 +21,21 @@ impl Trigger {
         match self {
             Self::Weapon(_, _) => Color::GOLD,
             Self::Health(_) => Color::DARK_GREEN,
+            Self::Sound(_, _) => Color::CRIMSON,
         }
     }
 
-    pub fn trigger(&mut self, bot: &mut Bot, inventory: &mut Inventory, name: &Name) {
+    pub fn trigger(
+        &mut self,
+        entity: Entity,
+        bot: &mut Bot,
+        inventory: &mut Inventory,
+        name: impl AsRef<str>,
+    ) {
+        if !bot.is_alive() {
+            return;
+        }
+
         match self {
             Self::Weapon(weapon, cooldown) => {
                 if !cooldown.is_available() {
@@ -32,7 +46,7 @@ impl Trigger {
 
                 info!("[{}]: ammo {} pickup!", name.as_ref(), ammo);
 
-                inventory.increase_ammo(*weapon, ammo.get_trigger_amount());
+                inventory.increase_ammo(*weapon, ammo.get_powerup_amount());
 
                 cooldown.start();
             }
@@ -47,16 +61,32 @@ impl Trigger {
 
                 cooldown.start();
             }
+            Self::Sound(owner, _) => {
+                if entity == *owner {
+                    return;
+                }
+
+                warn!("[{}] heard a sound!", name.as_ref());
+            }
         }
     }
 
-    pub fn update(&mut self, dt: f32) {
+    pub fn update(&mut self, commands: &mut Commands, entity: Entity, dt: f32) {
         match self {
             Self::Weapon(_, cooldown) => {
                 cooldown.tick(dt);
             }
             Self::Health(cooldown) => {
                 cooldown.tick(dt);
+            }
+            Self::Sound(_, timer) => {
+                timer.tick(Duration::from_secs_f32(dt));
+
+                if timer.just_finished() {
+                    info!("despawning Sound trigger");
+
+                    commands.entity(entity).despawn_recursive();
+                }
             }
         }
     }

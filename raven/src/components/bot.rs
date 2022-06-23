@@ -134,7 +134,7 @@ impl Bot {
         &self,
         commands: &mut Commands,
         entity: Entity,
-        name: &Name,
+        name: impl AsRef<str>,
         children: &Children,
         selected_visibility: &mut Query<
             &mut Visibility,

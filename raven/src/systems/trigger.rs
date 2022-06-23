@@ -7,17 +7,28 @@ use crate::components::physics::*;
 use crate::components::trigger::*;
 use crate::game::PHYSICS_STEP;
 
-pub fn update(time: Res<Time>, mut triggeres: Query<&mut Trigger>) {
-    for mut trigger in triggeres.iter_mut() {
-        trigger.update(time.delta_seconds());
+pub fn update(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut triggeres: Query<(Entity, &mut Trigger)>,
+) {
+    for (entity, mut trigger) in triggeres.iter_mut() {
+        trigger.update(&mut commands, entity, time.delta_seconds());
     }
 }
 
 pub fn check_bot_collision(
     mut triggers: Query<(&mut Trigger, &Transform, &Bounds)>,
-    mut bots: Query<(BotQueryMut, PhysicalQuery, &mut Inventory, &Bounds, &Name)>,
+    mut bots: Query<(
+        Entity,
+        BotQueryMut,
+        PhysicalQuery,
+        &mut Inventory,
+        &Bounds,
+        &Name,
+    )>,
 ) {
-    for (mut bot, bot_physical, mut inventory, bot_bounds, name) in bots.iter_mut() {
+    for (entity, mut bot, bot_physical, mut inventory, bot_bounds, name) in bots.iter_mut() {
         let bot_position = bot_physical.transform.translation.truncate();
         let bot_future_position = bot_physical
             .physical
@@ -39,7 +50,7 @@ pub fn check_bot_collision(
                 .is_some()
             {
                 if !contains {
-                    trigger.trigger(&mut bot.bot, &mut inventory, name);
+                    trigger.trigger(entity, &mut bot.bot, &mut inventory, name);
                     break;
                 }
             }

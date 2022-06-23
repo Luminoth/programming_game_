@@ -65,6 +65,11 @@ impl Plugin for MainStatePlugin {
                     .with_system(systems::physics::update.label(Systems::Physics))
                     // bounds checking
                     .with_system(
+                        systems::bot::check_bounds
+                            .label(Systems::BoundsCheck)
+                            .before(Systems::Physics),
+                    )
+                    .with_system(
                         systems::projectile::check_bounds
                             .label(Systems::BoundsCheck)
                             .after(Systems::Physics),

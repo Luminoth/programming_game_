@@ -7,7 +7,7 @@ use crate::util::*;
 
 pub fn update(mut steering_behaviors: Query<SteeringQueryMut>) {
     for mut steering in steering_behaviors.iter_mut() {
-        steering.steering.update(&mut steering.physical);
+        steering.steering.update_physical(&mut steering.physical);
     }
 }
 

@@ -82,6 +82,7 @@ fn main() {
     .register_inspectable::<components::corpse::Corpse>()
     .register_inspectable::<components::inventory::Inventory>()
     .register_inspectable::<components::physics::Physical>()
+    .register_inspectable::<components::physics::PhysicalCache>()
     .register_inspectable::<components::weapon::EquippedWeapon>()
     .register_inspectable::<components::spawnpoint::SpawnPoint>()
     .register_inspectable::<components::steering::Steering>()

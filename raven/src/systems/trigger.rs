@@ -5,7 +5,6 @@ use crate::components::collision::*;
 use crate::components::inventory::*;
 use crate::components::physics::*;
 use crate::components::trigger::*;
-use crate::game::PHYSICS_STEP;
 
 pub fn update(
     mut commands: Commands,
@@ -28,31 +27,29 @@ pub fn check_bot_collision(
         &Name,
     )>,
 ) {
-    for (entity, mut bot, bot_physical, mut inventory, bot_bounds, name) in bots.iter_mut() {
-        let bot_position = bot_physical.transform.translation.truncate();
-        let bot_future_position = bot_physical
-            .physical
-            .future_position(bot_physical.transform, PHYSICS_STEP);
+    for (mut trigger, transform, bounds) in triggers.iter_mut() {
+        let position = transform.translation.truncate();
 
-        let v = bot_future_position - bot_position;
-        let distance = v.length();
-        let direction = v.normalize_or_zero();
-
-        for (mut trigger, transform, bounds) in triggers.iter_mut() {
-            let position = transform.translation.truncate();
-
+        for (entity, mut bot, bot_physical, mut inventory, bot_bounds, name) in bots.iter_mut() {
             // TODO: need to account for bot bounds in raycast
 
-            let contains = bot_bounds.contains(bot_position, position);
+            let contains = bot_bounds.contains(bot_physical.physical.cache.position, position);
+            if contains {
+                // don't re-trigger
+                continue;
+            }
 
             if bounds
-                .ray_intersects(position, bot_position, direction, distance)
+                .ray_intersects(
+                    position,
+                    bot_physical.physical.cache.position,
+                    bot_physical.physical.cache.heading,
+                    bot_physical.physical.cache.max_distance,
+                )
                 .is_some()
             {
-                if !contains {
-                    trigger.trigger(entity, &mut bot.bot, &mut inventory, name);
-                    break;
-                }
+                trigger.trigger(entity, &mut bot.bot, &mut inventory, name);
+                break;
             }
         }
     }

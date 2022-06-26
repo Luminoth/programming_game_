@@ -6,13 +6,12 @@ use crate::components::inventory::*;
 use crate::components::physics::*;
 use crate::components::projectile::*;
 use crate::components::wall::*;
-use crate::game::PHYSICS_STEP;
 use crate::ORTHO_SIZE;
 
 pub fn check_bounds(
     mut commands: Commands,
     windows: Res<Windows>,
-    projectiles: Query<(Entity, &Transform, &Name), With<Projectile>>,
+    projectiles: Query<(Entity, PhysicalQuery, &Name), With<Projectile>>,
 ) {
     let window = windows.get_primary().unwrap();
     let aspect_ratio = window.width() / window.height();
@@ -20,9 +19,12 @@ pub fn check_bounds(
     let max_x = ORTHO_SIZE;
     let max_y = ORTHO_SIZE / aspect_ratio;
 
-    for (entity, transform, name) in projectiles.iter() {
-        let position = transform.translation.truncate();
-        if position.x < -max_x || position.x > max_x || position.y < -max_y || position.y > max_y {
+    for (entity, physical, name) in projectiles.iter() {
+        if physical.physical.cache.position.x < -max_x
+            || physical.physical.cache.position.x > max_x
+            || physical.physical.cache.position.y < -max_y
+            || physical.physical.cache.position.y > max_y
+        {
             info!("projectile '{}' is out of bounds", name);
             commands.entity(entity).despawn_recursive();
         }
@@ -36,32 +38,28 @@ pub fn check_wall_collision(
     mut bots: Query<(Entity, BotQueryMut, &mut Inventory, PhysicalQuery, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
-        let position = physical.transform.translation.truncate();
-        let future_position = physical
-            .physical
-            .future_position(physical.transform, PHYSICS_STEP);
-
-        let v = future_position - position;
-        let distance = v.length();
-        let direction = v.normalize_or_zero();
-
         // TODO: need to account for projectile bounds in raycast
 
         for (wall_transform, wall_bounds) in walls.iter() {
             let wall_position = wall_transform.translation.truncate();
 
-            let contains = wall_bounds.contains(wall_position, position);
+            let contains = wall_bounds.contains(wall_position, physical.physical.cache.position);
+            if contains {
+                // TODO: push back out of the wall?
+                continue;
+            }
 
-            if let Some(hit) =
-                wall_bounds.ray_intersects(wall_position, position, direction, distance)
-            {
-                if !contains {
-                    info!("projectile '{}' hit a wall at {}", name, hit);
-                    projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
+            if let Some(hit) = wall_bounds.ray_intersects(
+                wall_position,
+                physical.physical.cache.position,
+                physical.physical.cache.heading,
+                physical.physical.cache.max_distance,
+            ) {
+                info!("projectile '{}' hit a wall at {}", name, hit);
+                projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
 
-                    commands.entity(entity).despawn_recursive();
-                    break;
-                }
+                commands.entity(entity).despawn_recursive();
+                break;
             }
         }
     }
@@ -74,15 +72,6 @@ pub fn check_bot_collision(
     mut bots: Query<(Entity, BotQueryMut, &mut Inventory, PhysicalQuery, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
-        let position = physical.transform.translation.truncate();
-        let future_position = physical
-            .physical
-            .future_position(physical.transform, PHYSICS_STEP);
-
-        let v = future_position - position;
-        let distance = v.length();
-        let direction = v.normalize_or_zero();
-
         // TODO: need to account for projectile bounds in raycast
 
         for (bot_entity, mut bot, mut inventory, bot_physical, bot_bounds) in bots.iter_mut() {
@@ -90,31 +79,37 @@ pub fn check_bot_collision(
                 continue;
             }
 
-            let bot_position = bot_physical.transform.translation.truncate();
+            let contains = bot_bounds.contains(
+                bot_physical.physical.cache.position,
+                physical.physical.cache.position,
+            );
+            if contains {
+                // don't re-collide
+                continue;
+            }
 
-            let contains = bot_bounds.contains(bot_position, position);
+            if let Some(hit) = bot_bounds.ray_intersects(
+                bot_physical.physical.cache.position,
+                physical.physical.cache.position,
+                physical.physical.cache.heading,
+                physical.physical.cache.max_distance,
+            ) {
+                info!("projectile '{}' hit bot '{}' at {}!", name, bot.name, hit);
+                bot.bot.damage(
+                    &mut commands,
+                    bot_entity,
+                    bot_physical.transform,
+                    &mut inventory,
+                    bot.name,
+                    projectile.get_damage(),
+                );
 
-            if let Some(hit) =
-                bot_bounds.ray_intersects(bot_position, position, direction, distance)
-            {
-                if !contains {
-                    info!("projectile '{}' hit bot '{}' at {}!", name, bot.name, hit);
-                    bot.bot.damage(
-                        &mut commands,
-                        bot_entity,
-                        bot_physical.transform,
-                        &mut inventory,
-                        bot.name,
-                        projectile.get_damage(),
-                    );
+                projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
 
-                    projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
-
-                    if !matches!(projectile, Projectile::Slug(_)) {
-                        commands.entity(entity).despawn_recursive();
-                    }
-                    break;
+                if !matches!(projectile, Projectile::Slug(_)) {
+                    commands.entity(entity).despawn_recursive();
                 }
+                break;
             }
         }
     }

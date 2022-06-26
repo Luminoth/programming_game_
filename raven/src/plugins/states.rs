@@ -59,41 +59,53 @@ impl Plugin for MainStatePlugin {
                     .with_system(
                         systems::steering::update
                             .label(Systems::SteeringUpdatePhysics)
-                            .after(Systems::Steering),
+                            .after(Systems::Steering)
+                            .before(Systems::PhysicsUpdate),
                     )
                     // physics
-                    .with_system(systems::physics::update.label(Systems::Physics))
+                    .with_system(systems::physics::update.label(Systems::PhysicsUpdate))
+                    .with_system(
+                        systems::physics::sync
+                            .label(Systems::PhysicsSync)
+                            .after(Systems::PhysicsUpdate),
+                    )
                     // bounds checking
                     .with_system(
                         systems::bot::check_bounds
                             .label(Systems::BoundsCheck)
-                            .before(Systems::Physics),
+                            .after(Systems::PhysicsUpdate)
+                            .before(Systems::PhysicsSync),
                     )
                     .with_system(
                         systems::projectile::check_bounds
                             .label(Systems::BoundsCheck)
-                            .after(Systems::Physics),
+                            .after(Systems::PhysicsUpdate)
+                            .before(Systems::PhysicsSync),
                     )
                     // collisions
                     .with_system(
                         systems::bot::check_wall_collision
-                            .label(Systems::Collision)
-                            .before(Systems::Physics),
+                            .label(Systems::CollisionCheck)
+                            .after(Systems::PhysicsUpdate)
+                            .before(Systems::PhysicsSync),
                     )
                     .with_system(
                         systems::projectile::check_wall_collision
-                            .label(Systems::Collision)
-                            .before(Systems::Physics),
+                            .label(Systems::CollisionCheck)
+                            .after(Systems::PhysicsUpdate)
+                            .before(Systems::PhysicsSync),
                     )
                     .with_system(
                         systems::projectile::check_bot_collision
-                            .label(Systems::Collision)
-                            .before(Systems::Physics),
+                            .label(Systems::CollisionCheck)
+                            .after(Systems::PhysicsUpdate)
+                            .before(Systems::PhysicsSync),
                     )
                     .with_system(
                         systems::trigger::check_bot_collision
-                            .label(Systems::Collision)
-                            .before(Systems::Physics),
+                            .label(Systems::CollisionCheck)
+                            .after(Systems::PhysicsUpdate)
+                            .before(Systems::PhysicsSync),
                     ),
             )
             // per-frame systems

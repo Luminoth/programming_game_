@@ -4,6 +4,16 @@ use bevy_inspector_egui::prelude::*;
 
 use crate::game::PHYSICS_STEP;
 
+#[derive(Debug, Default, Inspectable)]
+pub struct PhysicalCache {
+    pub speed: f32,
+
+    pub position: Vec2,
+    pub future_position: Vec2,
+    pub heading: Vec2,
+    pub max_distance: f32,
+}
+
 #[derive(Debug, Component, Inspectable)]
 pub struct Physical {
     pub acceleration: Vec2,
@@ -14,6 +24,8 @@ pub struct Physical {
     pub max_speed: f32,
     pub max_force: f32,
     pub max_turn_rate: f32,
+
+    pub cache: PhysicalCache,
 }
 
 impl Default for Physical {
@@ -27,6 +39,8 @@ impl Default for Physical {
             max_speed: f32::MAX,
             max_force: f32::MAX,
             max_turn_rate: std::f32::consts::PI,
+
+            cache: PhysicalCache::default(),
         }
     }
 }
@@ -34,6 +48,11 @@ impl Default for Physical {
 impl Physical {
     pub fn get_speed(&self) -> f32 {
         self.velocity.length()
+    }
+
+    pub fn get_future_position(&self, transform: &Transform, dt: f32) -> Vec2 {
+        let position = transform.translation.truncate();
+        position + self.velocity * dt
     }
 
     pub fn teleport(&mut self, transform: &mut Transform, position: Vec2) {
@@ -58,12 +77,7 @@ impl Physical {
         self.velocity = Vec2::ZERO;
     }
 
-    pub fn future_position(&self, transform: &Transform, dt: f32) -> Vec2 {
-        let position = transform.translation.truncate();
-        position + self.velocity * dt
-    }
-
-    pub fn update(&mut self, transform: &mut Transform) {
+    pub fn update(&mut self, transform: &Transform) {
         // https://github.com/bevyengine/bevy/issues/2041
         let dt = PHYSICS_STEP;
 
@@ -71,9 +85,23 @@ impl Physical {
         self.velocity += self.acceleration * dt;
         self.velocity = self.velocity.clamp_length_max(self.max_speed);
 
-        transform.translation += (self.velocity * dt).extend(0.0);
-
         self.acceleration = Vec2::ZERO;
+
+        self.cache.speed = self.get_speed();
+
+        self.cache.position = transform.translation.truncate();
+        self.cache.future_position = self.get_future_position(transform, dt);
+
+        let heading = self.cache.future_position - self.cache.position;
+        self.cache.max_distance = heading.length();
+        self.cache.heading = heading.normalize_or_zero();
+    }
+
+    pub fn sync(&mut self, transform: &mut Transform) {
+        // https://github.com/bevyengine/bevy/issues/2041
+        let dt = PHYSICS_STEP;
+
+        transform.translation += (self.velocity * dt).extend(0.0);
     }
 }
 

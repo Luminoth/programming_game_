@@ -37,7 +37,6 @@ impl Bot {
     }
 
     fn do_select(
-        &self,
         commands: &mut Commands,
         entity: Entity,
         name: impl AsRef<str>,
@@ -60,7 +59,6 @@ impl Bot {
     }
 
     fn do_possess(
-        &self,
         commands: &mut Commands,
         entity: Entity,
         name: impl AsRef<str>,
@@ -115,7 +113,7 @@ impl Bot {
                     possessed_visibility,
                 );
 
-                self.do_select(commands, entity, name, children, selected_visibility);
+                Self::do_select(commands, entity, name, children, selected_visibility);
             } else {
                 if let Some(previous_possessed_entity) = previous_possessed {
                     if previous_possessed_entity == entity {
@@ -123,10 +121,10 @@ impl Bot {
                     }
                 }
 
-                self.do_possess(commands, entity, name, children, possessed_visibility);
+                Self::do_possess(commands, entity, name, children, possessed_visibility);
             }
         } else {
-            self.do_select(commands, entity, name, children, selected_visibility);
+            Self::do_select(commands, entity, name, children, selected_visibility);
         }
     }
 
@@ -173,6 +171,11 @@ impl Bot {
         transform: &Transform,
         name: impl AsRef<str>,
     ) {
+        if !self.is_alive() {
+            warn!("[{}]: can't fire weapon while dead!", name.as_ref(),);
+            return;
+        }
+
         if !weapon.is_ready() {
             warn!(
                 "[{}]: weapon '{}' not ready!",

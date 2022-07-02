@@ -201,7 +201,7 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>, window: Res<
         &mut commands,
         Vec2::new(hw * 0.5, 0.0),
         Vec2::new(10.0, hh * 0.5),
-        Vec2::X,
+        -Vec2::X,
     );
 }
 

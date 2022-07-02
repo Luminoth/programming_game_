@@ -212,6 +212,59 @@ pub fn update_obstacle_avoidance(
     }
 }
 
-// TODO: wall avoidance
+pub fn update_wall_avoidance(
+    params: Res<SimulationParams>,
+    mut query: Query<(PhysicalQueryMut, &mut WallAvoidance, &Name), Without<Wall>>,
+    walls: Query<WallQuery>,
+) {
+    for (mut physical, mut avoidance, name) in query.iter_mut() {
+        let position = physical.transform.translation.truncate();
+
+        avoidance.create_feelers(
+            position,
+            physical.physical.heading,
+            params.wall_detection_feeler_length,
+        );
+
+        let mut steering_force = Vec2::ZERO;
+
+        for feeler in avoidance.feelers {
+            let mut dist_to_closest_ip = f32::MAX;
+            let mut closest_wall_normal = None;
+            let mut closest_point = Vec2::ZERO;
+
+            for wall in walls.iter() {
+                let wall_position = wall.transform.translation.truncate();
+
+                if let Some((dist_to_this_ip, point)) = line_intersection(
+                    position,
+                    feeler,
+                    wall.wall.from(wall_position),
+                    wall.wall.to(wall_position),
+                ) {
+                    if dist_to_this_ip < dist_to_closest_ip {
+                        dist_to_closest_ip = dist_to_this_ip;
+                        closest_wall_normal = Some(wall.wall.facing);
+                        closest_point = point;
+                    }
+                }
+            }
+
+            if let Some(closest_wall_normal) = closest_wall_normal {
+                let overshoot = feeler - closest_point;
+                steering_force += closest_wall_normal * overshoot.length();
+
+                warn!(
+                    "{} avoiding wall overshoot {}: {}",
+                    name, overshoot, steering_force
+                );
+            }
+        }
+
+        physical
+            .physical
+            .accumulate_stearing_force(steering_force, params.wall_avoidance_weight);
+    }
+}
 
 // TODO: hide

@@ -55,7 +55,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         pursuit_weight: 1.0,
         wander_weight: 1.0,
         obstacle_avoidance_weight: 10.0,
+        wall_avoidance_weight: 10.0,
         min_detection_box_length: 40.0,
+        wall_detection_feeler_length: 40.0,
     });
 }
 
@@ -97,6 +99,7 @@ fn main() {
     // inspectable types
     .register_inspectable::<components::obstacle::ObstacleAvoidance>()
     .register_inspectable::<components::obstacle::Wall>()
+    .register_inspectable::<components::obstacle::WallAvoidance>()
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::steering::Seek>()
     .register_inspectable::<components::steering::SeekTarget>()
@@ -134,6 +137,11 @@ fn main() {
                 .with_run_criteria(FixedTimestep::step(PHYSICS_STEP as f64))
                 .with_system(
                     systems::steering::update_obstacle_avoidance
+                        .label(Systems::Avoidance)
+                        .before(Systems::Steering),
+                )
+                .with_system(
+                    systems::steering::update_wall_avoidance
                         .label(Systems::Avoidance)
                         .before(Systems::Steering),
                 )

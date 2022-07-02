@@ -1,3 +1,4 @@
+use bevy::math::Mat2;
 use bevy::prelude::*;
 
 pub fn point_to_world_space(point: Vec2, heading: Vec2, side: Vec2, position: Vec2) -> Vec2 {
@@ -40,6 +41,11 @@ pub fn point_to_local_space(point: Vec2, heading: Vec2, side: Vec2, position: Ve
     transform.transform_point2(vector)
 }*/
 
+pub fn rotate_around_origin(v: Vec2, angle: f32) -> Vec2 {
+    let transform = Mat2::from_angle(angle);
+    transform.mul_vec2(v)
+}
+
 pub fn circles_overlap(apos: Vec2, aradius: f32, bpos: Vec2, bradius: f32) -> bool {
     let dist_between_centers =
         ((apos.x - bpos.x) * (apos.x - bpos.x) + (apos.y - bpos.y) * (apos.y - bpos.y)).sqrt();
@@ -64,4 +70,29 @@ pub fn overlapped(
         }
     }
     false
+}
+
+pub fn line_intersection(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<(f32, Vec2)> {
+    let rt = (a.y - c.y) * (d.x - c.x) - (a.x - c.x) * (d.y - c.y);
+    let rb = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+
+    let st = (a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y);
+    let sb = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+
+    if (rb == 0.0) || (sb == 0.0) {
+        //lines are parallel
+        return None;
+    }
+
+    let r = rt / rb;
+    let s = st / sb;
+
+    if (r > 0.0) && (r < 1.0) && (s > 0.0) && (s < 1.0) {
+        let dist = a.distance(b) * r;
+        let point = a + r * (b - a);
+
+        return Some((dist, point));
+    }
+
+    None
 }

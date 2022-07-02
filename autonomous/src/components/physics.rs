@@ -55,6 +55,7 @@ impl Physical {
         let mag_so_far = self.steering_force.length();
         let mag_remain = self.max_force - mag_so_far;
         if mag_remain <= 0.0 {
+            warn!("too much force");
             return;
         }
 

@@ -25,7 +25,11 @@ pub struct SimulationParams {
     pub pursuit_weight: f32,
     pub wander_weight: f32,
     pub obstacle_avoidance_weight: f32,
+    pub wall_avoidance_weight: f32,
 
     // obstacle avoidance
     pub min_detection_box_length: f32,
+
+    // wall avoidance
+    pub wall_detection_feeler_length: f32,
 }

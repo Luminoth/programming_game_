@@ -148,8 +148,6 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>, window: Res<
         .entity(entity)
         .insert(steering::Wander::new(100.0, 100.0, 50.0));
 
-    // TODO: wander plus wall avoidance
-
     // TODO: hide from wanderer
 
     // build a set of non-overlapping obstacles
@@ -191,6 +189,20 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>, window: Res<
     for (position, radius) in obstacles {
         ObstacleBundle::spawn(&mut commands, position, radius);
     }
+
+    // spawn walls
+    WallBundle::spawn(
+        &mut commands,
+        Vec2::new(-hw * 0.5, 0.0),
+        Vec2::new(10.0, hh * 0.5),
+        Vec2::X,
+    );
+    WallBundle::spawn(
+        &mut commands,
+        Vec2::new(hw * 0.5, 0.0),
+        Vec2::new(10.0, hh * 0.5),
+        Vec2::X,
+    );
 }
 
 pub fn teardown(mut commands: Commands, entities: Query<Entity>) {

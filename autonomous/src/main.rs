@@ -95,6 +95,8 @@ fn main() {
     })
     .add_plugin(WorldInspectorPlugin::new())
     // inspectable types
+    .register_inspectable::<components::obstacle::ObstacleAvoidance>()
+    .register_inspectable::<components::obstacle::Wall>()
     .register_inspectable::<components::physics::Physical>()
     .register_inspectable::<components::steering::Seek>()
     .register_inspectable::<components::steering::SeekTarget>()

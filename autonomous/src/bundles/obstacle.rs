@@ -25,7 +25,9 @@ impl ObstacleBundle {
             actor: Actor {
                 bounding_radius: radius,
             },
-            transform: Transform::from_translation(position.extend(0.0)),
+            transform: TransformBundle::from_transform(Transform::from_translation(
+                position.extend(0.0),
+            )),
             name: Name::new("Obstacle"),
             ..Default::default()
         });
@@ -64,6 +66,49 @@ impl ObstacleBundle {
                 .insert(Name::new("Bounding Volume"))
                 .insert(ObstacleDebug);
         });*/
+
+        bundle.id()
+    }
+}
+
+#[derive(Debug, Default, Bundle)]
+pub struct WallBundle {
+    pub wall: Wall,
+
+    #[bundle]
+    pub transform: TransformBundle,
+}
+
+impl WallBundle {
+    pub fn spawn(commands: &mut Commands, position: Vec2, extents: Vec2, facing: Vec2) -> Entity {
+        info!(
+            "spawning wall of size {} at {} facing {}",
+            extents, position, facing
+        );
+
+        let mut bundle = commands.spawn_bundle(WallBundle {
+            wall: Wall { extents, facing },
+            transform: TransformBundle::from_transform(Transform::from_translation(
+                position.extend(0.0),
+            )),
+        });
+        bundle.insert(Name::new("Wall"));
+
+        bundle.with_children(|parent| {
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::Rectangle {
+                        extents,
+                        ..Default::default()
+                    },
+                    DrawMode::Fill(FillMode {
+                        color: Color::DARK_GRAY,
+                        options: FillOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Name::new("Model"));
+        });
 
         bundle.id()
     }

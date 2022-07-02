@@ -7,6 +7,6 @@ pub struct ActorBundle {
     pub actor: Actor,
     pub name: Name,
 
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
+    #[bundle]
+    pub transform: TransformBundle,
 }

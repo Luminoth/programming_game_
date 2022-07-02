@@ -17,6 +17,7 @@ pub struct VehicleBundle {
     pub agent: Agent,
     pub obstacle: Obstacle,
     pub obstacle_avoidance: ObstacleAvoidance,
+    pub wall_avoidance: WallAvoidance,
     pub vehicle: Vehicle,
 }
 
@@ -50,6 +51,7 @@ impl VehicleBundle {
             obstacle_avoidance: ObstacleAvoidance {
                 box_length: obstacle_avoidance_box_length,
             },
+            wall_avoidance: WallAvoidance::default(),
             vehicle: Vehicle::default(),
         });
 
@@ -58,7 +60,9 @@ impl VehicleBundle {
                 bounding_radius: VEHICLE_RADIUS,
             },
             name: Name::new(name),
-            transform: Transform::from_translation(position.extend(0.0)),
+            transform: TransformBundle::from_transform(Transform::from_translation(
+                position.extend(0.0),
+            )),
             ..Default::default()
         });
 

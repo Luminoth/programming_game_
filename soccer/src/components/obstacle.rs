@@ -21,6 +21,3 @@ pub struct WallQuery<'w> {
     pub wall: &'w Wall,
     pub transform: &'w Transform,
 }
-
-#[derive(Debug, Default, Component)]
-pub struct WallDebug;

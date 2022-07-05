@@ -80,14 +80,14 @@ pub struct WallBundle {
 }
 
 impl WallBundle {
-    pub fn spawn(commands: &mut Commands, position: Vec2, extents: Vec2, facing: Vec2) -> Entity {
-        info!(
-            "spawning wall of size {} at {} facing {}",
-            extents, position, facing
-        );
+    pub fn spawn(commands: &mut Commands, position: Vec2, from: Vec2, to: Vec2) -> Entity {
+        info!("spawning wall at {} from {} to {}", position, from, to);
+
+        let wall = Wall::new(from, to);
+        let wall_normal = wall.normal();
 
         let mut bundle = commands.spawn_bundle(WallBundle {
-            wall: Wall { extents, facing },
+            wall,
             transform: TransformBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
@@ -97,18 +97,30 @@ impl WallBundle {
         bundle.with_children(|parent| {
             parent
                 .spawn_bundle(GeometryBuilder::build_as(
-                    &shapes::Rectangle {
-                        extents,
-                        ..Default::default()
-                    },
-                    DrawMode::Fill(FillMode {
+                    &shapes::Line(from, to),
+                    DrawMode::Stroke(StrokeMode {
                         color: Color::DARK_GRAY,
-                        options: FillOptions::default(),
+                        options: StrokeOptions::default(),
                     }),
                     Transform::default(),
                 ))
                 .insert(Name::new("Model"));
         });
+
+        // wall normal
+        /*bundle.with_children(|parent| {
+            parent
+                .spawn_bundle(GeometryBuilder::build_as(
+                    &shapes::Line(from, from + wall_normal * 50.0),
+                    DrawMode::Stroke(StrokeMode {
+                        color: Color::PINK,
+                        options: StrokeOptions::default(),
+                    }),
+                    Transform::default(),
+                ))
+                .insert(Name::new("Wall Normal"))
+                .insert(WallDebug);
+        });*/
 
         bundle.id()
     }

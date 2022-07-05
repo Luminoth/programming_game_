@@ -244,7 +244,7 @@ pub fn update_wall_avoidance(
                 ) {
                     if dist_to_this_ip < dist_to_closest_ip {
                         dist_to_closest_ip = dist_to_this_ip;
-                        closest_wall_normal = Some(wall.wall.facing);
+                        closest_wall_normal = Some(wall.wall.normal());
                         closest_point = point;
                     }
                 }

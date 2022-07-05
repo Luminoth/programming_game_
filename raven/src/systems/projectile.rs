@@ -34,26 +34,28 @@ pub fn check_bounds(
 pub fn check_wall_collision(
     mut commands: Commands,
     projectiles: Query<(Entity, &Projectile, PhysicalQuery, &Bounds, &Name)>,
-    walls: Query<(&Transform, &Bounds), With<Wall>>,
+    walls: Query<WallQuery>,
     mut bots: Query<(Entity, BotQueryMut, &mut Inventory, PhysicalQuery, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
         // TODO: need to account for projectile bounds in raycast
 
-        for (wall_transform, wall_bounds) in walls.iter() {
-            let wall_position = wall_transform.translation.truncate();
+        for wall in walls.iter() {
+            let wall_position = wall.transform.translation.truncate();
+            let wall_from = wall.wall.from(wall_position);
+            let wall_to = wall.wall.to(wall_position);
 
-            let contains = wall_bounds.contains(wall_position, physical.physical.cache.position);
+            /*let contains = wall_bounds.contains(wall_position, physical.physical.cache.position);
             if contains {
                 // TODO: push back out of the wall?
                 continue;
-            }
+            }*/
 
-            if let Some(hit) = wall_bounds.ray_intersects(
-                wall_position,
+            if let Some((_, hit)) = line_intersection(
+                wall_from,
+                wall_to,
                 physical.physical.cache.position,
-                physical.physical.cache.heading,
-                physical.physical.cache.max_distance,
+                physical.physical.cache.heading * physical.physical.cache.max_distance,
             ) {
                 info!("projectile '{}' hit a wall at {}", name, hit);
                 projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());

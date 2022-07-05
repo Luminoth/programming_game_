@@ -36,7 +36,7 @@ impl Wall {
     }
 
     pub fn from(&self, position: Vec2) -> Vec2 {
-        position - self.from
+        position + self.from
     }
 
     pub fn to(&self, position: Vec2) -> Vec2 {

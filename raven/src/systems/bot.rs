@@ -32,25 +32,27 @@ pub fn check_bounds(
 
 pub fn check_wall_collision(
     mut bots: Query<(PhysicalQueryMut, &Bounds), With<Bot>>,
-    walls: Query<(&Transform, &Bounds), With<Wall>>,
+    walls: Query<WallQuery>,
 ) {
     for (mut physical, bounds) in bots.iter_mut() {
         // TODO: need to account for bot bounds in raycast
 
-        for (wall_transform, wall_bounds) in walls.iter() {
-            let wall_position = wall_transform.translation.truncate();
+        for wall in walls.iter() {
+            let wall_position = wall.transform.translation.truncate();
+            let wall_from = wall.wall.from(wall_position);
+            let wall_to = wall.wall.to(wall_position);
 
-            let contains = wall_bounds.contains(wall_position, physical.physical.cache.position);
+            /*let contains = wall_bounds.contains(wall_position, physical.physical.cache.position);
             if contains {
                 // TODO: push back out of the wall?
                 continue;
-            }
+            }*/
 
-            if let Some(hit) = wall_bounds.ray_intersects(
-                wall_position,
+            if let Some(_) = line_intersection(
+                wall_from,
+                wall_to,
                 physical.physical.cache.position,
-                physical.physical.cache.heading,
-                physical.physical.cache.max_distance,
+                physical.physical.cache.heading * physical.physical.cache.max_distance,
             ) {
                 // TODO: we should stop at the intersection
                 physical.physical.stop();

@@ -2,6 +2,31 @@ use bevy::ecs::query::WorldQuery;
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
 
+pub fn line_intersection(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<(f32, Vec2)> {
+    let rt = (a.y - c.y) * (d.x - c.x) - (a.x - c.x) * (d.y - c.y);
+    let rb = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+
+    let st = (a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y);
+    let sb = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+
+    if (rb == 0.0) || (sb == 0.0) {
+        //lines are parallel
+        return None;
+    }
+
+    let r = rt / rb;
+    let s = st / sb;
+
+    if (r > 0.0) && (r < 1.0) && (s > 0.0) && (s < 1.0) {
+        let dist = a.distance(b) * r;
+        let point = a + r * (b - a);
+
+        return Some((dist, point));
+    }
+
+    None
+}
+
 // Real-Time Collision Detection, Ericson
 
 #[derive(Debug, Clone, Component, Inspectable)]

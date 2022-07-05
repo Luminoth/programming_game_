@@ -4,6 +4,8 @@ use bevy_inspector_egui::prelude::*;
 
 use super::physics::*;
 
+use crate::util::*;
+
 pub trait SteeringBehavior: std::fmt::Debug + Component {}
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -28,6 +30,7 @@ impl Steering {
         let mag_so_far = self.accumulated_force.length();
         let mag_remain = physical.max_force - mag_so_far;
         if mag_remain <= 0.0 {
+            warn!("too much steering force");
             return;
         }
 
@@ -133,4 +136,24 @@ impl Arrive {
 pub struct ArriveQueryMut<'w> {
     pub arrive: &'w Arrive,
     pub steering: &'w mut Steering,
+}
+
+#[derive(Debug, Default, Component, Inspectable)]
+pub struct WallAvoidance {
+    pub feelers: [Vec2; 3],
+}
+
+impl WallAvoidance {
+    pub fn create_feelers(&mut self, position: Vec2, heading: Vec2, feeler_length: f32) {
+        // straight ahead
+        self.feelers[0] = position + feeler_length * heading;
+
+        // left
+        let temp = heading.rotate(std::f32::consts::FRAC_PI_2 * 3.5);
+        self.feelers[1] = position + feeler_length * 0.5 * temp;
+
+        // right
+        let temp = heading.rotate(std::f32::consts::FRAC_2_PI * 0.5);
+        self.feelers[2] = position + feeler_length * 0.5 * temp;
+    }
 }

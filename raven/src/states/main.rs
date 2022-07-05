@@ -34,7 +34,12 @@ pub fn setup(mut commands: Commands) {
     // spawn the world
     // TODO: this should come from the map
 
-    WallBundle::spawn(&mut commands, Vec2::new(20.0, 0.0), Vec2::new(1.0, 30.0));
+    WallBundle::spawn(
+        &mut commands,
+        Vec2::new(20.0, 0.0),
+        Vec2::new(0.0, -15.0),
+        Vec2::new(0.0, 15.0),
+    );
 
     // TODO: spawn spawnpoints
 

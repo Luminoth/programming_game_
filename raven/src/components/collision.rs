@@ -36,6 +36,27 @@ pub enum Bounds {
 }
 
 impl Bounds {
+    pub fn center(&self) -> Vec2 {
+        match self {
+            Self::Circle(center, _) => *center,
+            Self::Box(center, _) => *center,
+        }
+    }
+
+    pub fn width(&self) -> f32 {
+        match self {
+            Self::Circle(_, radius) => *radius,
+            Self::Box(_, extents) => extents.x,
+        }
+    }
+
+    pub fn height(&self) -> f32 {
+        match self {
+            Self::Circle(_, radius) => *radius,
+            Self::Box(_, extents) => extents.y,
+        }
+    }
+
     pub fn closest_point(&self, position: Vec2, point: Vec2) -> Vec2 {
         match self {
             Self::Circle(center, radius) => {

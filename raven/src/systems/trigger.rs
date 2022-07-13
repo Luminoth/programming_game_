@@ -28,12 +28,14 @@ pub fn check_bot_collision(
     )>,
 ) {
     for (mut trigger, transform, bounds) in triggers.iter_mut() {
-        let position = transform.translation.truncate();
+        // TODO: need to account for bounds width / height
+
+        let position = transform.translation.truncate() + bounds.center();
 
         for (entity, mut bot, bot_physical, mut inventory, bot_bounds, name) in bots.iter_mut() {
-            // TODO: need to account for bot bounds in raycast
+            let bot_position = bot_physical.physical.cache.position + bot_bounds.center();
 
-            let contains = bot_bounds.contains(bot_physical.physical.cache.position, position);
+            let contains = bot_bounds.contains(bot_position, position);
             if contains {
                 // don't re-trigger
                 continue;
@@ -42,7 +44,7 @@ pub fn check_bot_collision(
             if bounds
                 .ray_intersects(
                     position,
-                    bot_physical.physical.cache.position,
+                    bot_position,
                     bot_physical.physical.cache.heading,
                     bot_physical.physical.cache.max_distance,
                 )

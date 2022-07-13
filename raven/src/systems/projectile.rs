@@ -11,7 +11,7 @@ use crate::ORTHO_SIZE;
 pub fn check_bounds(
     mut commands: Commands,
     windows: Res<Windows>,
-    projectiles: Query<(Entity, PhysicalQuery, &Name), With<Projectile>>,
+    projectiles: Query<(Entity, PhysicalQuery, &Bounds, &Name), With<Projectile>>,
 ) {
     let window = windows.get_primary().unwrap();
     let aspect_ratio = window.width() / window.height();
@@ -19,11 +19,20 @@ pub fn check_bounds(
     let max_x = ORTHO_SIZE;
     let max_y = ORTHO_SIZE / aspect_ratio;
 
-    for (entity, physical, name) in projectiles.iter() {
-        if physical.physical.cache.position.x < -max_x
-            || physical.physical.cache.position.x > max_x
-            || physical.physical.cache.position.y < -max_y
-            || physical.physical.cache.position.y > max_y
+    for (entity, physical, bounds, name) in projectiles.iter() {
+        let projectile_min_x =
+            physical.physical.cache.future_position.x + bounds.center().x - bounds.width();
+        let projectile_min_y =
+            physical.physical.cache.future_position.y + bounds.center().y - bounds.height();
+        let projectile_max_x =
+            physical.physical.cache.future_position.x + bounds.center().x + bounds.width();
+        let projectile_max_y =
+            physical.physical.cache.future_position.y + bounds.center().y + bounds.height();
+
+        if projectile_min_x < -max_x
+            || projectile_max_x > max_x
+            || projectile_min_y < -max_y
+            || projectile_max_y > max_y
         {
             info!("projectile '{}' is out of bounds", name);
             commands.entity(entity).despawn_recursive();
@@ -38,25 +47,25 @@ pub fn check_wall_collision(
     mut bots: Query<(Entity, BotQueryMut, &mut Inventory, PhysicalQuery, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
-        // TODO: need to account for projectile bounds in raycast
+        // TODO: need to account for bounds width / height
+
+        let projectile_position = physical.physical.cache.position + bounds.center();
+        let heading = physical.physical.cache.heading * physical.physical.cache.max_distance;
 
         for wall in walls.iter() {
             let wall_position = wall.transform.translation.truncate();
             let wall_from = wall.wall.from(wall_position);
             let wall_to = wall.wall.to(wall_position);
 
-            /*let contains = wall_bounds.contains(wall_position, physical.physical.cache.position);
+            /*let contains = wall_bounds.contains(wall_position, projectile_position);
             if contains {
                 // TODO: push back out of the wall?
                 continue;
             }*/
 
-            if let Some((_, hit)) = line_intersection(
-                wall_from,
-                wall_to,
-                physical.physical.cache.position,
-                physical.physical.cache.heading * physical.physical.cache.max_distance,
-            ) {
+            if let Some((_, hit)) =
+                line_intersection(wall_from, wall_to, projectile_position, heading)
+            {
                 info!("projectile '{}' hit a wall at {}", name, hit);
                 projectile.on_impact(&mut commands, entity, hit, bots.iter_mut());
 
@@ -74,25 +83,26 @@ pub fn check_bot_collision(
     mut bots: Query<(Entity, BotQueryMut, &mut Inventory, PhysicalQuery, &Bounds)>,
 ) {
     for (entity, projectile, physical, bounds, name) in projectiles.iter() {
-        // TODO: need to account for projectile bounds in raycast
+        // TODO: need to account for bounds width / height
+
+        let projectile_position = physical.physical.cache.position + bounds.center();
 
         for (bot_entity, mut bot, mut inventory, bot_physical, bot_bounds) in bots.iter_mut() {
             if bot_entity == projectile.get_owner() {
                 continue;
             }
 
-            let contains = bot_bounds.contains(
-                bot_physical.physical.cache.position,
-                physical.physical.cache.position,
-            );
+            let bot_position = bot_physical.physical.cache.position + bot_bounds.center();
+
+            let contains = bot_bounds.contains(bot_position, projectile_position);
             if contains {
                 // don't re-collide
                 continue;
             }
 
             if let Some(hit) = bot_bounds.ray_intersects(
-                bot_physical.physical.cache.position,
-                physical.physical.cache.position,
+                bot_position,
+                projectile_position,
                 physical.physical.cache.heading,
                 physical.physical.cache.max_distance,
             ) {

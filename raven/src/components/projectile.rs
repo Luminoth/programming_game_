@@ -109,11 +109,9 @@ impl Projectile {
                     continue;
                 }
 
-                if explosion_bounds.bounds_intersects(
-                    hit,
-                    bot_bounds,
-                    bot_physical.physical.cache.position,
-                ) {
+                let bot_position = bot_physical.physical.cache.position + bot_bounds.center();
+
+                if explosion_bounds.bounds_intersects(hit, bot_bounds, bot_position) {
                     info!("rocket explosion hit bot '{}' at {}!", bot.name, hit);
                     bot.bot.damage(
                         commands,

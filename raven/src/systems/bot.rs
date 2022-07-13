@@ -17,13 +17,16 @@ pub fn check_bounds(
     let max_y = ORTHO_SIZE / aspect_ratio;
 
     for (mut physical, bounds) in bots.iter_mut() {
-        // TODO: need to account for bot bounds in check
+        let bot_min_x =
+            physical.physical.cache.future_position.x + bounds.center().x - bounds.width();
+        let bot_min_y =
+            physical.physical.cache.future_position.y + bounds.center().y - bounds.height();
+        let bot_max_x =
+            physical.physical.cache.future_position.x + bounds.center().x + bounds.width();
+        let bot_max_y =
+            physical.physical.cache.future_position.y + bounds.center().y + bounds.height();
 
-        if physical.physical.cache.future_position.x < -max_x
-            || physical.physical.cache.future_position.x > max_x
-            || physical.physical.cache.future_position.y < -max_y
-            || physical.physical.cache.future_position.y > max_y
-        {
+        if bot_min_x < -max_x || bot_max_x > max_x || bot_min_y < -max_y || bot_max_y > max_y {
             // TODO: we should stop at the intersection
             physical.physical.stop();
         }
@@ -35,29 +38,26 @@ pub fn check_wall_collision(
     walls: Query<WallQuery>,
 ) {
     for (mut physical, bounds) in bots.iter_mut() {
-        // TODO: need to account for bot bounds in raycast
+        // TODO: need to account for bounds width / height
+
+        let bot_position = physical.physical.cache.position + bounds.center();
+        let heading = physical.physical.cache.heading * physical.physical.cache.max_distance;
 
         for wall in walls.iter() {
             let wall_position = wall.transform.translation.truncate();
             let wall_from = wall.wall.from(wall_position);
             let wall_to = wall.wall.to(wall_position);
 
-            /*let contains = wall_bounds.contains(wall_position, physical.physical.cache.position);
+            /*let contains = wall_bounds.contains(wall_position, bot_position);
             if contains {
                 // TODO: push back out of the wall?
                 continue;
             }*/
 
-            if line_intersection(
-                wall_from,
-                wall_to,
-                physical.physical.cache.position,
-                physical.physical.cache.heading * physical.physical.cache.max_distance,
-            )
-            .is_some()
-            {
+            if line_intersection(wall_from, wall_to, bot_position, heading).is_some() {
                 // TODO: we should stop at the intersection
                 physical.physical.stop();
+                break;
             }
         }
     }

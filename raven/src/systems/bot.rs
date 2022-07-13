@@ -48,12 +48,14 @@ pub fn check_wall_collision(
                 continue;
             }*/
 
-            if let Some(_) = line_intersection(
+            if line_intersection(
                 wall_from,
                 wall_to,
                 physical.physical.cache.position,
                 physical.physical.cache.heading * physical.physical.cache.max_distance,
-            ) {
+            )
+            .is_some()
+            {
                 // TODO: we should stop at the intersection
                 physical.physical.stop();
             }

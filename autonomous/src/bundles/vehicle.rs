@@ -63,7 +63,6 @@ impl VehicleBundle {
             transform: TransformBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
-            ..Default::default()
         });
 
         bundle.with_children(|parent| {

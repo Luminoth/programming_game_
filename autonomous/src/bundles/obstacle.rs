@@ -29,7 +29,6 @@ impl ObstacleBundle {
                 position.extend(0.0),
             )),
             name: Name::new("Obstacle"),
-            ..Default::default()
         });
 
         bundle.with_children(|parent| {

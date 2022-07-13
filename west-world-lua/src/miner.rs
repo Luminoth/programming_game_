@@ -14,17 +14,9 @@ struct Stats {
     fatigue: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 struct MinerComponents {
     stats: Stats,
-}
-
-impl Default for MinerComponents {
-    fn default() -> Self {
-        Self {
-            stats: Stats::default(),
-        }
-    }
 }
 
 impl MinerComponents {
@@ -74,14 +66,20 @@ impl UserData for Miner {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method("name", |_, this, ()| Ok(this.entity.name().to_owned()));
         methods.add_method("gold_carried", |_, this, ()| {
-            Ok(this.components.gold_carried())
+            this.components.gold_carried();
+            Ok(())
         });
         methods.add_method_mut("mine_gold", |_, this, amount: u64| {
-            Ok(this.components.mine_gold(amount))
+            this.components.mine_gold(amount);
+            Ok(())
         });
         methods.add_method("is_fatigued", |_, this, ()| {
-            Ok(this.components.is_fatigued())
+            this.components.is_fatigued();
+            Ok(())
         });
-        methods.add_method_mut("rest", |_, this, ()| Ok(this.components.rest()));
+        methods.add_method_mut("rest", |_, this, ()| {
+            this.components.rest();
+            Ok(())
+        });
     }
 }

@@ -61,7 +61,6 @@ where
                 top,
                 bottom,
                 score_center,
-                ..Default::default()
             },
             team,
             bounds: BoundingRect {

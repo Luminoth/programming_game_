@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::components::collision::*;
 use crate::components::wall::*;
 use crate::components::*;
 use crate::game::WALL_SORT;

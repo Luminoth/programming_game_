@@ -33,7 +33,7 @@ impl BallBundle {
             bounds: BoundingCircle::from_radius(BALL_RADIUS),
             actor: ActorBundle {
                 name: Name::new("Ball"),
-                transform: TransformBundle::from_transform(Transform::from_translation(
+                spatial: SpatialBundle::from_transform(Transform::from_translation(
                     position.extend(BALL_SORT),
                 )),
                 ..Default::default()

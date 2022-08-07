@@ -85,33 +85,33 @@ impl GoalKeeper {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct GoalKeeperQuery<'w, T>
+pub struct GoalKeeperQuery<T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w SoccerPlayer,
-    pub goal_keeper: &'w GoalKeeper,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub player: &'static SoccerPlayer,
+    pub goal_keeper: &'static GoalKeeper,
+    pub team: &'static T,
+    pub name: &'static Name,
 
-    pub actor: &'w Actor,
-    pub agent: &'w Agent,
-    pub steering: &'w Steering,
+    pub actor: &'static Actor,
+    pub agent: &'static Agent,
+    pub steering: &'static Steering,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct GoalKeeperQueryMut<'w, T>
+pub struct GoalKeeperQueryMut<T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w mut SoccerPlayer,
-    pub goal_keeper: &'w GoalKeeper,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub player: &'static mut SoccerPlayer,
+    pub goal_keeper: &'static GoalKeeper,
+    pub team: &'static T,
+    pub name: &'static Name,
 
-    pub actor: &'w Actor,
-    pub agent: &'w mut Agent,
-    pub steering: &'w mut Steering,
-    pub state_machine: &'w mut GoalKeeperStateMachine,
+    pub actor: &'static Actor,
+    pub agent: &'static mut Agent,
+    pub steering: &'static mut Steering,
+    pub state_machine: &'static mut GoalKeeperStateMachine,
 }

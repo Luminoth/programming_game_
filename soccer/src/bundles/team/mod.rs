@@ -25,7 +25,7 @@ where
     pub support_spots: SupportSpotCalculator,
 
     #[bundle]
-    pub transform: TransformBundle,
+    pub spatial: SpatialBundle,
 }
 
 impl<T> SoccerTeamBundle<T>
@@ -49,7 +49,7 @@ where
             team: SoccerTeam::default(),
             color,
             support_spots,
-            transform: TransformBundle::default(),
+            spatial: SpatialBundle::default(),
         });
 
         SoccerTeamStateMachine::insert(&mut bundle, SoccerTeamState::PrepareForKickOff, false);

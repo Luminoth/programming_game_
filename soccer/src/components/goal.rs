@@ -47,19 +47,19 @@ pub struct GoalDebug;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct TeamGoalQuery<'w, T>
+pub struct TeamGoalQuery<T>
 where
     T: TeamColorMarker,
 {
-    pub goal: &'w Goal,
-    pub team: &'w T,
+    pub goal: &'static Goal,
+    pub team: &'static T,
 
-    pub transform: &'w Transform,
+    pub transform: &'static Transform,
 }
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct GoalQuery<'w> {
-    pub goal: &'w Goal,
-    pub transform: &'w Transform,
+pub struct GoalQuery {
+    pub goal: &'static Goal,
+    pub transform: &'static Transform,
 }

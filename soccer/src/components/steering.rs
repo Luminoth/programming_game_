@@ -49,9 +49,9 @@ impl Steering {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SteeringQueryMut<'w> {
-    pub steering: &'w mut Steering,
-    pub physical: &'w mut Physical,
+pub struct SteeringQueryMut {
+    pub steering: &'static mut Steering,
+    pub physical: &'static mut Physical,
 }
 
 #[derive(Debug, Default, Component)]
@@ -78,9 +78,9 @@ impl Seek {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SeekQueryMut<'w> {
-    pub seek: &'w Seek,
-    pub steering: &'w mut Steering,
+pub struct SeekQueryMut {
+    pub seek: &'static Seek,
+    pub steering: &'static mut Steering,
 }
 
 #[derive(Debug, Clone, Copy, Inspectable)]
@@ -132,9 +132,9 @@ impl Arrive {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct ArriveQueryMut<'w> {
-    pub arrive: &'w Arrive,
-    pub steering: &'w mut Steering,
+pub struct ArriveQueryMut {
+    pub arrive: &'static Arrive,
+    pub steering: &'static mut Steering,
 }
 
 #[derive(Debug, Component, Inspectable)]
@@ -175,9 +175,9 @@ impl Pursuit {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct PursuitQueryMut<'w> {
-    pub pursuit: &'w Pursuit,
-    pub steering: &'w mut Steering,
+pub struct PursuitQueryMut {
+    pub pursuit: &'static Pursuit,
+    pub steering: &'static mut Steering,
 }
 
 #[derive(Debug, Component, Inspectable)]
@@ -212,9 +212,9 @@ impl Interpose {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct InterposeQueryMut<'w> {
-    pub interpose: &'w Interpose,
-    pub steering: &'w mut Steering,
+pub struct InterposeQueryMut {
+    pub interpose: &'static Interpose,
+    pub steering: &'static mut Steering,
 }
 
 #[derive(Debug, Component, Inspectable)]
@@ -263,9 +263,9 @@ impl SoccerPlayerSeparation {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SoccerPlayerSeparationQueryMut<'w> {
-    pub separation: &'w SoccerPlayerSeparation,
-    pub steering: &'w mut Steering,
+pub struct SoccerPlayerSeparationQueryMut {
+    pub separation: &'static SoccerPlayerSeparation,
+    pub steering: &'static mut Steering,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]

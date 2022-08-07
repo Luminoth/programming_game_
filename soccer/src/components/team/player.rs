@@ -154,24 +154,24 @@ impl SoccerPlayer {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct SoccerPlayerQuery<'w, T>
+pub struct SoccerPlayerQuery<T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w SoccerPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub player: &'static SoccerPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SoccerPlayerQueryMut<'w, T>
+pub struct SoccerPlayerQueryMut<T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w mut SoccerPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub player: &'static mut SoccerPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -180,14 +180,14 @@ pub struct ReceivingPlayer;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct ReceivingPlayerQuery<'w, T>
+pub struct ReceivingPlayerQuery<T>
 where
     T: TeamColorMarker,
 {
     pub entity: Entity,
-    pub receiving: &'w ReceivingPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub receiving: &'static ReceivingPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -196,14 +196,14 @@ pub struct ClosestPlayer;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct ClosestPlayerQuery<'w, T>
+pub struct ClosestPlayerQuery<T>
 where
     T: TeamColorMarker,
 {
     pub entity: Entity,
-    pub closest: &'w ClosestPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub closest: &'static ClosestPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -212,14 +212,14 @@ pub struct ControllingPlayer;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct ControllingPlayerQuery<'w, T>
+pub struct ControllingPlayerQuery<T>
 where
     T: TeamColorMarker,
 {
     pub entity: Entity,
-    pub controlling: &'w ControllingPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub controlling: &'static ControllingPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -228,12 +228,12 @@ pub struct SupportingPlayer;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct SupportingPlayerQuery<'w, T>
+pub struct SupportingPlayerQuery<T>
 where
     T: TeamColorMarker,
 {
     pub entity: Entity,
-    pub supporting: &'w SupportingPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub supporting: &'static SupportingPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 }

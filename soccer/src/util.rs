@@ -1,5 +1,4 @@
-use bevy::ecs::query::{Fetch, FilterFetch, WorldQuery};
-use bevy::ecs::system::QuerySingleError;
+use bevy::ecs::query::{QueryItem, QuerySingleError, ROQueryItem, WorldQuery};
 use bevy::math::Mat2;
 use bevy::prelude::*;
 
@@ -46,17 +45,16 @@ pub trait OptionalSingle<'s, Q>
 where
     Q: WorldQuery,
 {
-    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item>;
-    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item>;
+    fn optional_single(&self) -> Option<ROQueryItem<'_, Q>>;
+    fn optional_single_mut(&mut self) -> Option<QueryItem<'_, Q>>;
 }
 
 impl<'w, 's, Q, F> OptionalSingle<'s, Q> for Query<'w, 's, Q, F>
 where
     Q: WorldQuery,
     F: WorldQuery,
-    F::Fetch: FilterFetch,
 {
-    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item> {
+    fn optional_single(&self) -> Option<ROQueryItem<'_, Q>> {
         match self.get_single() {
             Ok(item) => Some(item),
             Err(QuerySingleError::NoEntities(_)) => None,
@@ -66,7 +64,7 @@ where
         }
     }
 
-    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item> {
+    fn optional_single_mut(&mut self) -> Option<QueryItem<'_, Q>> {
         match self.get_single_mut() {
             Ok(item) => Some(item),
             Err(QuerySingleError::NoEntities(_)) => None,
@@ -95,7 +93,7 @@ pub trait RectUtils {
     fn contains(&self, transform: &Transform, point: Vec2) -> bool;
 }
 
-impl RectUtils for Rect<f32> {
+impl RectUtils for UiRect<f32> {
     fn contains(&self, transform: &Transform, point: Vec2) -> bool {
         let center = transform.translation.truncate();
 
@@ -119,7 +117,7 @@ impl TransformUtils for Transform {
             global_transform.translation, self.translation, world_position
         );*/
 
-        let parent_position = global_transform.translation - self.translation;
+        let parent_position = global_transform.translation() - self.translation;
         //println!("parent: {}", parent_position);
 
         let local_position = world_position - parent_position;
@@ -132,7 +130,7 @@ impl TransformUtils for Transform {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct TransformQueryMut<'w> {
-    pub global_transform: &'w GlobalTransform,
-    pub transform: &'w mut Transform,
+pub struct TransformQueryMut {
+    pub global_transform: &'static GlobalTransform,
+    pub transform: &'static mut Transform,
 }

@@ -21,7 +21,7 @@ where
     pub bounds: BoundingRect,
 
     #[bundle]
-    pub transform: TransformBundle,
+    pub spatial: SpatialBundle,
 }
 
 impl<T> GoalBundle<T>
@@ -64,14 +64,14 @@ where
             },
             team,
             bounds: BoundingRect {
-                rect: Rect {
+                rect: UiRect {
                     left: score_center.x - goal_half_extents.x,
                     right: score_center.x + goal_half_extents.x,
                     top: score_center.y + goal_half_extents.y,
                     bottom: score_center.y - goal_half_extents.y,
                 },
             },
-            transform: TransformBundle::from_transform(Transform::from_translation(
+            spatial: SpatialBundle::from_transform(Transform::from_translation(
                 position.extend(GOAL_SORT),
             )),
         });

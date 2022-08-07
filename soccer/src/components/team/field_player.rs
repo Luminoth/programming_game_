@@ -85,33 +85,33 @@ impl FieldPlayer {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct FieldPlayerQuery<'w, T>
+pub struct FieldPlayerQuery<T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w SoccerPlayer,
-    pub field_player: &'w FieldPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub player: &'static SoccerPlayer,
+    pub field_player: &'static FieldPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 
-    pub actor: &'w Actor,
-    pub agent: &'w Agent,
-    pub steering: &'w Steering,
+    pub actor: &'static Actor,
+    pub agent: &'static Agent,
+    pub steering: &'static Steering,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct FieldPlayerQueryMut<'w, T>
+pub struct FieldPlayerQueryMut<T>
 where
     T: TeamColorMarker,
 {
-    pub player: &'w mut SoccerPlayer,
-    pub field_player: &'w mut FieldPlayer,
-    pub team: &'w T,
-    pub name: &'w Name,
+    pub player: &'static mut SoccerPlayer,
+    pub field_player: &'static mut FieldPlayer,
+    pub team: &'static T,
+    pub name: &'static Name,
 
-    pub actor: &'w Actor,
-    pub agent: &'w mut Agent,
-    pub steering: &'w mut Steering,
-    pub state_machine: &'w mut FieldPlayerStateMachine,
+    pub actor: &'static Actor,
+    pub agent: &'static mut Agent,
+    pub steering: &'static mut Steering,
+    pub state_machine: &'static mut FieldPlayerStateMachine,
 }

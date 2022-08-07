@@ -17,7 +17,7 @@ pub struct Wall {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct WallQuery<'w> {
-    pub wall: &'w Wall,
-    pub transform: &'w Transform,
+pub struct WallQuery {
+    pub wall: &'static Wall,
+    pub transform: &'static Transform,
 }

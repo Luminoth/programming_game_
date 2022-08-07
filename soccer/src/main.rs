@@ -14,7 +14,7 @@ mod util;
 use bevy::diagnostic::*;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
-use bevy_asset_ron::*;
+use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::WorldInspectorParams;
@@ -75,8 +75,11 @@ fn main() {
     app.add_plugin(ShapePlugin);
 
     // egui
-    app.insert_resource(EguiSettings { scale_factor: 0.75 })
-        .add_plugin(EguiPlugin);
+    app.insert_resource(EguiSettings {
+        scale_factor: 0.75,
+        ..Default::default()
+    })
+    .add_plugin(EguiPlugin);
 
     // inspector
     app.insert_resource(WorldInspectorParams {

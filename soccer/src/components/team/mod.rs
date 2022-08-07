@@ -556,24 +556,24 @@ impl TeamColorMarker for BlueTeam {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct SoccerTeamQuery<'w, T>
+pub struct SoccerTeamQuery<T>
 where
     T: TeamColorMarker,
 {
-    pub team: &'w SoccerTeam,
-    pub color: &'w T,
+    pub team: &'static SoccerTeam,
+    pub color: &'static T,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SoccerTeamQueryMut<'w, T>
+pub struct SoccerTeamQueryMut<T>
 where
     T: TeamColorMarker,
 {
-    pub team: &'w mut SoccerTeam,
-    pub color: &'w T,
+    pub team: &'static mut SoccerTeam,
+    pub color: &'static T,
 
-    pub state_machine: &'w mut SoccerTeamStateMachine,
+    pub state_machine: &'static mut SoccerTeamStateMachine,
 }
 
 #[derive(Debug, Default, Clone, Copy, Component, Inspectable)]

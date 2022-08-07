@@ -72,7 +72,7 @@ where
             bounds: BoundingCircle::from_radius(PLAYER_RADIUS),
             actor: ActorBundle {
                 name: Name::new(format!("#{} {:?} Goal Keeper", number, team_color)),
-                transform: TransformBundle::from_transform(Transform::from_translation(
+                spatial: SpatialBundle::from_transform(Transform::from_translation(
                     position.extend(PLAYER_SORT),
                 )),
                 ..Default::default()
@@ -101,18 +101,18 @@ where
 
             parent
                 .spawn_bundle(Text2dBundle {
-                    text: Text::with_section(
+                    text: Text::from_section(
                         format!("#{}", number),
                         TextStyle {
                             font: fonts.normal.clone(),
                             font_size: 18.0,
                             color: Color::BLACK,
                         },
-                        TextAlignment {
-                            vertical: VerticalAlign::Center,
-                            horizontal: HorizontalAlign::Center,
-                        },
-                    ),
+                    )
+                    .with_alignment(TextAlignment {
+                        vertical: VerticalAlign::Center,
+                        horizontal: HorizontalAlign::Center,
+                    }),
                     transform: Transform::from_translation(Vec2::ZERO.extend(TEXT_SORT)),
                     ..Default::default()
                 })

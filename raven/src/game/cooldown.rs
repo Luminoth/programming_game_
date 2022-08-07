@@ -4,7 +4,7 @@
 
 use std::time::Duration;
 
-use bevy::core::Stopwatch;
+use bevy::time::Stopwatch;
 
 #[derive(Debug, Clone)]
 pub struct Cooldown {

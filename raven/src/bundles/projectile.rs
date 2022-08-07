@@ -36,7 +36,7 @@ impl ProjectileBundle {
         let mut bundle = commands.spawn_bundle(ProjectileBundle {
             actor: ActorBundle {
                 name: Name::new(projectile.get_name()),
-                transform: TransformBundle::from_transform(Transform::from_translation(
+                spatial: SpatialBundle::from_transform(Transform::from_translation(
                     position.extend(PROJECTILE_SORT),
                 )),
                 ..Default::default()

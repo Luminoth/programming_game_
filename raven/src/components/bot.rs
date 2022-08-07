@@ -316,16 +316,16 @@ impl Bot {
 // most of the time the PhysicalQuery captures that
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct BotQuery<'w> {
-    pub bot: &'w Bot,
-    pub name: &'w Name,
+pub struct BotQuery {
+    pub bot: &'static Bot,
+    pub name: &'static Name,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct BotQueryMut<'w> {
-    pub bot: &'w mut Bot,
-    pub name: &'w Name,
+pub struct BotQueryMut {
+    pub bot: &'static mut Bot,
+    pub name: &'static Name,
 }
 
 #[derive(Debug, Default, Component)]

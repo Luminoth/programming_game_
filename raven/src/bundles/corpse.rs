@@ -27,7 +27,7 @@ impl CorpseBundle {
         let mut bundle = commands.spawn_bundle(CorpseBundle {
             actor: ActorBundle {
                 name: Name::new(name),
-                transform: TransformBundle::from_transform(Transform::from_translation(
+                spatial: SpatialBundle::from_transform(Transform::from_translation(
                     position.extend(CORPSE_SORT),
                 )),
                 ..Default::default()

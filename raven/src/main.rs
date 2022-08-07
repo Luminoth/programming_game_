@@ -27,8 +27,8 @@ use states::GameState;
 const WINDOW_WIDTH: f32 = 1024.0;
 const WINDOW_HEIGHT: f32 = 768.0;
 
-// half-width in units
-pub const ORTHO_SIZE: f32 = 50.0;
+// half-size in units
+pub const ORTHO_SIZE: f32 = 100.0;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]
@@ -64,8 +64,11 @@ fn main() {
     app.add_plugin(ShapePlugin);
 
     // egui
-    app.insert_resource(EguiSettings { scale_factor: 0.75 })
-        .add_plugin(EguiPlugin);
+    app.insert_resource(EguiSettings {
+        scale_factor: 0.75,
+        ..Default::default()
+    })
+    .add_plugin(EguiPlugin);
 
     // inspector
     app.insert_resource(WorldInspectorParams {

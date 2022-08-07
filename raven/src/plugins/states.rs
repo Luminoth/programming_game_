@@ -1,7 +1,7 @@
 use bevy::app::PluginGroupBuilder;
-use bevy::core::FixedTimestep;
 use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
+use bevy::time::FixedTimestep;
 
 use crate::game::PHYSICS_STEP;
 use crate::states;

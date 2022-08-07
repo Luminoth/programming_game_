@@ -8,7 +8,7 @@ use crate::components::*;
 #[derive(Debug, Bundle)]
 pub struct TriggerBundle {
     #[bundle]
-    pub transform: TransformBundle,
+    pub spatial: SpatialBundle,
 
     pub name: Name,
 
@@ -24,7 +24,7 @@ impl TriggerBundle {
         let color = trigger.get_color();
 
         let mut bundle = commands.spawn_bundle(TriggerBundle {
-            transform: TransformBundle::from_transform(Transform::from_translation(
+            spatial: SpatialBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
             name: Name::new(format!("{} Trigger", trigger)),

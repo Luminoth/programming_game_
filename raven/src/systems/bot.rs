@@ -13,8 +13,8 @@ pub fn check_bounds(
     let window = windows.get_primary().unwrap();
     let aspect_ratio = window.width() / window.height();
 
-    let max_x = ORTHO_SIZE;
-    let max_y = ORTHO_SIZE / aspect_ratio;
+    let max_x = ORTHO_SIZE * aspect_ratio;
+    let max_y = ORTHO_SIZE;
 
     for (mut physical, bounds) in bots.iter_mut() {
         let bot_min_x =

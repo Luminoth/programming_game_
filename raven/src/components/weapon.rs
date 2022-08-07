@@ -96,7 +96,7 @@ impl EquippedWeapon {
 
                 let mut angle = -spread / 2.0;
                 for _ in 0..NUMBER_OF_PELLETS {
-                    let direction = direction.rotate(angle);
+                    let direction = direction.rotate_origin(angle);
 
                     ProjectileBundle::spawn(
                         commands,

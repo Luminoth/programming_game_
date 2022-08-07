@@ -8,5 +8,5 @@ pub struct ActorBundle {
     pub name: Name,
 
     #[bundle]
-    pub transform: TransformBundle,
+    pub spatial: SpatialBundle,
 }

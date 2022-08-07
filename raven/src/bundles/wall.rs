@@ -8,7 +8,7 @@ use crate::game::WALL_SORT;
 #[derive(Debug, Bundle)]
 pub struct WallBundle {
     #[bundle]
-    pub transform: TransformBundle,
+    pub spatial: SpatialBundle,
 
     pub name: Name,
 
@@ -20,7 +20,7 @@ impl WallBundle {
         info!("spawning wall at {} ({} to {})", position, from, to);
 
         let mut bundle = commands.spawn_bundle(WallBundle {
-            transform: TransformBundle::from_transform(Transform::from_translation(
+            spatial: SpatialBundle::from_transform(Transform::from_translation(
                 position.extend(WALL_SORT),
             )),
             name: Name::new("Wall"),

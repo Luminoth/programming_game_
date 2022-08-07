@@ -5,7 +5,7 @@ use crate::components::spawnpoint::*;
 #[derive(Debug, Bundle)]
 pub struct SpawnPointBundle {
     #[bundle]
-    pub transform: TransformBundle,
+    pub spatial: SpatialBundle,
 
     pub name: Name,
 
@@ -17,7 +17,7 @@ impl SpawnPointBundle {
         info!("spawning spawnpoint at {}", position,);
 
         let bundle = commands.spawn_bundle(SpawnPointBundle {
-            transform: TransformBundle::from_transform(Transform::from_translation(
+            spatial: SpatialBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
             name: Name::new("Spawnpoint"),

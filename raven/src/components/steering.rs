@@ -50,9 +50,9 @@ impl Steering {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SteeringQueryMut<'w> {
-    pub steering: &'w mut Steering,
-    pub physical: &'w mut Physical,
+pub struct SteeringQueryMut {
+    pub steering: &'static mut Steering,
+    pub physical: &'static mut Physical,
 }
 
 #[derive(Debug, Default, Component)]
@@ -79,9 +79,9 @@ impl Seek {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct SeekQueryMut<'w> {
-    pub seek: &'w Seek,
-    pub steering: &'w mut Steering,
+pub struct SeekQueryMut {
+    pub seek: &'static Seek,
+    pub steering: &'static mut Steering,
 }
 
 #[derive(Debug, Clone, Copy, Inspectable)]
@@ -133,9 +133,9 @@ impl Arrive {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct ArriveQueryMut<'w> {
-    pub arrive: &'w Arrive,
-    pub steering: &'w mut Steering,
+pub struct ArriveQueryMut {
+    pub arrive: &'static Arrive,
+    pub steering: &'static mut Steering,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -149,11 +149,11 @@ impl WallAvoidance {
         self.feelers[0] = position + feeler_length * heading;
 
         // left
-        let temp = heading.rotate(std::f32::consts::FRAC_PI_2 * 3.5);
+        let temp = heading.rotate_origin(std::f32::consts::FRAC_PI_2 * 3.5);
         self.feelers[1] = position + feeler_length * 0.5 * temp;
 
         // right
-        let temp = heading.rotate(std::f32::consts::FRAC_2_PI * 0.5);
+        let temp = heading.rotate_origin(std::f32::consts::FRAC_2_PI * 0.5);
         self.feelers[2] = position + feeler_length * 0.5 * temp;
     }
 }

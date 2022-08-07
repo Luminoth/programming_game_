@@ -36,7 +36,7 @@ impl Agent {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct AgentQueryMut<'w> {
-    pub agent: &'w mut Agent,
-    pub steering: &'w mut Steering,
+pub struct AgentQueryMut {
+    pub agent: &'static mut Agent,
+    pub steering: &'static mut Steering,
 }

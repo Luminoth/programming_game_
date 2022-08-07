@@ -107,21 +107,21 @@ impl Physical {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct PhysicalQuery<'w> {
-    pub transform: &'w Transform,
-    pub physical: &'w Physical,
+pub struct PhysicalQuery {
+    pub transform: &'static Transform,
+    pub physical: &'static Physical,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct PhysicalQueryMut<'w> {
-    pub transform: &'w Transform,
-    pub physical: &'w mut Physical,
+pub struct PhysicalQueryMut {
+    pub transform: &'static Transform,
+    pub physical: &'static mut Physical,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct PhysicalQueryUpdateMut<'w> {
-    pub transform: &'w mut Transform,
-    pub physical: &'w mut Physical,
+pub struct PhysicalQueryUpdateMut {
+    pub transform: &'static mut Transform,
+    pub physical: &'static mut Physical,
 }

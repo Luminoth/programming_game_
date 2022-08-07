@@ -16,8 +16,8 @@ pub fn check_bounds(
     let window = windows.get_primary().unwrap();
     let aspect_ratio = window.width() / window.height();
 
-    let max_x = ORTHO_SIZE;
-    let max_y = ORTHO_SIZE / aspect_ratio;
+    let max_x = ORTHO_SIZE * aspect_ratio;
+    let max_y = ORTHO_SIZE;
 
     for (entity, physical, bounds, name) in projectiles.iter() {
         let projectile_min_x =
@@ -34,7 +34,16 @@ pub fn check_bounds(
             || projectile_min_y < -max_y
             || projectile_max_y > max_y
         {
-            info!("projectile '{}' is out of bounds", name);
+            info!(
+                "projectile '{}' is out of bounds - ({}, {}) : ({}, {}) vs ({}, {})",
+                name,
+                projectile_min_x,
+                projectile_min_y,
+                projectile_max_x,
+                projectile_max_y,
+                max_x,
+                max_y
+            );
             commands.entity(entity).despawn_recursive();
         }
     }

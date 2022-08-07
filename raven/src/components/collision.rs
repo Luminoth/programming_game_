@@ -248,9 +248,9 @@ impl Bounds {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct BoundsQuery<'w> {
-    pub bounds: &'w Bounds,
-    pub transform: &'w Transform,
+pub struct BoundsQuery {
+    pub bounds: &'static Bounds,
+    pub transform: &'static Transform,
 }
 
 #[cfg(test)]

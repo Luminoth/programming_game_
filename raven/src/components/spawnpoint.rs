@@ -15,7 +15,7 @@ impl SpawnPoint {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct SpawnPointQuery<'w> {
-    pub spawnpoint: &'w SpawnPoint,
-    pub transform: &'w Transform,
+pub struct SpawnPointQuery {
+    pub spawnpoint: &'static SpawnPoint,
+    pub transform: &'static Transform,
 }

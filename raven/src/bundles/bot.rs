@@ -59,7 +59,7 @@ impl BotBundle {
         let mut bundle = commands.spawn_bundle(BotBundle {
             actor: ActorBundle {
                 name: Name::new(name),
-                transform: TransformBundle::from_transform(Transform::from_translation(
+                spatial: SpatialBundle::from_transform(Transform::from_translation(
                     position.extend(BOT_SORT),
                 )),
                 ..Default::default()

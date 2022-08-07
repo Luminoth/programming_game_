@@ -9,7 +9,7 @@ pub struct UiCamera;
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct CameraQuery<'w> {
-    pub camera: &'w Camera,
-    pub transform: &'w Transform,
+pub struct CameraQuery {
+    pub camera: &'static Camera,
+    pub transform: &'static Transform,
 }

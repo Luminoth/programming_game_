@@ -1,5 +1,4 @@
-use bevy::ecs::query::{Fetch, FilterFetch, WorldQuery};
-use bevy::ecs::system::QuerySingleError;
+use bevy::ecs::query::{QueryItem, QuerySingleError, ROQueryItem, WorldQuery};
 use bevy::prelude::*;
 
 // https://bevy-cheatbook.github.io/cookbook/cursor2world.html#2d-games
@@ -7,7 +6,7 @@ pub fn get_mouse_position(camera: (&Camera, &Transform), window: &Window) -> Opt
     if let Some(screen_position) = window.cursor_position() {
         let window_size = Vec2::new(window.width(), window.height());
         let ndc = (screen_position / window_size) * 2.0 - Vec2::ONE;
-        let ndc_to_world = camera.1.compute_matrix() * camera.0.projection_matrix.inverse();
+        let ndc_to_world = camera.1.compute_matrix() * camera.0.projection_matrix().inverse();
         let world_position = ndc_to_world.project_point3(ndc.extend(-1.0));
         Some(world_position.truncate())
     } else {
@@ -19,17 +18,16 @@ pub trait OptionalSingle<'s, Q>
 where
     Q: WorldQuery,
 {
-    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item>;
-    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item>;
+    fn optional_single(&self) -> Option<ROQueryItem<'_, Q>>;
+    fn optional_single_mut(&mut self) -> Option<QueryItem<'_, Q>>;
 }
 
 impl<'w, 's, Q, F> OptionalSingle<'s, Q> for Query<'w, 's, Q, F>
 where
     Q: WorldQuery,
     F: WorldQuery,
-    F::Fetch: FilterFetch,
 {
-    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item> {
+    fn optional_single(&self) -> Option<ROQueryItem<'_, Q>> {
         match self.get_single() {
             Ok(item) => Some(item),
             Err(QuerySingleError::NoEntities(_)) => None,
@@ -39,7 +37,7 @@ where
         }
     }
 
-    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item> {
+    fn optional_single_mut(&mut self) -> Option<QueryItem<'_, Q>> {
         match self.get_single_mut() {
             Ok(item) => Some(item),
             Err(QuerySingleError::NoEntities(_)) => None,
@@ -53,7 +51,7 @@ where
 pub trait Vec2Utils {
     fn sign(&self, v2: Vec2) -> f32;
 
-    fn rotate(&self, angle: f32) -> Vec2;
+    fn rotate_origin(&self, angle: f32) -> Vec2;
 }
 
 impl Vec2Utils for Vec2 {
@@ -65,7 +63,7 @@ impl Vec2Utils for Vec2 {
         }
     }
 
-    fn rotate(&self, angle: f32) -> Vec2 {
+    fn rotate_origin(&self, angle: f32) -> Vec2 {
         let v = self.extend(0.0);
         (Quat::from_rotation_z(angle) * v).truncate()
     }
@@ -82,7 +80,7 @@ impl TransformUtils for Transform {
             global_transform.translation, self.translation, world_position
         );*/
 
-        let parent_position = global_transform.translation - self.translation;
+        let parent_position = global_transform.translation() - self.translation;
         //println!("parent: {}", parent_position);
 
         let local_position = world_position - parent_position;
@@ -95,7 +93,7 @@ impl TransformUtils for Transform {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct TransformQueryMut<'w> {
-    pub global_transform: &'w GlobalTransform,
-    pub transform: &'w mut Transform,
+pub struct TransformQueryMut {
+    pub global_transform: &'static GlobalTransform,
+    pub transform: &'static mut Transform,
 }

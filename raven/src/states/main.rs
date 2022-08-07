@@ -17,9 +17,8 @@ pub fn setup(mut commands: Commands) {
 
     // cameras
     commands.insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)));
-    let mut camera = OrthographicCameraBundle::new_2d();
-    camera.orthographic_projection.scaling_mode = ScalingMode::FixedHorizontal;
-    camera.orthographic_projection.scale = ORTHO_SIZE;
+    let mut camera = Camera2dBundle::default();
+    camera.projection.scaling_mode = ScalingMode::FixedVertical(ORTHO_SIZE);
     commands
         .spawn_bundle(camera)
         .insert(MainCamera)

@@ -28,7 +28,7 @@ const WINDOW_WIDTH: f32 = 1024.0;
 const WINDOW_HEIGHT: f32 = 768.0;
 
 // half-size in units
-pub const ORTHO_SIZE: f32 = 100.0;
+pub const ORTHO_SIZE: f32 = 50.0;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(debug_assertions)]

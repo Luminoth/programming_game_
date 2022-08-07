@@ -18,7 +18,7 @@ pub fn setup(mut commands: Commands) {
     // cameras
     commands.insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)));
     let mut camera = Camera2dBundle::default();
-    camera.projection.scaling_mode = ScalingMode::FixedVertical(ORTHO_SIZE);
+    camera.projection.scaling_mode = ScalingMode::FixedVertical(ORTHO_SIZE * 2.0);
     commands
         .spawn_bundle(camera)
         .insert(MainCamera)

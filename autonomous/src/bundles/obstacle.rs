@@ -25,7 +25,7 @@ impl ObstacleBundle {
             actor: Actor {
                 bounding_radius: radius,
             },
-            transform: TransformBundle::from_transform(Transform::from_translation(
+            spatial: SpatialBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
             name: Name::new("Obstacle"),

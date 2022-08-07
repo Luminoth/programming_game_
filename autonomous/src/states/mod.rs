@@ -45,7 +45,7 @@ fn spawn_button(parent: &mut ChildBuilder, fonts: &Fonts, text: impl Into<String
                 .spawn_bundle(ButtonBundle {
                     style: Style {
                         size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                        margin: Rect::all(Val::Auto),
+                        margin: UiRect::all(Val::Auto),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..Default::default()
@@ -55,14 +55,13 @@ fn spawn_button(parent: &mut ChildBuilder, fonts: &Fonts, text: impl Into<String
                 })
                 .with_children(|parent| {
                     parent.spawn_bundle(TextBundle {
-                        text: Text::with_section(
+                        text: Text::from_section(
                             text,
                             TextStyle {
                                 font: fonts.normal.clone(),
                                 font_size: 40.0,
                                 color: Color::rgb(0.9, 0.9, 0.9),
                             },
-                            Default::default(),
                         ),
                         ..Default::default()
                     });

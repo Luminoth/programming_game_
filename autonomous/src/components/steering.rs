@@ -34,9 +34,9 @@ impl Seek {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct SeekQuery<'w> {
-    pub steering: &'w Seek,
-    pub target: &'w SeekTarget,
+pub struct SeekQuery {
+    pub steering: &'static Seek,
+    pub target: &'static SeekTarget,
 }
 
 fn flee_force(target: Vec2, physical: &PhysicalQueryMutItem) -> Vec2 {
@@ -71,9 +71,9 @@ impl Flee {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct FleeQuery<'w> {
-    pub steering: &'w Flee,
-    pub target: &'w FleeTarget,
+pub struct FleeQuery {
+    pub steering: &'static Flee,
+    pub target: &'static FleeTarget,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]
@@ -125,9 +125,9 @@ impl Arrive {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct ArriveQuery<'w> {
-    pub steering: &'w Arrive,
-    pub target: &'w ArriveTarget,
+pub struct ArriveQuery {
+    pub steering: &'static Arrive,
+    pub target: &'static ArriveTarget,
 }
 
 fn turnaround_time(target: Vec2, physical: &PhysicalQueryMutItem) -> f32 {
@@ -188,9 +188,9 @@ impl Pursuit {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct PursuitQuery<'w> {
-    pub steering: &'w Pursuit,
-    pub target: &'w PursuitTarget,
+pub struct PursuitQuery {
+    pub steering: &'static Pursuit,
+    pub target: &'static PursuitTarget,
 }
 
 // TODO: offset pursuit
@@ -234,9 +234,9 @@ impl Evade {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct EvadeQuery<'w> {
-    pub steering: &'w Evade,
-    pub target: &'w EvadeTarget,
+pub struct EvadeQuery {
+    pub steering: &'static Evade,
+    pub target: &'static EvadeTarget,
 }
 
 #[derive(Debug, Default, Component, Inspectable)]

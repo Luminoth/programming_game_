@@ -22,7 +22,7 @@ pub fn setup(mut commands: Commands, params: Res<SimulationParams>, window: Res<
     // cameras
     commands.insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)));
     commands
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .spawn_bundle(Camera2dBundle::default())
         .insert(MainCamera)
         .insert(Name::new("Main Camera"));
 

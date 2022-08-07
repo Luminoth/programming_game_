@@ -60,7 +60,7 @@ impl VehicleBundle {
                 bounding_radius: VEHICLE_RADIUS,
             },
             name: Name::new(name),
-            transform: TransformBundle::from_transform(Transform::from_translation(
+            spatial: SpatialBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
         });

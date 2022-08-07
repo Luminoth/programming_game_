@@ -12,7 +12,7 @@ pub struct Actor {
 // most of the time the PhysicalQuery captures that
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct ActorQuery<'w> {
-    pub actor: &'w Actor,
-    pub name: &'w Name,
+pub struct ActorQuery {
+    pub actor: &'static Actor,
+    pub name: &'static Name,
 }

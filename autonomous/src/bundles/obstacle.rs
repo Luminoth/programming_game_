@@ -75,7 +75,7 @@ pub struct WallBundle {
     pub wall: Wall,
 
     #[bundle]
-    pub transform: TransformBundle,
+    pub spatial: SpatialBundle,
 }
 
 impl WallBundle {
@@ -87,7 +87,7 @@ impl WallBundle {
 
         let mut bundle = commands.spawn_bundle(WallBundle {
             wall,
-            transform: TransformBundle::from_transform(Transform::from_translation(
+            spatial: SpatialBundle::from_transform(Transform::from_translation(
                 position.extend(0.0),
             )),
         });

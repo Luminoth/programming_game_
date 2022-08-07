@@ -1,6 +1,7 @@
 use bevy::ecs::query::{QueryItem, QuerySingleError, ROQueryItem, WorldQuery};
 use bevy::math::Mat2;
 use bevy::prelude::*;
+use bevy_inspector_egui::prelude::*;
 
 pub fn point_to_world_space(point: Vec2, heading: Vec2, side: Vec2, position: Vec2) -> Vec2 {
     // rotate
@@ -89,12 +90,16 @@ impl Vec2Utils for Vec2 {
     }
 }
 
-pub trait RectUtils {
-    fn contains(&self, transform: &Transform, point: Vec2) -> bool;
+#[derive(Debug, Inspectable)]
+pub struct Rect {
+    pub left: f32,
+    pub right: f32,
+    pub top: f32,
+    pub bottom: f32,
 }
 
-impl RectUtils for UiRect<f32> {
-    fn contains(&self, transform: &Transform, point: Vec2) -> bool {
+impl Rect {
+    pub fn contains(&self, transform: &Transform, point: Vec2) -> bool {
         let center = transform.translation.truncate();
 
         let left = center.x + self.left;

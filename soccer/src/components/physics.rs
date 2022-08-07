@@ -177,13 +177,13 @@ pub struct PhysicalQueryUpdateMut {
 
 #[derive(Debug, Component, Inspectable)]
 pub struct BoundingRect {
-    pub rect: UiRect<f32>,
+    pub rect: Rect,
 }
 
 impl Default for BoundingRect {
     fn default() -> Self {
         Self {
-            rect: UiRect {
+            rect: Rect {
                 left: -0.5,
                 right: 0.5,
                 top: 0.5,

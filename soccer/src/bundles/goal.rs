@@ -8,6 +8,7 @@ use crate::game::team::TeamColor;
 use crate::game::GOAL_BAR_WIDTH;
 use crate::resources::pitch::Pitch;
 use crate::resources::SimulationParams;
+use crate::util::*;
 use crate::{DEBUG_RADIUS, DEBUG_SORT, GOAL_SORT};
 
 #[derive(Debug, Default, Bundle)]
@@ -64,7 +65,7 @@ where
             },
             team,
             bounds: BoundingRect {
-                rect: UiRect {
+                rect: Rect {
                     left: score_center.x - goal_half_extents.x,
                     right: score_center.x + goal_half_extents.x,
                     top: score_center.y + goal_half_extents.y,

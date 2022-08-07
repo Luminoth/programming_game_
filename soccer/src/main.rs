@@ -115,7 +115,8 @@ fn main() {
     .register_inspectable::<components::team::ReceivingPlayer>()
     .register_inspectable::<components::team::ClosestPlayer>()
     .register_inspectable::<components::team::ControllingPlayer>()
-    .register_inspectable::<components::team::SupportingPlayer>();
+    .register_inspectable::<components::team::SupportingPlayer>()
+    .register_inspectable::<util::Rect>();
 
     // assets
     app.add_plugin(RonAssetPlugin::<SimulationParams>::new(&["params"]));

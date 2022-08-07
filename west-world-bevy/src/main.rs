@@ -7,9 +7,9 @@ mod resources;
 mod states;
 mod systems;
 
-use bevy::core::FixedTimestep;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
+use bevy::time::FixedTimestep;
 
 use events::messaging::MessageEvent;
 use states::GameState;

@@ -106,9 +106,9 @@ pub struct MinerWife {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct MinerQuery<'w> {
-    pub miner: &'w mut Miner,
-    pub stats: &'w mut Stats,
-    pub state_machine: &'w mut MinerStateMachine,
-    pub name: &'w Name,
+pub struct MinerQuery {
+    pub miner: &'static mut Miner,
+    pub stats: &'static mut Stats,
+    pub state_machine: &'static mut MinerStateMachine,
+    pub name: &'static Name,
 }

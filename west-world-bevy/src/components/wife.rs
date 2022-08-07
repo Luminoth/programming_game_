@@ -32,8 +32,8 @@ pub struct WifeMiner {
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct WifeQuery<'w> {
-    pub wife: &'w mut Wife,
-    pub state_machine: &'w mut WifeStateMachine,
-    pub name: &'w Name,
+pub struct WifeQuery {
+    pub wife: &'static mut Wife,
+    pub state_machine: &'static mut WifeStateMachine,
+    pub name: &'static Name,
 }

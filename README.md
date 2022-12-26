@@ -1,5 +1,7 @@
 # Programming Game AI by Example
 
+I believe I dropped this book in chapter 7 (Raven).
+
 * [Book Source](https://github.com/wangchen/Programming-Game-AI-by-Example-src)
 * [Errata](http://www.ai-junkie.com/ai_book2/errata/)
 * [Bug Fixes](http://www.ai-junkie.com/ai_book2/bugs/)
